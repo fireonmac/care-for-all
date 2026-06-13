@@ -12,8 +12,11 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isFuture = targetDate > todayStr;
+
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && window.location.hash === '#week-view') {
       textareaRef.current.focus({ preventScroll: true });
     }
   }, [targetDate]);
@@ -52,7 +55,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <textarea
-              className="w-full bg-white border border-surface-400 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.cognition}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
@@ -65,7 +68,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <textarea
-              className="w-full bg-white border border-surface-400 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.behavior}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
@@ -112,8 +115,9 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
             value={keywords}
             maxLength={1000}
             onChange={(e) => setKeywords(e.target.value)}
-            placeholder="여기에 핵심 단어를 입력하세요..."
-            className="w-full min-h-[300px] bg-white border border-surface-400 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
+            disabled={isFuture}
+            placeholder={isFuture ? "미래 날짜의 기록은 아직 작성할 수 없습니다." : "여기에 핵심 단어를 입력하세요..."}
+            className="w-full min-h-[300px] bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent resize-none text-black text-2xl font-light placeholder:text-surface-600 leading-[1.8] disabled:opacity-50 disabled:bg-surface-50 disabled:hover:border-surface-500"
           />
           <span className="absolute bottom-6 right-6 text-base text-surface-500 font-light tracking-widest">
             {keywords.length}/1000
@@ -122,7 +126,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <div className="flex justify-end mt-12">
           <button
             type="submit"
-            disabled={loading || !keywords.trim()}
+            disabled={loading || !keywords.trim() || isFuture}
             className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-30"
           >
             {loading ? '생성 중...' : '기록 초안 생성'}
