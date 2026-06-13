@@ -1,4 +1,4 @@
-import { getRecipientRecords } from '../actions';
+import { getRecipientRecords, getRecipientOr404 } from '../actions';
 import { RecordEditForm } from './RecordEditForm';
 import { redirect } from 'next/navigation';
 
@@ -23,5 +23,7 @@ export default async function EditRecordPage({
     redirect(`/recipients/${resolvedParams.id}?date=${resolvedSearch.date}`);
   }
 
-  return <RecordEditForm record={targetRecord} recipientId={resolvedParams.id} date={resolvedSearch.date} />;
+  const recipient = await getRecipientOr404(resolvedParams.id);
+
+  return <RecordEditForm record={targetRecord} recipientId={resolvedParams.id} recipientName={recipient.name} date={resolvedSearch.date} />;
 }

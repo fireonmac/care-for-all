@@ -48,7 +48,7 @@ export default async function RecipientDetailPage({
 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
         <h1 className="text-4xl font-medium text-black tracking-tight">
-          {recipient.name} <span className="text-2xl font-normal text-surface-500">어르신</span>
+          {recipient.name} <span className="text-2xl font-normal text-surface-700 ml-1">어르신</span>
         </h1>
         <div className="self-start sm:self-auto">
           <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} />

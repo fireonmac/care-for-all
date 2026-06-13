@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { updateDailyRecord } from '../actions';
 import { useRouter } from 'next/navigation';
 
-export function RecordEditForm({ record, recipientId, date }: { record: any, recipientId: string, date: string }) {
+export function RecordEditForm({ record, recipientId, recipientName, date }: { record: any, recipientId: string, recipientName: string, date: string }) {
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
   const [saving, setSaving] = useState(false);
@@ -17,6 +17,9 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
     router.push(`/recipients/${recipientId}?date=${date}`);
     router.refresh();
   };
+
+  // 날짜 포맷 (YYYY-MM-DD -> YYYY.MM.DD)
+  const formattedDate = date.replace(/-/g, '.');
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
@@ -31,7 +34,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
         <h1 className="text-4xl font-medium text-black tracking-tight">
-          기록 수정
+          {recipientName} <span className="text-2xl font-normal text-surface-500">어르신</span> {formattedDate} 기록 수정
         </h1>
       </header>
       
