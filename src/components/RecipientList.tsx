@@ -83,7 +83,7 @@ export function RecipientList({
         </div>
         <input
           type="text"
-          placeholder="어르신 이름 검색..."
+          placeholder="어르신 성함 검색..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className={`sm:w-80 px-4 py-3 pl-12 text-lg ${commonInputClasses}`}

@@ -11,7 +11,7 @@ export async function getRecipients() {
 }
 
 export async function addRecipient(name: string) {
-  if (!name.trim()) return { error: '이름을 입력해주세요.' };
+  if (!name.trim()) return { error: '성함을 입력해주세요.' };
   
   await db.insert(recipients).values({
     id: randomUUID(),
