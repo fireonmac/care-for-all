@@ -14,8 +14,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      textareaRef.current.focus({ preventScroll: true });
     }
   }, [targetDate]);
   

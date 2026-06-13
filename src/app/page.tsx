@@ -53,7 +53,7 @@ export default async function Home() {
             >
               <div className="flex flex-col gap-3">
                 <span className="text-3xl font-medium tracking-tight text-black">
-                  {r.name}
+                  {r.name} <span className="text-2xl font-normal ml-1 text-surface-700">어르신</span>
                 </span>
                 <span className="text-surface-500 font-normal text-base tracking-wide">
                   최근 기록: {r.latestRecordDate ? r.latestRecordDate : '없음'}
