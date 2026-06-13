@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "어르신 요양보호기록 자동 작성 시스템",
 };
 
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +25,7 @@ export default function RootLayout({
           </div>
         </header>
         <div className="flex-1 mt-16">
-          {children}
+          <NuqsAdapter>{children}</NuqsAdapter>
         </div>
         <footer className="w-full border-t border-surface-100 pt-6 pb-8 mt-24">
           <div className="max-w-5xl mx-auto px-6 sm:px-12 text-center">

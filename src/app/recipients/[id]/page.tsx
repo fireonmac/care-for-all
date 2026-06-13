@@ -2,14 +2,29 @@ import { getRecipientOr404, getRecipientRecords } from './actions';
 import { KeywordInputForm } from './KeywordInputForm';
 import { WeeklyReportForm } from './WeeklyReportForm';
 import { TodayRecordView } from './TodayRecordView';
+import { WeekSelector } from '@/components/WeekSelector';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
-function getWeekDates(todayStr: string) {
+function getWeekDates(todayStr: string, weekOffset: number) {
   const today = new Date(todayStr);
+  today.setDate(today.getDate() + weekOffset * 7);
+
   const day = today.getDay();
   const diff = today.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(today.setDate(diff));
+  
+  const thursday = new Date(monday);
+  thursday.setDate(monday.getDate() + 3);
+  
+  const currentMonth = thursday.getMonth() + 1;
+  const firstDayOfMonth = new Date(thursday.getFullYear(), thursday.getMonth(), 1);
+  
+  let firstDayDow = firstDayOfMonth.getDay();
+  if (firstDayDow === 0) firstDayDow = 7;
+  
+  const date = thursday.getDate();
+  const currentWeekOfMonth = Math.ceil((date + firstDayDow - 1) / 7);
   
   const week = [];
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -23,7 +38,7 @@ function getWeekDates(todayStr: string) {
       isFuture: dateStr > todayStr,
     });
   }
-  return week;
+  return { week, currentMonth, currentWeekOfMonth };
 }
 
 export default async function RecipientDetailPage({
@@ -45,7 +60,8 @@ export default async function RecipientDetailPage({
   const targetRecord = recentRecords.find((r) => r.date === targetDate && r.type === 'daily');
   const hasTargetRecord = !!targetRecord;
 
-  const weekDates = getWeekDates(todayStr);
+  const weekOffset = parseInt(resolvedSearch.week || '0', 10);
+  const { week: weekDates, currentMonth, currentWeekOfMonth } = getWeekDates(todayStr, weekOffset);
   const startOfWeek = weekDates[0].dateStr;
   const endOfWeek = weekDates[6].dateStr;
   
@@ -77,7 +93,10 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <h2 className="text-base font-medium tracking-widest text-surface-600 mb-10">이번 주 기록 요약</h2>
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-base font-medium tracking-widest text-surface-600">주간 일지 기록</h2>
+          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} />
+        </div>
         
         <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {
@@ -88,7 +107,7 @@ export default async function RecipientDetailPage({
             return (
               <Link
                 key={dateStr}
-                href={`/recipients/${recipient.id}?date=${dateStr}`}
+                href={`/recipients/${recipient.id}?date=${dateStr}${weekOffset !== 0 ? `&week=${weekOffset}` : ''}`}
                 className={`flex flex-col items-center justify-center py-6 rounded-xl gap-4 transition-colors ${isSelected ? 'bg-surface-100' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
