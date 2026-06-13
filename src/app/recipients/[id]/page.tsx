@@ -55,7 +55,7 @@ export default async function RecipientDetailPage({
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
-    <main className="max-w-5xl mx-auto px-6 sm:px-8 py-16 min-h-screen flex flex-col">
+    <main className="max-w-3xl mx-auto px-6 sm:px-8 py-16 min-h-screen flex flex-col">
       <header className="flex justify-between items-end border-b-2 border-black pb-6 mb-16">
         <div className="flex flex-col gap-2">
           <Link 
@@ -113,7 +113,7 @@ export default async function RecipientDetailPage({
       </section>
 
       {/* 하단: 컨텐츠 영역 */}
-      <section className="flex-1 w-full max-w-4xl mx-auto">
+      <section className="flex-1 w-full mx-auto">
         {!hasTargetRecord ? (
           <KeywordInputForm recipientId={recipient.id} targetDate={targetDate} />
         ) : (

@@ -6,8 +6,8 @@ export default async function Home() {
   const recipients = await getRecipientsWithStats();
 
   return (
-    <main className="max-w-4xl mx-auto px-6 sm:px-8 py-20 min-h-screen">
-      <header className="flex justify-between items-end border-b-2 border-black pb-8 mb-20">
+    <main className="max-w-3xl mx-auto px-6 sm:px-8 py-20 min-h-screen">
+      <header className="flex justify-between items-end border-b-2 border-black pb-8 mb-16">
         <h1 className="text-4xl font-extrabold text-black tracking-tight">
           어르신 목록
         </h1>
@@ -37,11 +37,11 @@ export default async function Home() {
               </div>
               <div>
                 {r.hasTodayRecord ? (
-                  <span className="text-sm font-bold tracking-widest text-status-success border border-status-success/30 px-5 py-2.5 rounded-none bg-status-success/5">
+                  <span className="text-sm font-bold tracking-widest text-status-success border border-status-success/30 px-5 py-2.5 rounded-full bg-status-success/5">
                     작성 완료
                   </span>
                 ) : (
-                  <span className="text-sm font-bold tracking-widest text-surface-500 border border-surface-200 px-5 py-2.5 rounded-none">
+                  <span className="text-sm font-bold tracking-widest text-surface-500 border border-surface-200 px-5 py-2.5 rounded-full">
                     미작성
                   </span>
                 )}
