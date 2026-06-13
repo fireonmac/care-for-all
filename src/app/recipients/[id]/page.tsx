@@ -60,7 +60,7 @@ export default async function RecipientDetailPage({
         <div className="flex flex-col gap-2">
           <Link 
             href="/"
-            className="text-sm font-bold tracking-widest text-surface-400 hover:text-black mb-4"
+            className="text-base font-bold tracking-widest text-surface-500 hover:text-black mb-4"
           >
             ← 목록으로 돌아가기
           </Link>
@@ -73,39 +73,39 @@ export default async function RecipientDetailPage({
         </div>
       </header>
 
-      {/* 상단: 구조적이고 미니멀한 주간 뷰 */}
+      {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <h2 className="text-sm font-bold tracking-widest text-surface-500 mb-10">이번 주 기록 요약</h2>
+        <h2 className="text-base font-bold tracking-widest text-surface-600 mb-10 border-l-4 border-black pl-4">이번 주 기록 요약</h2>
         
-        <div className="flex justify-between items-end border-b border-surface-200 pb-6">
+        <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {
             const record = currentWeekRecords.find(r => r.date === dateStr);
             const isSelected = dateStr === targetDate;
             const isToday = dateStr === todayStr;
             
             return (
-              <Link 
+              <Link
                 key={dateStr}
                 href={`/recipients/${recipient.id}?date=${dateStr}`}
-                className={`flex flex-col items-center gap-4 transition-all group ${isFuture ? 'opacity-30 pointer-events-none' : 'hover:-translate-y-1'}`}
+                className={`flex flex-col items-center justify-center py-6 rounded-2xl transition-all gap-4 ${isSelected ? 'bg-surface-100 ring-1 ring-surface-300' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
-                <span className={`text-sm font-bold tracking-widest ${isSelected ? 'text-black' : 'text-surface-400 group-hover:text-black'}`}>
+                <span className={`text-sm font-bold tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
                   {dayName}
                 </span>
-                <span className={`text-3xl font-light ${isSelected ? 'text-black font-medium' : 'text-surface-400 group-hover:text-black'}`}>
+                <span className={`text-4xl font-light ${isSelected ? 'text-black font-semibold' : 'text-surface-600'}`}>
                   {dateStr.split('-')[2]}
                 </span>
                 
-                {/* 인디케이터 (극도로 미니멀하게) */}
-                <div className="flex h-2 items-center justify-center">
+                {/* 인디케이터 */}
+                <div className="flex h-2 items-center justify-center mt-2">
                   {record ? (
-                    <div className="w-1.5 h-1.5 rounded-full bg-surface-300"></div>
+                    <div className="w-2 h-2 rounded-full bg-surface-300"></div>
                   ) : isSelected ? (
-                    <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
+                    <div className="w-2 h-2 rounded-full bg-black"></div>
                   ) : !isFuture && isToday ? (
-                    <div className="w-1.5 h-1.5 rounded-full bg-status-danger"></div>
+                    <div className="w-2 h-2 rounded-full bg-status-danger"></div>
                   ) : !isFuture ? (
-                    <div className="w-1.5 h-1.5 rounded-full bg-status-danger opacity-50"></div>
+                    <div className="w-2 h-2 rounded-full bg-status-danger opacity-50"></div>
                   ) : null}
                 </div>
               </Link>

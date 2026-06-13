@@ -33,7 +33,7 @@ export default async function Home() {
                 <span className="text-3xl font-bold tracking-tight text-black group-hover:translate-x-2 transition-transform duration-300">
                   {r.name}
                 </span>
-                <span className="text-surface-500 font-medium text-base tracking-wide">
+                <span className="text-surface-600 font-medium text-base tracking-wide">
                   최근 기록: {r.latestRecordDate ? r.latestRecordDate : '없음'}
                 </span>
               </div>
@@ -43,7 +43,7 @@ export default async function Home() {
                     작성 완료
                   </span>
                 ) : (
-                  <span className="text-sm font-bold tracking-widest text-surface-500 px-5 py-2.5 rounded-xl bg-surface-100 border border-surface-200">
+                  <span className="text-sm font-bold tracking-widest text-surface-600 px-5 py-2.5 rounded-xl bg-surface-100 border border-surface-300">
                     미작성
                   </span>
                 )}
