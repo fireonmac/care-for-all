@@ -65,7 +65,13 @@ export default async function Home() {
                   const isFuture = d.dateStr > todayStr;
                   return (
                     <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${isFuture ? 'opacity-30' : ''}`}>
-                      <span className={`text-[11px] font-medium tracking-widest ${d.dateStr === todayStr ? 'text-black font-bold' : 'text-surface-400'}`}>
+                      <span className={`text-[11px] tracking-widest ${
+                        d.dateStr === todayStr 
+                          ? 'text-black font-semibold' 
+                          : d.dayName === '일' 
+                            ? 'text-surface-400 font-medium' 
+                            : 'text-black font-medium'
+                      }`}>
                         {d.dayName}
                       </span>
                       <div className="h-4 flex items-center justify-center">
