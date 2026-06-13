@@ -3,21 +3,26 @@
 import { useState } from 'react';
 import { updateDailyRecord, deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Pencil, Trash2 } from 'lucide-react';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
   const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedCog, setCopiedCog] = useState(false);
+  const [copiedBeh, setCopiedBeh] = useState(false);
   const router = useRouter();
 
-  const handleCopy = () => {
-    const text = `[인지 영역]\n${record.cognitionContent}\n\n[행동 영역]\n${record.behaviorContent}`;
+  const handleCopy = (text: string, type: 'cog' | 'beh') => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (type === 'cog') {
+      setCopiedCog(true);
+      setTimeout(() => setCopiedCog(false), 2000);
+    } else {
+      setCopiedBeh(true);
+      setTimeout(() => setCopiedBeh(false), 2000);
+    }
   };
 
   const handleSave = async () => {
@@ -91,36 +96,49 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
         <h2 className="text-3xl font-medium text-black tracking-tight">상세 기록</h2>
         <div className="flex gap-8 items-center">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-2 text-base font-medium tracking-widest text-surface-500 hover:text-black"
-          >
-            {copied ? <Check size={18} /> : <Copy size={18} />}
-            <span>복사</span>
-          </button>
           <button 
             onClick={() => setIsEditing(true)} 
-            className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
+            className="flex items-center gap-2 text-base font-medium tracking-widest text-surface-500 hover:text-black"
           >
-            수정
+            <Pencil size={18} />
+            <span>수정</span>
           </button>
           <button 
             onClick={handleDelete} 
             disabled={saving}
-            className="text-base font-medium tracking-widest text-surface-500 hover:text-status-danger"
+            className="flex items-center gap-2 text-base font-medium tracking-widest text-surface-500 hover:text-status-danger"
           >
-            삭제
+            <Trash2 size={18} />
+            <span>삭제</span>
           </button>
         </div>
       </div>
 
       <div className="flex flex-col gap-24">
         <div>
-          <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-base font-medium text-black tracking-widest">인지 영역</h3>
+            <button
+              onClick={() => handleCopy(record.cognitionContent, 'cog')}
+              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-400 hover:text-black"
+            >
+              {copiedCog ? <Check size={16} /> : <Copy size={16} />}
+              <span>복사</span>
+            </button>
+          </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.cognitionContent}</p>
         </div>
         <div>
-          <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-base font-medium text-black tracking-widest">행동 영역</h3>
+            <button
+              onClick={() => handleCopy(record.behaviorContent, 'beh')}
+              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-400 hover:text-black"
+            >
+              {copiedBeh ? <Check size={16} /> : <Copy size={16} />}
+              <span>복사</span>
+            </button>
+          </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.behaviorContent}</p>
         </div>
       </div>

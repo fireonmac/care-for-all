@@ -57,7 +57,7 @@ export default async function RecipientDetailPage({
   return (
     <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-12">
           <Link 
             href="/"
             className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
