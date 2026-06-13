@@ -21,15 +21,16 @@ export function RecipientList({
   const [loading, setLoading] = useState(false);
   
   const [isTyping, setIsTyping] = useState(false);
-  const isFirstRender = useRef(true);
+  const prevSearchQuery = useRef(searchQuery);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // 검색어 변경 시 데이터 리로드
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (prevSearchQuery.current === searchQuery) {
       return;
     }
+    prevSearchQuery.current = searchQuery;
+    
     setIsTyping(true);
     const timer = setTimeout(async () => {
       const res = await getRecipientsWithStats(searchQuery, null, 10);
@@ -107,7 +108,7 @@ export function RecipientList({
                   {r.name} <span className="text-2xl font-normal ml-1 text-surface-700">어르신</span>
                 </span>
                 <span className="text-surface-500 font-normal text-base tracking-wide">
-                  최근 기록: {r.latestRecordDate ? r.latestRecordDate : '없음'}
+                  최근 작성일: {r.latestRecordDate ? r.latestRecordDate : '-'}
                 </span>
               </div>
               <div className="self-start sm:self-auto mt-4 sm:mt-0 flex gap-4">
