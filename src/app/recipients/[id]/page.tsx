@@ -55,16 +55,16 @@ export default async function RecipientDetailPage({
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
-    <main className="max-w-5xl mx-auto px-6 sm:px-8 py-16 min-h-screen flex flex-col">
+    <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-6 mb-16 gap-6">
         <div className="flex flex-col gap-2">
           <Link 
             href="/"
-            className="text-base font-bold tracking-widest text-surface-500 hover:text-black mb-4"
+            className="text-base font-medium tracking-widest text-surface-500 hover:text-black mb-4"
           >
             ← 목록으로 돌아가기
           </Link>
-          <h1 className="text-4xl font-extrabold text-black tracking-tight">
+          <h1 className="text-4xl font-medium text-black tracking-tight">
             {recipient.name}
           </h1>
         </div>
@@ -75,7 +75,7 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <h2 className="text-base font-bold tracking-widest text-surface-600 mb-10 border-l-4 border-black pl-4">이번 주 기록 요약</h2>
+        <h2 className="text-base font-medium tracking-widest text-surface-600 mb-10 border-l-4 border-black pl-4">이번 주 기록 요약</h2>
         
         <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {
@@ -87,9 +87,9 @@ export default async function RecipientDetailPage({
               <Link
                 key={dateStr}
                 href={`/recipients/${recipient.id}?date=${dateStr}`}
-                className={`flex flex-col items-center justify-center py-6 rounded-2xl transition-all gap-4 ${isSelected ? 'bg-surface-100 ring-1 ring-surface-300' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
+                className={`flex flex-col items-center justify-center py-6 rounded-2xl gap-4 ${isSelected ? 'bg-surface-100 ring-1 ring-surface-300' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
-                <span className={`text-sm font-bold tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
+                <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
                   {dayName}
                 </span>
                 <span className={`text-4xl font-light ${isSelected ? 'text-black font-semibold' : 'text-surface-600'}`}>

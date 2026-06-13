@@ -47,15 +47,15 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
     }}>
       <button
         onClick={handleGenerate}
-        className="px-4 py-2 bg-surface-800 text-white text-sm font-bold rounded-md hover:bg-surface-900 transition-colors shadow-sm hover:shadow-md"
+        className="px-6 py-3 bg-black text-white text-base font-medium rounded-xl hover:bg-surface-800 tracking-widest"
       >
         주간 리포트 발간
       </button>
       
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-2xl w-[90vw] max-w-2xl shadow-2xl z-50 outline-none flex flex-col max-h-[85vh]">
-          <Dialog.Title className="text-2xl font-bold text-foreground mb-4 tracking-tight">
+        <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
+        <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-2xl w-[90vw] max-w-2xl shadow-2xl z-50 outline-none flex flex-col max-h-[85vh]">
+          <Dialog.Title className="text-2xl font-medium text-black mb-8 tracking-tight">
             주간 요양보호기록 종합
           </Dialog.Title>
           
@@ -67,24 +67,24 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
               </div>
             ) : report !== null ? (
               <textarea
-                className="w-full h-64 bg-surface-50 border border-surface-200 rounded-xl p-6 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none transition-all text-surface-900 text-base leading-relaxed shadow-inner"
+                className="w-full h-64 bg-surface-50 border border-surface-200 rounded-xl p-8 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
             ) : null}
           </div>
 
-          <div className="flex justify-end gap-3 shrink-0">
-            <Dialog.Close className="px-6 py-3 text-surface-600 font-medium rounded-lg hover:bg-surface-100 transition-colors">
+          <div className="flex justify-end gap-6 pt-4 shrink-0 border-t border-surface-200">
+            <Dialog.Close className="text-base font-medium tracking-widest text-surface-500 hover:text-black">
               닫기
             </Dialog.Close>
             {!loading && report !== null && (
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-8 py-3 bg-primary-500 text-white font-bold rounded-lg hover:bg-primary-600 transition-colors shadow-sm disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
+                className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-50"
               >
-                {saving ? '저장 중...' : '최종 저장하기'}
+                {saving ? '저장 중...' : '최종 저장'}
               </button>
             )}
           </div>

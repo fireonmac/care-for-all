@@ -29,12 +29,14 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
   if (isEditing) {
     return (
-      <div className="animate-in fade-in duration-500">
-        <h2 className="text-3xl font-extrabold text-black mb-12 tracking-tight">기록 수정</h2>
+      <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6">
+          <h2 className="text-3xl font-medium text-black tracking-tight">기록 수정</h2>
+        </div>
         
         <div className="flex flex-col gap-16 mb-16">
           <div className="flex flex-col">
-            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
+            <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
             <textarea
               className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={cognition}
@@ -43,7 +45,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
           </div>
           
           <div className="flex flex-col">
-            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
+            <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
             <textarea
               className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={behavior}
@@ -59,14 +61,14 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
               setCognition(record.cognitionContent || '');
               setBehavior(record.behaviorContent || '');
             }}
-            className="text-base font-bold tracking-widest text-surface-500 hover:text-black transition-colors"
+            className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
           >
             취소
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-10 py-4 bg-black text-white text-base font-bold tracking-widest rounded-xl hover:bg-surface-800 transition-colors disabled:opacity-50"
+            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-50"
           >
             {saving ? '저장 중...' : '저장하기'}
           </button>
@@ -76,20 +78,20 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
   }
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6">
-        <h2 className="text-3xl font-extrabold text-black tracking-tight">상세 기록</h2>
+        <h2 className="text-3xl font-medium text-black tracking-tight">상세 기록</h2>
         <div className="flex gap-6">
           <button 
             onClick={() => setIsEditing(true)} 
-            className="text-base font-bold tracking-widest text-surface-500 hover:text-black transition-colors"
+            className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
           >
             수정
           </button>
           <button 
             onClick={handleDelete} 
             disabled={saving}
-            className="text-base font-bold tracking-widest text-surface-500 hover:text-status-danger transition-colors"
+            className="text-base font-medium tracking-widest text-surface-500 hover:text-status-danger"
           >
             삭제
           </button>
@@ -98,11 +100,11 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
       <div className="flex flex-col gap-16">
         <div>
-          <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
+          <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.cognitionContent}</p>
         </div>
         <div>
-          <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
+          <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.behaviorContent}</p>
         </div>
       </div>
