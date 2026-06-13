@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { updateDailyRecord } from '../actions';
 import { useRouter } from 'next/navigation';
+import { BackButton } from '@/components/BackButton';
 
 export function RecordEditForm({ record, recipientId, recipientName, date }: { record: any, recipientId: string, recipientName: string, date: string }) {
   const [cognition, setCognition] = useState(record.cognitionContent || '');
@@ -24,17 +25,10 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
-      <div className="mb-12">
-        <button 
-          onClick={() => router.push(`/recipients/${recipientId}?date=${date}`)}
-          className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
-        >
-          ← 상세 페이지로 돌아가기
-        </button>
-      </div>
+      <BackButton href={`/recipients/${recipientId}?date=${date}`} label="상세 페이지로 돌아가기" />
 
       <header className="flex flex-col border-b-2 border-black pb-8 mb-20 gap-2">
-        <span className="text-xl font-normal text-surface-500 tracking-widest">{recipientName} 어르신</span>
+        <span className="text-xl font-normal text-black tracking-widest">{recipientName} 어르신</span>
         <h1 className="text-4xl font-medium text-black tracking-tight">
           {formattedDate} 일지 수정
         </h1>

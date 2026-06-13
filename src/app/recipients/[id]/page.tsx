@@ -3,6 +3,7 @@ import { KeywordInputForm } from './KeywordInputForm';
 import { WeeklyReportForm } from './WeeklyReportForm';
 import { TodayRecordView } from './TodayRecordView';
 import { WeekSelector } from '@/components/WeekSelector';
+import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
@@ -37,14 +38,7 @@ export default async function RecipientDetailPage({
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
-      <div className="mb-12">
-        <Link 
-          href="/"
-          className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
-        >
-          ← 목록으로 돌아가기
-        </Link>
-      </div>
+      <BackButton href="/" label="목록으로 돌아가기" />
 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
         <h1 className="text-4xl font-medium text-black tracking-tight">

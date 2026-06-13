@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import Link from 'next/link';
 
 export default function RootLayout({
   children,
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col tracking-tight bg-white text-black">
         <header className="fixed top-0 w-full border-b border-surface-200 bg-white/80 backdrop-blur-md z-50">
           <div className="max-w-5xl mx-auto px-6 sm:px-12 h-16 flex items-center">
-            <span className="text-black font-semibold tracking-tight text-lg">스마트 요양일지</span>
+            <Link href="/" className="text-black font-semibold tracking-tight text-lg hover:opacity-70 transition-opacity">
+              스마트 요양일지
+            </Link>
           </div>
         </header>
         <div className="flex-1 mt-16">

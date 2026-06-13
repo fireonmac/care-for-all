@@ -14,7 +14,7 @@ export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate, sta
       isInitialMount.current = false;
       return;
     }
-    document.getElementById('week-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('week-view')?.scrollIntoView({ behavior: 'auto', block: 'start' });
   }, [targetDate]);
 
   const handlePrev = () => {
