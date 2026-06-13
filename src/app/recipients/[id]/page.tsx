@@ -56,7 +56,7 @@ export default async function RecipientDetailPage({
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
-    <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+    <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <div className="mb-12">
         <Link 
           href="/"
@@ -89,7 +89,7 @@ export default async function RecipientDetailPage({
               <Link
                 key={dateStr}
                 href={`/recipients/${recipient.id}?date=${dateStr}`}
-                className={`flex flex-col items-center justify-center py-6 rounded-xl gap-4 transition-colors ${isSelected ? 'bg-white ring-1 ring-surface-200 shadow-sm' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
+                className={`flex flex-col items-center justify-center py-6 rounded-xl gap-4 transition-colors ${isSelected ? 'bg-surface-100' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
                   {dayName}

@@ -19,7 +19,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
   };
 
   return (
-    <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+    <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <div className="mb-12">
         <button 
           onClick={() => router.push(`/recipients/${recipientId}?date=${date}`)}

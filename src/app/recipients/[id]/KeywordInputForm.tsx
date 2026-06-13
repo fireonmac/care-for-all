@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateDraft, saveDailyRecord } from './actions';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +10,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [targetDate]);
   
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +100,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       
       <form onSubmit={handleGenerate} className="flex flex-col">
         <textarea
-          autoFocus
+          ref={textareaRef}
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           placeholder="여기에 핵심 단어를 입력하세요..."
