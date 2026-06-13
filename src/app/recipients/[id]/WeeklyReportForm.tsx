@@ -47,14 +47,14 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
     }}>
       <button
         onClick={handleGenerate}
-        className="px-5 py-2.5 bg-white border border-surface-300 text-surface-700 text-sm font-medium rounded-xl hover:bg-surface-50 hover:border-black hover:text-black tracking-widest transition-colors"
+        className="px-5 py-2.5 bg-white border border-surface-300 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-50 hover:border-black hover:text-black tracking-widest transition-colors"
       >
         주간 리포트 발간
       </button>
       
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-2xl w-[90vw] max-w-2xl shadow-2xl z-50 outline-none flex flex-col max-h-[85vh]">
+        <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-xl w-[90vw] max-w-2xl shadow-2xl z-50 outline-none flex flex-col max-h-[85vh]">
           <Dialog.Title className="text-2xl font-medium text-black mb-8 tracking-tight">
             주간 요양보호기록 종합
           </Dialog.Title>
@@ -67,7 +67,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
               </div>
             ) : report !== null ? (
               <textarea
-                className="w-full h-64 bg-surface-100 border border-surface-200 rounded-xl p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
+                className="w-full h-64 bg-surface-100 border border-surface-200 rounded-lg p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
@@ -82,7 +82,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-50"
+                className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-50"
               >
                 {saving ? '저장 중...' : '최종 저장'}
               </button>

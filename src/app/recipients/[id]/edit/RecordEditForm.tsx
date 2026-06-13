@@ -19,7 +19,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
   };
 
   return (
-    <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+    <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
       <div className="mb-12">
         <button 
           onClick={() => router.push(`/recipients/${recipientId}?date=${date}`)}
@@ -39,7 +39,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
         <div className="flex flex-col">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
           <textarea
-            className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={cognition}
             onChange={(e) => setCognition(e.target.value)}
           />
@@ -48,7 +48,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
         <div className="flex flex-col">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
           <textarea
-            className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={behavior}
             onChange={(e) => setBehavior(e.target.value)}
           />
@@ -65,7 +65,7 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-50"
+          className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-50"
         >
           {saving ? '저장 중...' : '저장하기'}
         </button>

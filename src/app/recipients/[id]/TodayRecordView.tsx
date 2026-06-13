@@ -39,20 +39,20 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         <div className="flex gap-4 items-center">
           <button 
             onClick={() => router.push(`/recipients/${recipientId}/edit?date=${record.date}`)} 
-            className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-4 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-4 py-2 rounded-lg transition-colors"
           >
             <Pencil size={16} />
             <span>수정</span>
           </button>
           
           <Dialog.Root open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-            <Dialog.Trigger className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-4 py-2 rounded-xl transition-colors cursor-pointer">
+            <Dialog.Trigger className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-4 py-2 rounded-lg transition-colors cursor-pointer">
               <Trash2 size={16} />
               <span>삭제</span>
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" />
-              <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-2xl w-[90vw] max-w-md shadow-2xl z-50 outline-none flex flex-col">
+              <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-xl w-[90vw] max-w-md shadow-2xl z-50 outline-none flex flex-col">
                 <Dialog.Title className="text-xl font-medium text-black mb-4 tracking-tight">
                   기록 삭제
                 </Dialog.Title>
@@ -66,7 +66,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
                   <button
                     onClick={handleDelete}
                     disabled={saving}
-                    className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-xl hover:bg-status-danger/90 disabled:opacity-50"
+                    className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
                   >
                     {saving ? '삭제 중...' : '삭제하기'}
                   </button>
@@ -90,7 +90,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
               {copiedCog ? <Check size={18} /> : <Copy size={18} />}
             </button>
           </div>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-xl">{record.cognitionContent}</p>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.cognitionContent}</p>
         </div>
         <div>
           <div className="flex items-center gap-3 mb-6">
@@ -103,7 +103,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
               {copiedBeh ? <Check size={18} /> : <Copy size={18} />}
             </button>
           </div>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-xl">{record.behaviorContent}</p>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.behaviorContent}</p>
         </div>
       </div>
     </div>

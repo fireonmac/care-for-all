@@ -45,7 +45,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           <div className="flex flex-col">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.cognition}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
             />
@@ -54,7 +54,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           <div className="flex flex-col">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.behavior}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
             />
@@ -71,7 +71,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-50"
+            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-50"
           >
             {saving ? '저장 중...' : '최종 저장'}
           </button>
@@ -92,16 +92,17 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       
       <form onSubmit={handleGenerate} className="flex flex-col">
         <textarea
+          autoFocus
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           placeholder="여기에 핵심 단어를 입력하세요..."
-          className="w-full min-h-[300px] bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
+          className="w-full min-h-[300px] bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
         />
         <div className="flex justify-end mt-12">
           <button
             type="submit"
             disabled={loading || !keywords.trim()}
-            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-xl hover:bg-surface-800 disabled:opacity-30"
+            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-30"
           >
             {loading ? '생성 중...' : '기록 초안 생성'}
           </button>

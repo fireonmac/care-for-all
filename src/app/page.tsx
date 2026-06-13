@@ -39,11 +39,11 @@ export default async function Home() {
               </div>
               <div className="self-start sm:self-auto mt-2 sm:mt-0">
                 {r.hasTodayRecord ? (
-                  <span className="text-sm font-medium tracking-widest text-status-success px-5 py-2.5 rounded-xl bg-status-success/10 border border-status-success/20">
+                  <span className="text-sm font-medium tracking-widest text-status-success px-5 py-2.5 rounded-lg bg-status-success/10 border border-status-success/20">
                     작성 완료
                   </span>
                 ) : (
-                  <span className="text-sm font-medium tracking-widest text-surface-500 px-5 py-2.5 rounded-xl bg-surface-100 border border-surface-200">
+                  <span className="text-sm font-medium tracking-widest text-surface-500 px-5 py-2.5 rounded-lg bg-surface-100 border border-surface-200">
                     미작성
                   </span>
                 )}
