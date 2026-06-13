@@ -9,7 +9,6 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
   const [isEditing, setIsEditing] = useState(false);
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
-  const [behavior, setBehavior] = useState(record.behaviorContent || '');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
@@ -38,7 +37,6 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
   };
 
   if (isEditing) {
-    return (
     return (
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
