@@ -56,7 +56,7 @@ export default async function RecipientDetailPage({
 
   return (
     <main className="max-w-5xl mx-auto px-6 sm:px-8 py-16 min-h-screen flex flex-col">
-      <header className="flex justify-between items-end border-b-2 border-black pb-6 mb-16">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-6 mb-16 gap-6">
         <div className="flex flex-col gap-2">
           <Link 
             href="/"
@@ -68,7 +68,9 @@ export default async function RecipientDetailPage({
             {recipient.name}
           </h1>
         </div>
-        <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} />
+        <div className="self-start sm:self-auto">
+          <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} />
+        </div>
       </header>
 
       {/* 상단: 구조적이고 미니멀한 주간 뷰 */}

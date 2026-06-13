@@ -77,7 +77,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="flex justify-between items-end mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6">
         <h2 className="text-3xl font-extrabold text-black tracking-tight">상세 기록</h2>
         <div className="flex gap-6">
           <button 

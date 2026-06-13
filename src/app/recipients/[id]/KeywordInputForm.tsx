@@ -80,7 +80,9 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
 
   return (
     <div className="animate-in fade-in duration-500">
-      <h2 className="text-3xl font-extrabold text-black mb-4 tracking-tight">관찰 키워드 입력</h2>
+      <div className="mb-8">
+        <h2 className="text-3xl font-extrabold text-black tracking-tight">관찰 키워드 입력</h2>
+      </div>
       <p className="text-surface-400 mb-12 text-lg font-light leading-relaxed">
         핵심 단어나 짧은 문장만 작성해주세요.<br />
         나머지는 시스템이 전문적인 형식으로 완성합니다.
