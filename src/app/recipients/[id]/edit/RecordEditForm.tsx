@@ -28,9 +28,9 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
       <BackButton href={`/recipients/${recipientId}?date=${date}`} label="상세 페이지로 돌아가기" />
 
       <header className="flex flex-col border-b-2 border-black pb-8 mb-20 gap-2">
-        <span className="text-xl font-normal text-black tracking-widest">{recipientName} 어르신</span>
+        <span className="text-xl font-normal text-surface-600 tracking-widest">{formattedDate}</span>
         <h1 className="text-4xl font-medium text-black tracking-tight">
-          {formattedDate} 일지 수정
+          {recipientName} 어르신 일지 수정
         </h1>
       </header>
       
