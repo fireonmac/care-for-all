@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Copy, Check, Pencil, Trash2 } from 'lucide-react';
-import { Dialog } from '@base-ui/react/Dialog';
+import { Dialog } from '@base-ui/react';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [saving, setSaving] = useState(false);
