@@ -52,7 +52,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
           <div className="flex flex-col">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-50 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={cognition}
               onChange={(e) => setCognition(e.target.value)}
             />
@@ -61,7 +61,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
           <div className="flex flex-col">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-50 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={behavior}
               onChange={(e) => setBehavior(e.target.value)}
             />
@@ -120,26 +120,26 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
             <h3 className="text-base font-medium text-black tracking-widest">인지 영역</h3>
             <button
               onClick={() => handleCopy(record.cognitionContent, 'cog')}
-              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-400 hover:text-black"
+              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-600 hover:text-black bg-white border border-surface-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-black transition-colors"
             >
               {copiedCog ? <Check size={16} /> : <Copy size={16} />}
               <span>복사</span>
             </button>
           </div>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.cognitionContent}</p>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-xl">{record.cognitionContent}</p>
         </div>
         <div>
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-base font-medium text-black tracking-widest">행동 영역</h3>
             <button
               onClick={() => handleCopy(record.behaviorContent, 'beh')}
-              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-400 hover:text-black"
+              className="flex items-center gap-2 text-sm font-medium tracking-widest text-surface-600 hover:text-black bg-white border border-surface-200 px-3 py-1.5 rounded-lg shadow-sm hover:border-black transition-colors"
             >
               {copiedBeh ? <Check size={16} /> : <Copy size={16} />}
               <span>복사</span>
             </button>
           </div>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.behaviorContent}</p>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-xl">{record.behaviorContent}</p>
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" as="style" crossOrigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
       </head>
-      <body className="min-h-full flex flex-col tracking-tight">{children}</body>
+      <body className="min-h-full flex flex-col tracking-tight bg-white text-black">{children}</body>
     </html>
   );
 }

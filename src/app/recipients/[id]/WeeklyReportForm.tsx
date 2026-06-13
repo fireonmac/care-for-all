@@ -47,7 +47,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
     }}>
       <button
         onClick={handleGenerate}
-        className="px-5 py-2.5 bg-white border border-surface-300 text-surface-700 text-sm font-medium rounded-xl hover:bg-surface-50 tracking-widest shadow-sm"
+        className="px-5 py-2.5 bg-white border border-surface-300 text-surface-700 text-sm font-medium rounded-xl hover:bg-surface-50 hover:border-black hover:text-black tracking-widest transition-colors shadow-sm"
       >
         주간 리포트 발간
       </button>
@@ -67,7 +67,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
               </div>
             ) : report !== null ? (
               <textarea
-                className="w-full h-64 bg-surface-50 border border-surface-200 rounded-xl p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
+                className="w-full h-64 bg-surface-100 border border-surface-200 rounded-xl p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />

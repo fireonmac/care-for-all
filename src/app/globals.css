@@ -37,6 +37,7 @@
 :root {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  color-scheme: light;
 }
 
 body {

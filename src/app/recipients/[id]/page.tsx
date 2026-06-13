@@ -56,18 +56,19 @@ export default async function RecipientDetailPage({
 
   return (
     <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+      <div className="mb-12">
+        <Link 
+          href="/"
+          className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
+        >
+          ← 목록으로 돌아가기
+        </Link>
+      </div>
+
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
-        <div className="flex flex-col gap-12">
-          <Link 
-            href="/"
-            className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
-          >
-            ← 목록으로 돌아가기
-          </Link>
-          <h1 className="text-4xl font-medium text-black tracking-tight">
-            {recipient.name}
-          </h1>
-        </div>
+        <h1 className="text-4xl font-medium text-black tracking-tight">
+          {recipient.name}
+        </h1>
         <div className="self-start sm:self-auto">
           <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} />
         </div>
@@ -87,7 +88,7 @@ export default async function RecipientDetailPage({
               <Link
                 key={dateStr}
                 href={`/recipients/${recipient.id}?date=${dateStr}`}
-                className={`flex flex-col items-center justify-center py-6 rounded-2xl gap-4 ${isSelected ? 'bg-surface-100 ring-1 ring-surface-300' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
+                className={`flex flex-col items-center justify-center py-6 rounded-2xl gap-4 ${isSelected ? 'bg-surface-200 ring-1 ring-surface-400' : 'hover:bg-surface-100'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
                   {dayName}
@@ -99,7 +100,7 @@ export default async function RecipientDetailPage({
                 {/* 인디케이터 */}
                 <div className="flex h-2 items-center justify-center mt-2">
                   {record ? (
-                    <div className="w-2 h-2 rounded-full bg-surface-300"></div>
+                    <div className="w-2 h-2 rounded-full bg-status-success"></div>
                   ) : isSelected ? (
                     <div className="w-2 h-2 rounded-full bg-black"></div>
                   ) : !isFuture && isToday ? (
