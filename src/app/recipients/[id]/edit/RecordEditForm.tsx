@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { updateDailyRecord } from '../actions';
 import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/BackButton';
+import { Textarea } from '@/components/Textarea';
 
 export function RecordEditForm({ record, recipientId, recipientName, date }: { record: any, recipientId: string, recipientName: string, date: string }) {
   const [cognition, setCognition] = useState(record.cognitionContent || '');
@@ -37,8 +38,8 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
       <div className="flex flex-col gap-16 mb-16">
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
-          <textarea
-            className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+          <Textarea
+            className="text-xl pb-12 min-h-[200px]"
             value={cognition}
             maxLength={1000}
             onChange={(e) => setCognition(e.target.value)}
@@ -50,8 +51,8 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
         
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
-          <textarea
-            className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+          <Textarea
+            className="text-xl pb-12 min-h-[200px]"
             value={behavior}
             maxLength={1000}
             onChange={(e) => setBehavior(e.target.value)}

@@ -1,25 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { generateDraft, saveDailyRecord } from './actions';
 import { useRouter } from 'next/navigation';
+import { Textarea } from '@/components/Textarea';
 
-export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
+export function KeywordInputForm({ recipientId, targetDate, recipientName }: { recipientId: string, targetDate: string, recipientName: string }) {
   const [keywords, setKeywords] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
   const router = useRouter();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const todayStr = new Date().toISOString().split('T')[0];
   const isFuture = targetDate > todayStr;
-
-  useEffect(() => {
-    if (textareaRef.current && window.location.hash === '#week-view') {
-      textareaRef.current.focus({ preventScroll: true });
-    }
-  }, [targetDate]);
+  
+  const [year, month, day] = targetDate.split('-');
   
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +50,8 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <div className="flex flex-col gap-16 mb-16">
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
-            <textarea
-              className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            <Textarea
+              className="text-xl pb-12 min-h-[200px]"
               value={draft.cognition}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
@@ -67,8 +63,8 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
-            <textarea
-              className="w-full bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            <Textarea
+              className="text-xl pb-12 min-h-[200px]"
               value={draft.behavior}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
@@ -101,23 +97,25 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-medium text-black tracking-tight">관찰 키워드 입력</h2>
+        <h2 className="text-3xl font-medium text-black tracking-tight mb-4">관찰 키워드 입력</h2>
+        <p className="text-2xl font-normal text-black mb-12">
+          {parseInt(month)}월 {parseInt(day)}일의 {recipientName} 어르신에 대해 알려주세요.
+        </p>
       </div>
-      <p className="text-surface-600 mb-12 text-lg font-medium leading-relaxed">
+      <p className="text-surface-600 mb-6 text-lg font-medium leading-relaxed">
         핵심 단어나 짧은 문장만 작성해주세요.<br />
         나머지는 시스템이 전문적인 형식으로 완성합니다.
       </p>
       
       <form onSubmit={handleGenerate} className="flex flex-col">
         <div className="relative w-full">
-          <textarea
-            ref={textareaRef}
+          <Textarea
             value={keywords}
             maxLength={1000}
             onChange={(e) => setKeywords(e.target.value)}
             disabled={isFuture}
             placeholder={isFuture ? "미래 날짜의 기록은 아직 작성할 수 없습니다." : "여기에 핵심 단어를 입력하세요..."}
-            className="w-full min-h-[300px] bg-white border border-surface-500 hover:border-black transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent resize-none text-black text-2xl font-light placeholder:text-surface-600 leading-[1.8] disabled:opacity-50 disabled:bg-surface-50 disabled:hover:border-surface-500"
+            className="text-2xl pb-12 min-h-[300px]"
           />
           <span className="absolute bottom-6 right-6 text-base text-surface-500 font-light tracking-widest">
             {keywords.length}/1000

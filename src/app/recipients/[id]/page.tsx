@@ -93,7 +93,7 @@ export default async function RecipientDetailPage({
       {/* 하단: 컨텐츠 영역 */}
       <section className="flex-1 w-full mx-auto">
         {!hasTargetRecord ? (
-          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
+          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} recipientName={recipient.name} />
         ) : (
           <TodayRecordView record={targetRecord} recipientId={recipient.id} />
         )}

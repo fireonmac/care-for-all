@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { generateWeeklyDraft, saveWeeklyReport } from './actions';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
+import { Textarea } from '@/components/Textarea';
 
 export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientId: string, dailyRecordCount: number }) {
   const [open, setOpen] = useState(false);
@@ -81,8 +82,8 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
             <p className="font-medium">기록을 종합하여 작성 중입니다...</p>
           </div>
         ) : report !== null ? (
-          <textarea
-            className="w-full h-64 bg-surface-100 border border-surface-200 rounded-lg p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
+          <Textarea
+            className="text-lg h-64 shadow-inner"
             value={report}
             onChange={(e) => setReport(e.target.value)}
           />
