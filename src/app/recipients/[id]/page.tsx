@@ -105,7 +105,7 @@ export default async function RecipientDetailPage({
                   ) : !isFuture ? (
                     <div className="w-2 h-2 rounded-full bg-status-danger"></div>
                   ) : (
-                    <div className="w-2 h-2 rounded-full bg-surface-300"></div>
+                    <div className="w-2 h-2 rounded-full bg-surface-500"></div>
                   )}
                 </div>
               </Link>

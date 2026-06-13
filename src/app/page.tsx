@@ -80,7 +80,7 @@ export default async function Home() {
                         ) : !isFuture ? (
                           <div className="w-1.5 h-1.5 rounded-full bg-status-danger"></div>
                         ) : (
-                          <div className="w-1.5 h-1.5 rounded-full bg-surface-300"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-surface-500"></div>
                         )}
                       </div>
                     </div>
