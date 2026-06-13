@@ -4,7 +4,7 @@ interface FormatResult {
 }
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.6:27b';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma4:26b:27b';
 const GENERATION_TIMEOUT_MS = 20_000;
 
 export async function formatKeywordsWithAI(keywords: string): Promise<FormatResult> {
