@@ -69,7 +69,7 @@ export default async function Home() {
                         d.dateStr === todayStr 
                           ? 'text-black font-semibold' 
                           : d.dayName === '일' 
-                            ? 'text-surface-400 font-medium' 
+                            ? 'text-surface-500 font-medium' 
                             : 'text-black font-medium'
                       }`}>
                         {d.dayName}
