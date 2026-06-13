@@ -102,13 +102,11 @@ export default async function RecipientDetailPage({
                 <div className="flex h-2 items-center justify-center mt-2 relative">
                   {record ? (
                     <Check size={16} strokeWidth={3} className="text-status-success absolute" />
-                  ) : isSelected ? (
-                    <div className="w-2 h-2 rounded-full bg-black"></div>
-                  ) : !isFuture && isToday ? (
-                    <div className="w-2 h-2 rounded-full bg-status-danger"></div>
                   ) : !isFuture ? (
-                    <div className="w-2 h-2 rounded-full bg-status-danger opacity-50"></div>
-                  ) : null}
+                    <div className="w-2 h-2 rounded-full bg-status-danger"></div>
+                  ) : (
+                    <div className="w-2 h-2 rounded-full bg-surface-300"></div>
+                  )}
                 </div>
               </Link>
             );

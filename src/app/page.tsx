@@ -69,7 +69,7 @@ export default async function Home() {
                         d.dateStr === todayStr 
                           ? 'text-black font-semibold' 
                           : d.dayName === '일' 
-                            ? 'text-surface-500 font-medium' 
+                            ? 'text-surface-700 font-medium' 
                             : 'text-black font-medium'
                       }`}>
                         {d.dayName}
@@ -77,6 +77,8 @@ export default async function Home() {
                       <div className="h-4 flex items-center justify-center">
                         {hasRecord ? (
                           <Check size={14} strokeWidth={4} className="text-status-success" />
+                        ) : !isFuture ? (
+                          <div className="w-1.5 h-1.5 rounded-full bg-status-danger"></div>
                         ) : (
                           <div className="w-1.5 h-1.5 rounded-full bg-surface-300"></div>
                         )}
