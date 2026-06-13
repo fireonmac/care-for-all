@@ -39,7 +39,7 @@ export function AddRecipientForm() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="이름을 입력하세요"
-                className="w-full bg-surface-50 border border-surface-200 p-4 rounded-xl focus:ring-1 focus:border-primary-500 text-black text-xl font-light placeholder:text-surface-300 shadow-inner"
+                className="w-full bg-surface-50 border border-surface-200 p-4 rounded-xl focus:ring-1 focus:border-black text-black text-xl font-light placeholder:text-surface-500 shadow-inner"
                 required
               />
             </div>

@@ -95,7 +95,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
           placeholder="여기에 핵심 단어를 입력하세요..."
-          className="w-full min-h-[300px] bg-surface-50 rounded-xl p-10 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-400 leading-[1.8]"
+          className="w-full min-h-[300px] bg-surface-50 rounded-xl p-10 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
         />
         <div className="flex justify-end mt-12">
           <button

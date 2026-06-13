@@ -55,7 +55,7 @@ export default async function RecipientDetailPage({
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
-    <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+    <main className="max-w-6xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-6 mb-16 gap-6">
         <div className="flex flex-col gap-2">
           <Link 

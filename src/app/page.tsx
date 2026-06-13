@@ -6,7 +6,7 @@ export default async function Home() {
   const recipients = await getRecipientsWithStats();
 
   return (
-    <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-24 min-h-screen">
+    <main className="max-w-6xl w-full mx-auto px-6 sm:px-12 py-24 min-h-screen">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-8 mb-16 gap-6">
         <h1 className="text-4xl font-medium text-black tracking-tight">
           어르신 목록
@@ -16,7 +16,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-6">
         {recipients.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-light mb-4 text-surface-900 tracking-tight">등록된 어르신이 없습니다.</p>
@@ -27,7 +27,7 @@ export default async function Home() {
             <Link 
               key={r.id} 
               href={`/recipients/${r.id}`}
-              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-10 border-b border-surface-200 hover:bg-surface-50 px-6 -mx-6 rounded-2xl gap-6"
+              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-8 px-10 bg-surface-50 hover:bg-surface-100 rounded-3xl gap-6"
             >
               <div className="flex flex-col gap-3">
                 <span className="text-3xl font-medium tracking-tight text-black">
