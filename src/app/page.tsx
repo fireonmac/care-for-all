@@ -72,7 +72,7 @@ export default async function Home() {
                         {hasRecord ? (
                           <Check size={14} strokeWidth={4} className="text-status-success" />
                         ) : (
-                          <div className="w-1.5 h-1.5 rounded-full bg-surface-200"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-surface-300"></div>
                         )}
                       </div>
                     </div>
