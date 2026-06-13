@@ -36,22 +36,30 @@ export function RecordEditForm({ record, recipientId, date }: { record: any, rec
       </header>
       
       <div className="flex flex-col gap-16 mb-16">
-        <div className="flex flex-col">
+        <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
           <textarea
-            className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={cognition}
+            maxLength={1000}
             onChange={(e) => setCognition(e.target.value)}
           />
+          <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+            {cognition.length}/1000
+          </span>
         </div>
         
-        <div className="flex flex-col">
+        <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
           <textarea
-            className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={behavior}
+            maxLength={1000}
             onChange={(e) => setBehavior(e.target.value)}
           />
+          <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+            {behavior.length}/1000
+          </span>
         </div>
       </div>
 

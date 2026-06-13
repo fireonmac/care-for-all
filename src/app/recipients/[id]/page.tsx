@@ -57,7 +57,7 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-6 justify-center">
           <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
         </div>
         

@@ -50,22 +50,30 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         </div>
         
         <div className="flex flex-col gap-16 mb-16">
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.cognition}
+              maxLength={1000}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
             />
+            <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+              {draft.cognition.length}/1000
+            </span>
           </div>
           
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-100 rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.behavior}
+              maxLength={1000}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
             />
+            <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+              {draft.behavior.length}/1000
+            </span>
           </div>
         </div>
 
@@ -99,13 +107,19 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       </p>
       
       <form onSubmit={handleGenerate} className="flex flex-col">
-        <textarea
-          ref={textareaRef}
-          value={keywords}
-          onChange={(e) => setKeywords(e.target.value)}
-          placeholder="여기에 핵심 단어를 입력하세요..."
-          className="w-full min-h-[300px] bg-surface-100 rounded-lg p-6 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
-        />
+        <div className="relative w-full">
+          <textarea
+            ref={textareaRef}
+            value={keywords}
+            maxLength={1000}
+            onChange={(e) => setKeywords(e.target.value)}
+            placeholder="여기에 핵심 단어를 입력하세요..."
+            className="w-full min-h-[300px] bg-surface-100 rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none resize-none text-black text-2xl font-light placeholder:text-surface-500 leading-[1.8]"
+          />
+          <span className="absolute bottom-6 right-6 text-base text-surface-400 font-light tracking-widest">
+            {keywords.length}/1000
+          </span>
+        </div>
         <div className="flex justify-end mt-12">
           <button
             type="submit"
