@@ -76,9 +76,9 @@ export function RecipientList({
       <div className="relative mb-12">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           {isTyping ? (
-            <Loader2 className="h-5 w-5 text-surface-400 animate-spin" />
+            <Loader2 className="h-5 w-5 text-surface-500 animate-spin" />
           ) : (
-            <Search className="h-5 w-5 text-surface-400" />
+            <Search className="h-5 w-5 text-surface-500" />
           )}
         </div>
         <input

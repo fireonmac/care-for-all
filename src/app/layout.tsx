@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "요양보호기록 관리",
+  title: "스마트 요양일지",
   description: "어르신 요양보호기록 자동 작성 시스템",
 };
 
@@ -22,8 +23,18 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col tracking-tight bg-white text-black">
         <header className="fixed top-0 w-full border-b border-surface-200 bg-white/80 backdrop-blur-md z-50">
           <div className="max-w-5xl mx-auto px-6 sm:px-12 h-16 flex items-center">
-            <Link href="/" className="text-black font-semibold tracking-tight text-lg hover:opacity-70 transition-opacity">
-              스마트 요양일지
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-black tracking-tight text-xl font-medium hover:opacity-70 transition-opacity"
+            >
+              <Image
+                src="/brand/smart-care-journal-mark.svg"
+                alt=""
+                width={36}
+                height={36}
+                priority
+              />
+              <span>스마트 요양일지</span>
             </Link>
           </div>
         </header>
