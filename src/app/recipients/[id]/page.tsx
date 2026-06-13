@@ -6,40 +6,7 @@ import { WeekSelector } from '@/components/WeekSelector';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
-function getWeekDates(todayStr: string, weekOffset: number) {
-  const today = new Date(todayStr);
-  today.setDate(today.getDate() + weekOffset * 7);
-
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(today.setDate(diff));
-  
-  const thursday = new Date(monday);
-  thursday.setDate(monday.getDate() + 3);
-  
-  const currentMonth = thursday.getMonth() + 1;
-  const firstDayOfMonth = new Date(thursday.getFullYear(), thursday.getMonth(), 1);
-  
-  let firstDayDow = firstDayOfMonth.getDay();
-  if (firstDayDow === 0) firstDayDow = 7;
-  
-  const date = thursday.getDate();
-  const currentWeekOfMonth = Math.ceil((date + firstDayDow - 1) / 7);
-  
-  const week = [];
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
-    week.push({
-      dateStr,
-      dayName: dayNames[d.getDay()],
-      isFuture: dateStr > todayStr,
-    });
-  }
-  return { week, currentMonth, currentWeekOfMonth };
-}
+import { getWeekData } from '@/lib/dateUtils';
 
 export default async function RecipientDetailPage({
   params,
@@ -61,9 +28,7 @@ export default async function RecipientDetailPage({
   const hasTargetRecord = !!targetRecord;
 
   const weekOffset = parseInt(resolvedSearch.week || '0', 10);
-  const { week: weekDates, currentMonth, currentWeekOfMonth } = getWeekDates(todayStr, weekOffset);
-  const startOfWeek = weekDates[0].dateStr;
-  const endOfWeek = weekDates[6].dateStr;
+  const { weekDates, currentMonth, currentWeekOfMonth, startOfWeek, endOfWeek } = getWeekData(weekOffset);
   
   const currentWeekRecords = recentRecords.filter(r => 
     r.date >= startOfWeek && r.date <= endOfWeek && r.type === 'daily'
@@ -93,8 +58,7 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <div className="flex items-center justify-between mb-10">
-          <h2 className="text-base font-medium tracking-widest text-surface-600">주간 일지 기록</h2>
+        <div className="flex items-center mb-10">
           <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} />
         </div>
         

@@ -4,7 +4,7 @@ import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function WeekSelector({ currentMonth, currentWeekOfMonth }: { currentMonth: number, currentWeekOfMonth: number }) {
-  const [week, setWeek] = useQueryState('week', { defaultValue: '0' });
+  const [week, setWeek] = useQueryState('week', { defaultValue: '0', shallow: false });
 
   const currentOffset = parseInt(week || '0', 10);
 
