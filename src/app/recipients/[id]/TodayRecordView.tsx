@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Copy, Check, Pencil, Trash2 } from 'lucide-react';
-import { Dialog } from '@base-ui/react';
+import { Modal, ModalClose } from '@/components/Modal';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [saving, setSaving] = useState(false);
@@ -45,35 +45,35 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
             <span>수정</span>
           </button>
           
-          <Dialog.Root open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-            <Dialog.Trigger className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-4 py-2 rounded-lg transition-colors cursor-pointer">
-              <Trash2 size={16} />
-              <span>삭제</span>
-            </Dialog.Trigger>
-            <Dialog.Portal>
-              <Dialog.Backdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" />
-              <Dialog.Popup className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-10 rounded-xl w-[90vw] max-w-md shadow-2xl z-50 outline-none flex flex-col">
-                <Dialog.Title className="text-xl font-medium text-black mb-4 tracking-tight">
-                  기록 삭제
-                </Dialog.Title>
-                <Dialog.Description className="text-black text-lg font-light mb-12 leading-relaxed">
-                  이 기록을 정말 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.
-                </Dialog.Description>
-                <div className="flex justify-end gap-6 items-center pt-6 border-t border-surface-200">
-                  <Dialog.Close className="text-base font-medium tracking-widest text-black hover:text-surface-600">
-                    취소
-                  </Dialog.Close>
-                  <button
-                    onClick={handleDelete}
-                    disabled={saving}
-                    className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
-                  >
-                    {saving ? '삭제 중...' : '삭제하기'}
-                  </button>
-                </div>
-              </Dialog.Popup>
-            </Dialog.Portal>
-          </Dialog.Root>
+          <Modal
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            title="기록 삭제"
+            trigger={
+              <button className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-4 py-2 rounded-lg transition-colors cursor-pointer">
+                <Trash2 size={16} />
+                <span>삭제</span>
+              </button>
+            }
+            footer={
+              <>
+                <ModalClose className="text-base font-medium tracking-widest text-black hover:text-surface-600">
+                  취소
+                </ModalClose>
+                <button
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
+                >
+                  {saving ? '삭제 중...' : '삭제하기'}
+                </button>
+              </>
+            }
+          >
+            <p className="text-black text-lg font-light leading-relaxed">
+              이 기록을 정말 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.
+            </p>
+          </Modal>
 
         </div>
       </div>

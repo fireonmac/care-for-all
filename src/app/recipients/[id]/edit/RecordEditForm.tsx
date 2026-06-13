@@ -18,8 +18,9 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
     router.refresh();
   };
 
-  // 날짜 포맷 (YYYY-MM-DD -> YYYY.MM.DD)
-  const formattedDate = date.replace(/-/g, '.');
+  // 날짜 포맷 (YYYY-MM-DD -> YYYY년 M월 D일)
+  const [year, month, day] = date.split('-');
+  const formattedDate = `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
@@ -32,9 +33,10 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
         </button>
       </div>
 
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
+      <header className="flex flex-col border-b-2 border-black pb-8 mb-20 gap-2">
+        <span className="text-xl font-normal text-surface-500 tracking-widest">{recipientName} 어르신</span>
         <h1 className="text-4xl font-medium text-black tracking-tight">
-          {recipientName} <span className="text-2xl font-normal text-surface-500">어르신</span> {formattedDate} 기록 수정
+          {formattedDate} 일지 수정
         </h1>
       </header>
       
