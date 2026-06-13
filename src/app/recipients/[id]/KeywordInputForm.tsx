@@ -99,9 +99,9 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
       <div className="mb-8">
         <h2 className="text-3xl font-medium text-black tracking-tight">관찰 키워드 입력</h2>
       </div>
-      <p className="text-surface-600 mb-12 text-lg font-medium leading-relaxed">
-        {parseInt(month)}월 {parseInt(day)}일의 {recipientName} 어르신에 대해 알려주세요.<br />
-        핵심 단어나 짧은 문장만 작성하시면, 나머지는 시스템이 전문적인 형식으로 완성합니다.
+      <p className="text-surface-600 mb-12 text-xl font-medium leading-relaxed">
+        일지에 들어가야할 핵심 단어가 포함된 짧은 문장들을 입력해주세요. <br /> 
+        시스템이 주어진 문장들을 분석하여 전문적인 일지로 바꾸어줍니다.
       </p>
       
       <form onSubmit={handleGenerate} className="flex flex-col">
@@ -111,14 +111,14 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
             maxLength={1000}
             onChange={(e) => setKeywords(e.target.value)}
             disabled={isFuture}
-            placeholder={isFuture ? "미래 날짜의 기록은 아직 작성할 수 없습니다." : "여기에 핵심 단어를 입력하세요..."}
+            placeholder={`${parseInt(month)}월 ${parseInt(day)}일의 ${recipientName} 어르신에 대해 알려주세요.`}
             className="text-2xl pb-12 min-h-[300px]"
           />
           <span className="absolute bottom-6 right-6 text-base text-surface-500 font-light tracking-widest">
             {keywords.length}/1000
           </span>
         </div>
-        <div className="flex justify-end mt-12">
+        <div className="flex justify-end mt-4">
           <button
             type="submit"
             disabled={loading || !keywords.trim() || isFuture}

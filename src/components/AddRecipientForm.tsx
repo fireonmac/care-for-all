@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Modal, ModalClose } from './Modal';
 import { Dialog } from '@base-ui/react';
 import { addRecipient } from '@/app/actions';
+import { commonInputClasses } from './Textarea';
 
 export function AddRecipientForm() {
   const [open, setOpen] = useState(false);
@@ -53,8 +54,8 @@ export function AddRecipientForm() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="이름을 입력하세요"
-            className="w-full bg-surface-100 border border-surface-200 p-4 rounded-lg focus:ring-1 focus:border-black text-black text-xl font-light placeholder:text-surface-500 shadow-inner"
+            placeholder="어르신 성함을 입력하세요"
+            className={`px-4 py-3 text-xl ${commonInputClasses}`}
             required
           />
         </div>

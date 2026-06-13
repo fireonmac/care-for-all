@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getRecipientsWithStats } from '@/app/actions';
 import Link from 'next/link';
-import { Check, Search } from 'lucide-react';
+import { Check, Search, Loader2 } from 'lucide-react';
 import { commonInputClasses } from '@/components/Textarea';
 
 export function RecipientList({ 
@@ -20,16 +20,22 @@ export function RecipientList({
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   
+  const [isTyping, setIsTyping] = useState(false);
+  const isFirstRender = useRef(true);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // 검색어 변경 시 데이터 리로드
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setIsTyping(true);
     const timer = setTimeout(async () => {
-      setLoading(true);
       const res = await getRecipientsWithStats(searchQuery, null, 10);
       setRecipients(res.data);
       setNextCursor(res.nextCursor);
-      setLoading(false);
+      setIsTyping(false);
     }, 300); // 디바운스
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -69,7 +75,11 @@ export function RecipientList({
     <div className="flex flex-col">
       <div className="relative mb-12">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-surface-400" />
+          {isTyping ? (
+            <Loader2 className="h-5 w-5 text-surface-400 animate-spin" />
+          ) : (
+            <Search className="h-5 w-5 text-surface-400" />
+          )}
         </div>
         <input
           type="text"
