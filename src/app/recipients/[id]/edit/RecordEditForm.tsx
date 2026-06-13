@@ -38,12 +38,12 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
           <textarea
-            className="w-full bg-surface-100 border border-surface-200/80 hover:border-surface-300 transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 border border-surface-300 hover:border-surface-400 transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={cognition}
             maxLength={1000}
             onChange={(e) => setCognition(e.target.value)}
           />
-          <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+          <span className="absolute bottom-4 right-6 text-sm text-surface-500 font-light tracking-widest">
             {cognition.length}/1000
           </span>
         </div>
@@ -51,12 +51,12 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
           <textarea
-            className="w-full bg-surface-100 border border-surface-200/80 hover:border-surface-300 transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+            className="w-full bg-surface-100 border border-surface-300 hover:border-surface-400 transition-colors rounded-lg p-6 pb-12 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
             value={behavior}
             maxLength={1000}
             onChange={(e) => setBehavior(e.target.value)}
           />
-          <span className="absolute bottom-4 right-6 text-sm text-surface-400 font-light tracking-widest">
+          <span className="absolute bottom-4 right-6 text-sm text-surface-500 font-light tracking-widest">
             {behavior.length}/1000
           </span>
         </div>
