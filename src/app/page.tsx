@@ -1,9 +1,31 @@
 import { getRecipientsWithStats } from './actions';
 import { AddRecipientForm } from '@/components/AddRecipientForm';
 import Link from 'next/link';
+import { Check } from 'lucide-react';
+
+function getWeekDates() {
+  const today = new Date();
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(today.setDate(diff));
+  
+  const week = [];
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    week.push({
+      dateStr: d.toISOString().split('T')[0],
+      dayName: dayNames[d.getDay()],
+    });
+  }
+  return week;
+}
 
 export default async function Home() {
   const recipients = await getRecipientsWithStats();
+  const weekDates = getWeekDates();
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-32 pb-24 min-h-screen">
@@ -37,16 +59,25 @@ export default async function Home() {
                   최근 기록: {r.latestRecordDate ? r.latestRecordDate : '없음'}
                 </span>
               </div>
-              <div className="self-start sm:self-auto mt-2 sm:mt-0">
-                {r.hasTodayRecord ? (
-                  <span className="text-sm font-medium tracking-widest text-status-success px-5 py-2.5 rounded-lg bg-status-success/10 border border-status-success/20">
-                    작성 완료
-                  </span>
-                ) : (
-                  <span className="text-sm font-medium tracking-widest text-surface-500 px-5 py-2.5 rounded-lg bg-surface-100 border border-surface-200">
-                    미작성
-                  </span>
-                )}
+              <div className="self-start sm:self-auto mt-4 sm:mt-0 flex gap-4">
+                {weekDates.map((d) => {
+                  const hasRecord = r.weeklyRecords.includes(d.dateStr);
+                  const isFuture = d.dateStr > todayStr;
+                  return (
+                    <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${isFuture ? 'opacity-30' : ''}`}>
+                      <span className={`text-[11px] font-medium tracking-widest ${d.dateStr === todayStr ? 'text-black font-bold' : 'text-surface-400'}`}>
+                        {d.dayName}
+                      </span>
+                      <div className="h-4 flex items-center justify-center">
+                        {hasRecord ? (
+                          <Check size={14} strokeWidth={4} className="text-status-success" />
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-surface-200"></div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </Link>
           ))

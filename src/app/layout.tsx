@@ -25,7 +25,7 @@ export default function RootLayout({
         <div className="flex-1 mt-16">
           {children}
         </div>
-        <footer className="w-full border-t border-surface-100 py-12 mt-auto">
+        <footer className="w-full border-t border-surface-100 pt-6 pb-8 mt-24">
           <div className="max-w-5xl mx-auto px-6 sm:px-12 text-center">
             <span className="text-surface-600 text-sm tracking-widest font-light">고운마음시티주야간보호센터 | 박정원</span>
           </div>

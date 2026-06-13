@@ -30,16 +30,28 @@ export async function getRecipientsWithStats() {
   const allRecords = await db.select().from(records).orderBy(desc(records.date));
 
   const todayStr = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const monday = new Date(today.setDate(diff));
+  
+  const startOfWeek = monday.toISOString().split('T')[0];
+  const endOfWeek = new Date(monday.setDate(monday.getDate() + 6)).toISOString().split('T')[0];
 
   return allRecipients.map(recipient => {
     const recipientRecords = allRecords.filter(r => r.recipientId === recipient.id);
     const hasTodayRecord = recipientRecords.some(r => r.date === todayStr && r.type === 'daily');
     const latestRecord = recipientRecords.find(r => r.type === 'daily');
+    
+    const weeklyRecords = recipientRecords
+      .filter(r => r.type === 'daily' && r.date >= startOfWeek && r.date <= endOfWeek)
+      .map(r => r.date);
 
     return {
       ...recipient,
       hasTodayRecord,
       latestRecordDate: latestRecord ? latestRecord.date : null,
+      weeklyRecords,
     };
   });
 }
