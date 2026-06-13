@@ -64,7 +64,7 @@ export default async function RecipientDetailPage({
             return (
               <Link
                 key={dateStr}
-                href={`/recipients/${recipient.id}?date=${dateStr}`}
+                href={`/recipients/${recipient.id}?date=${dateStr}#week-view`}
                 className={`flex flex-col items-center justify-center py-6 rounded-xl gap-4 transition-colors ${isSelected ? 'bg-surface-100' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>

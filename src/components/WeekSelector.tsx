@@ -3,19 +3,10 @@
 import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format } from 'date-fns';
-import { useEffect, useRef } from 'react';
 
 export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate, startOfWeek }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string, startOfWeek: string }) {
   const [dateParam, setDateParam] = useQueryState('date', { shallow: false });
-  const isInitialMount = useRef(true);
 
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    document.getElementById('week-view')?.scrollIntoView({ behavior: 'auto', block: 'start' });
-  }, [targetDate]);
 
   const handlePrev = () => {
     const newDate = addDays(new Date(targetDate), -7);
