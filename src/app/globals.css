@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
+@theme {
+  /* Minimal Monochromatic Primary Scale (PlusX Aesthetic) */
+  --color-primary-50: #f8f9fa;
+  --color-primary-100: #f1f3f5;
+  --color-primary-200: #e9ecef;
+  --color-primary-300: #dee2e6;
+  --color-primary-400: #ced4da;
+  --color-primary-500: #212529; /* Main Black */
+  --color-primary-600: #000000; /* Hover True Black */
+  --color-primary-700: #000000;
+  --color-primary-800: #000000;
+  --color-primary-900: #000000;
+  
+  /* Crisp Neutral Surface Scale */
+  --color-surface-50: #ffffff;
+  --color-surface-100: #f8f9fa;
+  --color-surface-200: #f1f3f5;
+  --color-surface-300: #e9ecef;
+  --color-surface-400: #dee2e6;
+  --color-surface-500: #adb5bd;
+  --color-surface-600: #868e96;
+  --color-surface-700: #495057;
+  --color-surface-800: #343a40;
+  --color-surface-900: #212529;
+
+  /* Additional Status Colors (More muted/elegant) */
+  --color-status-success: #12b886;
+  --color-status-danger: #fa5252;
+
+  /* Base Mapping */
+  --color-background: #ffffff;
+  --color-foreground: var(--color-surface-900);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  background-color: var(--color-background);
+  color: var(--color-foreground);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
