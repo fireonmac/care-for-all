@@ -97,14 +97,11 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-medium text-black tracking-tight mb-4">관찰 키워드 입력</h2>
-        <p className="text-2xl font-normal text-black mb-12">
-          {parseInt(month)}월 {parseInt(day)}일의 {recipientName} 어르신에 대해 알려주세요.
-        </p>
+        <h2 className="text-3xl font-medium text-black tracking-tight">관찰 키워드 입력</h2>
       </div>
-      <p className="text-surface-600 mb-6 text-lg font-medium leading-relaxed">
-        핵심 단어나 짧은 문장만 작성해주세요.<br />
-        나머지는 시스템이 전문적인 형식으로 완성합니다.
+      <p className="text-surface-600 mb-12 text-lg font-medium leading-relaxed">
+        {parseInt(month)}월 {parseInt(day)}일의 {recipientName} 어르신에 대해 알려주세요.<br />
+        핵심 단어나 짧은 문장만 작성하시면, 나머지는 시스템이 전문적인 형식으로 완성합니다.
       </p>
       
       <form onSubmit={handleGenerate} className="flex flex-col">

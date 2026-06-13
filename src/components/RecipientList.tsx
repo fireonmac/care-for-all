@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getRecipientsWithStats } from '@/app/actions';
 import Link from 'next/link';
 import { Check, Search } from 'lucide-react';
+import { commonInputClasses } from '@/components/Textarea';
 
 export function RecipientList({ 
   initialData, 
@@ -75,7 +76,7 @@ export function RecipientList({
           placeholder="어르신 이름 검색..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full sm:w-80 bg-white border border-surface-300 hover:border-surface-400 transition-colors rounded-lg pl-12 pr-4 py-3 focus:ring-2 focus:ring-black focus:outline-none focus:border-transparent text-black text-lg font-light placeholder:text-surface-400"
+          className={`sm:w-80 px-4 py-3 pl-12 text-lg ${commonInputClasses}`}
         />
       </div>
 
