@@ -6,9 +6,9 @@ export default async function Home() {
   const recipients = await getRecipientsWithStats();
 
   return (
-    <main className="max-w-5xl mx-auto px-6 sm:px-8 py-20 min-h-screen">
-      <header className="flex justify-between items-end border-b border-black pb-8 mb-20">
-        <h1 className="text-5xl font-extrabold text-black tracking-tight">
+    <main className="max-w-4xl mx-auto px-6 sm:px-8 py-24 min-h-screen">
+      <header className="flex justify-between items-end border-b-2 border-black pb-6 mb-12">
+        <h1 className="text-3xl font-extrabold text-black tracking-tight">
           어르신 목록
         </h1>
         <AddRecipientForm />
@@ -25,23 +25,23 @@ export default async function Home() {
             <Link 
               key={r.id} 
               href={`/recipients/${r.id}`}
-              className="flex justify-between items-center py-12 border-b border-surface-200 group transition-all hover:border-black"
+              className="flex justify-between items-center py-8 border-b border-surface-200 group transition-colors hover:bg-surface-50 px-4 -mx-4 rounded-xl"
             >
-              <div className="flex flex-col gap-4">
-                <span className="text-4xl font-extrabold tracking-tight text-black group-hover:translate-x-2 transition-transform duration-300">
+              <div className="flex flex-col gap-2">
+                <span className="text-2xl font-bold tracking-tight text-black">
                   {r.name}
                 </span>
-                <span className="text-surface-500 font-medium text-lg tracking-wide">
+                <span className="text-surface-500 font-medium text-sm tracking-wide">
                   최근 기록: {r.latestRecordDate ? r.latestRecordDate : '없음'}
                 </span>
               </div>
               <div>
                 {r.hasTodayRecord ? (
-                  <span className="text-base font-bold tracking-widest text-status-success border border-status-success/30 px-6 py-3 rounded-full bg-status-success/5">
+                  <span className="text-sm font-bold tracking-widest text-status-success px-4 py-2 rounded-lg bg-status-success/10">
                     작성 완료
                   </span>
                 ) : (
-                  <span className="text-base font-bold tracking-widest text-surface-500 border border-surface-200 px-6 py-3 rounded-full">
+                  <span className="text-sm font-bold tracking-widest text-surface-500 px-4 py-2 rounded-lg bg-surface-100">
                     미작성
                   </span>
                 )}

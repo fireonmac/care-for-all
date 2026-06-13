@@ -32,20 +32,20 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
       <div className="animate-in fade-in duration-500">
         <h2 className="text-3xl font-extrabold text-black mb-12 tracking-tight">기록 수정</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16">
+        <div className="flex flex-col gap-16 mb-16">
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-surface-900 tracking-widest border-b border-surface-200 pb-4 mb-8">인지 영역</h3>
+            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-50 border border-surface-200 rounded-2xl p-8 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-surface-900 text-lg font-light leading-relaxed resize-none min-h-[240px] shadow-sm"
+              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={cognition}
               onChange={(e) => setCognition(e.target.value)}
             />
           </div>
           
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-surface-900 tracking-widest border-b border-surface-200 pb-4 mb-8">행동 영역</h3>
+            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-50 border border-surface-200 rounded-2xl p-8 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-surface-900 text-lg font-light leading-relaxed resize-none min-h-[240px] shadow-sm"
+              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={behavior}
               onChange={(e) => setBehavior(e.target.value)}
             />
@@ -96,14 +96,14 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+      <div className="flex flex-col gap-16">
         <div>
-          <h3 className="text-sm font-bold text-black tracking-widest border-b border-surface-200 pb-4 mb-8">인지 영역</h3>
-          <p className="text-xl text-surface-700 font-light leading-relaxed whitespace-pre-wrap bg-surface-50 p-10 rounded-2xl border border-surface-200 min-h-[200px]">{record.cognitionContent}</p>
+          <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.cognitionContent}</p>
         </div>
         <div>
-          <h3 className="text-sm font-bold text-black tracking-widest border-b border-surface-200 pb-4 mb-8">행동 영역</h3>
-          <p className="text-xl text-surface-700 font-light leading-relaxed whitespace-pre-wrap bg-surface-50 p-10 rounded-2xl border border-surface-200 min-h-[200px]">{record.behaviorContent}</p>
+          <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.behaviorContent}</p>
         </div>
       </div>
     </div>

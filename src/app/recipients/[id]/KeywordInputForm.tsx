@@ -39,20 +39,20 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
         <h2 className="text-3xl font-extrabold text-black mb-12 tracking-tight">생성된 기록 검토</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16">
+        <div className="flex flex-col gap-16 mb-16">
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-surface-900 tracking-widest border-b border-surface-200 pb-4 mb-8">인지 영역</h3>
+            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-50 border border-surface-200 rounded-2xl p-8 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-surface-900 text-lg font-light leading-relaxed resize-none min-h-[240px] shadow-sm"
+              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.cognition}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
             />
           </div>
           
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-surface-900 tracking-widest border-b border-surface-200 pb-4 mb-8">행동 영역</h3>
+            <h3 className="text-base font-bold text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-50 border border-surface-200 rounded-2xl p-8 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-surface-900 text-lg font-light leading-relaxed resize-none min-h-[240px] shadow-sm"
+              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={draft.behavior}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
             />
@@ -90,14 +90,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <textarea
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
-          placeholder="여기에 키워드를 입력하세요..."
-          className="w-full min-h-[240px] bg-surface-50 border border-surface-200 rounded-2xl p-10 focus:ring-1 focus:border-primary-500 resize-none transition-colors text-black text-2xl font-light placeholder:text-surface-300 shadow-sm leading-relaxed"
+          placeholder="여기에 핵심 단어를 입력하세요..."
+          className="w-full min-h-[300px] bg-surface-50 rounded-xl p-10 focus:ring-2 focus:ring-black focus:outline-none resize-none transition-colors text-black text-2xl font-light placeholder:text-surface-400 leading-[1.8]"
         />
         <div className="flex justify-end mt-12">
           <button
             type="submit"
             disabled={loading || !keywords.trim()}
-            className="px-12 py-5 bg-black text-white text-base font-bold tracking-widest rounded-xl hover:bg-surface-800 transition-all disabled:opacity-30"
+            className="px-10 py-4 bg-black text-white text-base font-bold tracking-widest rounded-xl hover:bg-surface-800 transition-all disabled:opacity-30"
           >
             {loading ? '생성 중...' : '기록 초안 생성'}
           </button>
