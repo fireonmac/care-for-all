@@ -3,6 +3,7 @@ import { KeywordInputForm } from './KeywordInputForm';
 import { WeeklyReportForm } from './WeeklyReportForm';
 import { TodayRecordView } from './TodayRecordView';
 import Link from 'next/link';
+import { Check } from 'lucide-react';
 
 function getWeekDates(todayStr: string) {
   const today = new Date(todayStr);
@@ -88,7 +89,7 @@ export default async function RecipientDetailPage({
               <Link
                 key={dateStr}
                 href={`/recipients/${recipient.id}?date=${dateStr}`}
-                className={`flex flex-col items-center justify-center py-6 rounded-2xl gap-4 ${isSelected ? 'bg-surface-200 ring-1 ring-surface-400' : 'hover:bg-surface-100'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
+                className={`flex flex-col items-center justify-center py-6 rounded-2xl gap-4 transition-colors ${isSelected ? 'bg-white ring-1 ring-surface-200 shadow-sm' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>
                   {dayName}
@@ -98,9 +99,9 @@ export default async function RecipientDetailPage({
                 </span>
                 
                 {/* 인디케이터 */}
-                <div className="flex h-2 items-center justify-center mt-2">
+                <div className="flex h-2 items-center justify-center mt-2 relative">
                   {record ? (
-                    <div className="w-2 h-2 rounded-full bg-status-success"></div>
+                    <Check size={16} strokeWidth={3} className="text-status-success absolute" />
                   ) : isSelected ? (
                     <div className="w-2 h-2 rounded-full bg-black"></div>
                   ) : !isFuture && isToday ? (

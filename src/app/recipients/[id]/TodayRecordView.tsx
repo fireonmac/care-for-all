@@ -84,7 +84,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
             <h3 className="text-base font-medium text-black tracking-widest">인지 영역</h3>
             <button
               onClick={() => handleCopy(record.cognitionContent, 'cog')}
-              className="flex items-center text-surface-400 hover:text-black transition-colors"
+              className="flex items-center text-surface-600 hover:text-black transition-colors"
               title="인지 영역 복사"
             >
               {copiedCog ? <Check size={18} /> : <Copy size={18} />}
@@ -97,7 +97,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
             <h3 className="text-base font-medium text-black tracking-widest">행동 영역</h3>
             <button
               onClick={() => handleCopy(record.behaviorContent, 'beh')}
-              className="flex items-center text-surface-400 hover:text-black transition-colors"
+              className="flex items-center text-surface-600 hover:text-black transition-colors"
               title="행동 영역 복사"
             >
               {copiedBeh ? <Check size={18} /> : <Copy size={18} />}
