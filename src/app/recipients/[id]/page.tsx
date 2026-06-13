@@ -27,8 +27,7 @@ export default async function RecipientDetailPage({
   const targetRecord = recentRecords.find((r) => r.date === targetDate && r.type === 'daily');
   const hasTargetRecord = !!targetRecord;
 
-  const weekOffset = parseInt(resolvedSearch.week || '0', 10);
-  const { weekDates, currentMonth, currentWeekOfMonth, startOfWeek, endOfWeek } = getWeekData(weekOffset);
+  const { weekDates, currentMonth, currentWeekOfMonth, startOfWeek, endOfWeek } = getWeekData(targetDate);
   
   const currentWeekRecords = recentRecords.filter(r => 
     r.date >= startOfWeek && r.date <= endOfWeek && r.type === 'daily'
@@ -58,8 +57,8 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <div className="flex items-center mb-10">
-          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} />
+        <div className="flex items-center mb-6">
+          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
         </div>
         
         <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
@@ -71,7 +70,7 @@ export default async function RecipientDetailPage({
             return (
               <Link
                 key={dateStr}
-                href={`/recipients/${recipient.id}?date=${dateStr}${weekOffset !== 0 ? `&week=${weekOffset}` : ''}`}
+                href={`/recipients/${recipient.id}?date=${dateStr}`}
                 className={`flex flex-col items-center justify-center py-6 rounded-xl gap-4 transition-colors ${isSelected ? 'bg-surface-100' : 'hover:bg-surface-50'} ${isFuture ? 'opacity-40 pointer-events-none' : ''}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${isSelected ? 'text-black' : 'text-surface-600'}`}>

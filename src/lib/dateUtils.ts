@@ -10,9 +10,8 @@ import {
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-export function getWeekData(weekOffset: number = 0) {
-  const today = startOfDay(new Date());
-  const targetDate = addWeeks(today, weekOffset);
+export function getWeekData(targetDateStr: string) {
+  const targetDate = startOfDay(new Date(targetDateStr));
 
   // 한국식 달력: 한 주의 시작을 월요일(1)로 설정
   const start = startOfWeek(targetDate, { weekStartsOn: 1 });
@@ -25,6 +24,7 @@ export function getWeekData(weekOffset: number = 0) {
   const currentMonth = getMonth(thursday) + 1;
   const currentWeekOfMonth = getWeekOfMonth(thursday, { weekStartsOn: 1 });
 
+  const today = startOfDay(new Date());
   const days = eachDayOfInterval({ start, end });
   const weekDates = days.map((d) => {
     const dateStr = format(d, 'yyyy-MM-dd');

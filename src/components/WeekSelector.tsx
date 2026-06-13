@@ -2,14 +2,20 @@
 
 import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { addDays, format } from 'date-fns';
 
-export function WeekSelector({ currentMonth, currentWeekOfMonth }: { currentMonth: number, currentWeekOfMonth: number }) {
-  const [week, setWeek] = useQueryState('week', { defaultValue: '0', shallow: false });
+export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string }) {
+  const [dateParam, setDateParam] = useQueryState('date', { shallow: false });
 
-  const currentOffset = parseInt(week || '0', 10);
+  const handlePrev = () => {
+    const newDate = addDays(new Date(targetDate), -7);
+    setDateParam(format(newDate, 'yyyy-MM-dd'));
+  };
 
-  const handlePrev = () => setWeek((currentOffset - 1).toString());
-  const handleNext = () => setWeek((currentOffset + 1).toString());
+  const handleNext = () => {
+    const newDate = addDays(new Date(targetDate), 7);
+    setDateParam(format(newDate, 'yyyy-MM-dd'));
+  };
 
   return (
     <div className="flex items-center gap-4">
