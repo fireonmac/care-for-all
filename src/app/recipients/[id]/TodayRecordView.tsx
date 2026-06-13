@@ -36,7 +36,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
         <h2 className="text-3xl font-medium text-black tracking-tight">상세 기록</h2>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-2.5 items-center">
           <button 
             onClick={() => router.push(`/recipients/${recipientId}/edit?date=${record.date}`)} 
             className="flex items-center gap-2 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-4 py-2 rounded-lg transition-colors"
