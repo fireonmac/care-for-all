@@ -75,7 +75,7 @@ export default async function RecipientDetailPage({
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section className="mb-24">
-        <h2 className="text-base font-medium tracking-widest text-surface-600 mb-10 border-l-4 border-black pl-4">이번 주 기록 요약</h2>
+        <h2 className="text-base font-medium tracking-widest text-surface-600 mb-10">이번 주 기록 요약</h2>
         
         <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {

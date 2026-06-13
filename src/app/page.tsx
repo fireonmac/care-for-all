@@ -27,7 +27,7 @@ export default async function Home() {
             <Link 
               key={r.id} 
               href={`/recipients/${r.id}`}
-              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-8 px-10 bg-surface-50 hover:bg-surface-100 rounded-3xl gap-6"
+              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-8 border-b border-surface-200 group gap-6"
             >
               <div className="flex flex-col gap-3">
                 <span className="text-3xl font-medium tracking-tight text-black">

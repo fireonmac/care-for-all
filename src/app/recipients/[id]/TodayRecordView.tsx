@@ -36,18 +36,18 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         
         <div className="flex flex-col gap-16 mb-16">
           <div className="flex flex-col">
-            <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
+            <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <textarea
-              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-50 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={cognition}
               onChange={(e) => setCognition(e.target.value)}
             />
           </div>
           
           <div className="flex flex-col">
-            <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
+            <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <textarea
-              className="w-full bg-surface-50 rounded-xl p-8 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
+              className="w-full bg-surface-50 rounded-xl p-6 focus:ring-2 focus:ring-black focus:outline-none text-surface-900 text-xl font-light leading-[1.8] resize-none min-h-[200px]"
               value={behavior}
               onChange={(e) => setBehavior(e.target.value)}
             />
@@ -100,12 +100,12 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
       <div className="flex flex-col gap-16">
         <div>
-          <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">인지 영역</h3>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.cognitionContent}</p>
+          <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.cognitionContent}</p>
         </div>
         <div>
-          <h3 className="text-base font-medium text-black tracking-widest mb-6 border-l-4 border-black pl-4">행동 영역</h3>
-          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-10 rounded-xl">{record.behaviorContent}</p>
+          <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
+          <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.behaviorContent}</p>
         </div>
       </div>
     </div>

@@ -67,7 +67,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
               </div>
             ) : report !== null ? (
               <textarea
-                className="w-full h-64 bg-surface-50 border border-surface-200 rounded-xl p-8 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
+                className="w-full h-64 bg-surface-50 border border-surface-200 rounded-xl p-6 focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none text-black text-lg font-light leading-relaxed shadow-inner"
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
               />
