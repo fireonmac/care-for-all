@@ -3,13 +3,23 @@
 import { useState } from 'react';
 import { updateDailyRecord, deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
+import { Copy, Check } from 'lucide-react';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
+  const [behavior, setBehavior] = useState(record.behaviorContent || '');
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
+
+  const handleCopy = () => {
+    const text = `[인지 영역]\n${record.cognitionContent}\n\n[행동 영역]\n${record.behaviorContent}`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -29,8 +39,9 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
   if (isEditing) {
     return (
+    return (
       <div>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
           <h2 className="text-3xl font-medium text-black tracking-tight">기록 수정</h2>
         </div>
         
@@ -79,9 +90,16 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
         <h2 className="text-3xl font-medium text-black tracking-tight">상세 기록</h2>
-        <div className="flex gap-6">
+        <div className="flex gap-8 items-center">
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-2 text-base font-medium tracking-widest text-surface-500 hover:text-black"
+          >
+            {copied ? <Check size={18} /> : <Copy size={18} />}
+            <span>복사</span>
+          </button>
           <button 
             onClick={() => setIsEditing(true)} 
             className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
@@ -98,7 +116,7 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         </div>
       </div>
 
-      <div className="flex flex-col gap-16">
+      <div className="flex flex-col gap-24">
         <div>
           <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-50 p-6 rounded-xl">{record.cognitionContent}</p>

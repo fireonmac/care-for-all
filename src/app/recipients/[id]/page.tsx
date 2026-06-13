@@ -55,12 +55,12 @@ export default async function RecipientDetailPage({
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
-    <main className="max-w-6xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-6 mb-16 gap-6">
-        <div className="flex flex-col gap-2">
+    <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-16 min-h-screen flex flex-col">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
+        <div className="flex flex-col gap-6">
           <Link 
             href="/"
-            className="text-base font-medium tracking-widest text-surface-500 hover:text-black mb-4"
+            className="text-base font-medium tracking-widest text-surface-500 hover:text-black"
           >
             ← 목록으로 돌아가기
           </Link>

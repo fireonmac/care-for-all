@@ -47,7 +47,7 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount }: { recipientI
     }}>
       <button
         onClick={handleGenerate}
-        className="px-6 py-3 bg-black text-white text-base font-medium rounded-xl hover:bg-surface-800 tracking-widest"
+        className="px-5 py-2.5 bg-surface-100 text-surface-600 text-sm font-medium rounded-xl hover:bg-surface-200 tracking-widest"
       >
         주간 리포트 발간
       </button>
