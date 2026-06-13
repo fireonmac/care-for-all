@@ -16,7 +16,7 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
   const todayStr = new Date().toISOString().split('T')[0];
   const isFuture = targetDate > todayStr;
   
-  const [year, month, day] = targetDate.split('-');
+  const [, month, day] = targetDate.split('-');
   
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +33,9 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
         body: JSON.stringify({ keywords })
       });
 
+      if (!res.ok) {
+        throw new Error(`Generation failed: ${res.status}`);
+      }
       if (!res.body) throw new Error('No body');
       
       const reader = res.body.getReader();
@@ -44,33 +47,22 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
         const { done, value } = await reader.read();
         if (done) break;
         
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const token = data.choices[0].delta.content || '';
-              fullText += token;
-              
-              let currentCognition = '';
-              let currentBehavior = '';
-              
-              if (fullText.includes('[행동]')) {
-                 const parts = fullText.split('[행동]');
-                 currentCognition = parts[0].replace('[인지]', '').trim();
-                 currentBehavior = parts[1].trim();
-              } else {
-                 currentCognition = fullText.replace('[인지]', '').trim();
-              }
-              
-              setDraft({ cognition: currentCognition, behavior: currentBehavior });
-            } catch (e) {}
-          }
+        fullText += decoder.decode(value, { stream: true });
+
+        let currentCognition = '';
+        let currentBehavior = '';
+
+        if (fullText.includes('[행동]')) {
+          const [cognition, behavior = ''] = fullText.split('[행동]', 2);
+          currentCognition = cognition.replace('[인지]', '').trim();
+          currentBehavior = behavior.trim();
+        } else {
+          currentCognition = fullText.replace('[인지]', '').trim();
         }
+
+        setDraft({ cognition: currentCognition, behavior: currentBehavior });
       }
-    } catch (error) {
+    } catch {
       alert('생성 중 오류가 발생했습니다.');
       setDraft(null);
     } finally {
@@ -98,10 +90,10 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
             <Textarea
-              className="text-xl pb-12 min-h-[200px]"
+              className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.cognition ? 'bg-surface-200 animate-pulse border-transparent text-surface-700' : ''}`}
               value={draft.cognition}
-              placeholder={loading && !draft.cognition ? 'AI가 문서를 분석하고 작성을 준비하고 있습니다...' : ''}
-              disabled={loading}
+              placeholder={loading && !draft.cognition ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
+              readOnly={loading}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, cognition: e.target.value})}
             />
@@ -113,10 +105,10 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
           <div className="flex flex-col relative">
             <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
             <Textarea
-              className="text-xl pb-12 min-h-[200px]"
+              className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.behavior ? 'bg-surface-200 animate-pulse border-transparent text-surface-700' : ''}`}
               value={draft.behavior}
-              placeholder={loading && !draft.behavior && draft.cognition ? '인지 영역 작성 완료. 행동 영역 작성을 준비합니다...' : loading && !draft.behavior ? 'AI가 문서를 분석하고 작성을 준비하고 있습니다...' : ''}
-              disabled={loading}
+              placeholder={loading && !draft.behavior && draft.cognition ? '인지 영역 완료. 행동 영역 작성을 준비합니다...' : loading && !draft.behavior ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
+              readOnly={loading}
               maxLength={1000}
               onChange={(e) => setDraft({...draft, behavior: e.target.value})}
             />
