@@ -177,6 +177,23 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
     );
   }
 
+  const isSunday = new Date(targetDate).getDay() === 0;
+
+  if (isSunday) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-surface-50 rounded-[2rem] border border-surface-200 mt-4">
+        <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-sm border border-surface-200">
+          <span className="text-3xl">☕️</span>
+        </div>
+        <h2 className="text-2xl font-semibold text-black mb-3 tracking-tight">일요일은 휴무일입니다</h2>
+        <p className="text-surface-500 text-lg leading-relaxed max-w-sm">
+          오늘은 어르신을 뵙지 않는 날이네요.<br/>
+          선생님도 편안하고 따뜻한 휴식 보내시길 바랍니다!
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-8">
