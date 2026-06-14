@@ -37,10 +37,10 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
     setTimeout(() => {
       const el = document.getElementById(`event-input-${newId}`);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
         el.focus({ preventScroll: true });
       }
-    }, 50);
+    }, 10);
   };
 
   const removeEvent = (id: string) => {
