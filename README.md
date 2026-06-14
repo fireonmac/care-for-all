@@ -6,10 +6,13 @@
 
 ```bash
 pnpm install
+mkdir -p app_data
+pnpm db:push
 pnpm dev
 ```
 
 개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
+로컬 SQLite 데이터는 기본적으로 `app_data/sqlite.db`에 저장됩니다.
 
 ## 기술 구성
 
