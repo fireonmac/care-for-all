@@ -45,7 +45,14 @@ export default async function RecipientDetailPage({
           {recipient.name} <span className="text-2xl font-normal text-surface-700 ml-1">어르신</span>
         </h1>
         <div className="self-start sm:self-auto">
-          <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} weekStartDate={weekDates[0].dateStr} />
+          <WeeklyReportForm 
+            recipientId={recipient.id} 
+            recipientName={recipient.name}
+            currentMonth={currentMonth}
+            currentWeekOfMonth={currentWeekOfMonth}
+            dailyRecordCount={dailyRecordCount} 
+            weekStartDate={weekDates[0].dateStr} 
+          />
         </div>
       </header>
 

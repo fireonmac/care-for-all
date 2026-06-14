@@ -7,7 +7,14 @@ import { Textarea } from '@/components/Textarea';
 import { Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Toast } from '@base-ui/react/toast';
 
-export function WeeklyReportForm(props: { recipientId: string, dailyRecordCount: number, weekStartDate: string }) {
+export function WeeklyReportForm(props: { 
+  recipientId: string, 
+  recipientName: string,
+  currentMonth: number,
+  currentWeekOfMonth: number,
+  dailyRecordCount: number, 
+  weekStartDate: string 
+}) {
   if (props.dailyRecordCount < 2) {
     return null;
   }
@@ -46,7 +53,19 @@ function ToastList() {
   ));
 }
 
-function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: string, weekStartDate: string }) {
+function WeeklyReportFormInner({ 
+  recipientId, 
+  recipientName,
+  currentMonth,
+  currentWeekOfMonth,
+  weekStartDate 
+}: { 
+  recipientId: string, 
+  recipientName: string,
+  currentMonth: number,
+  currentWeekOfMonth: number,
+  weekStartDate: string 
+}) {
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
@@ -188,12 +207,12 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
         <Modal
           open={open}
           onOpenChange={setOpen}
-          title="주간 요양보호기록 종합"
+          title={`${currentMonth}월 ${currentWeekOfMonth}째주 ${recipientName} 어르신 주간 요양보호기록 종합`}
           maxWidth="max-w-3xl"
           trigger={
             <button 
               onClick={() => setOpen(true)}
-              className="px-5 py-2.5 bg-white border border-black text-black text-sm font-medium rounded-lg hover:bg-surface-50 tracking-widest transition-colors shadow-sm"
+              className="px-5 py-2.5 bg-white border-2 border-black text-black text-sm font-medium rounded-lg hover:border-blue-600 hover:text-blue-600 tracking-widest transition-colors shadow-sm"
             >
               주간 리포트 확인
             </button>
@@ -207,23 +226,21 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
           }
         >
           <div className="flex flex-col gap-6">
-            <div className="bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
-                {report || '내용이 없습니다.'}
-              </p>
-            </div>
-            
-            <div className="flex justify-end">
+            <div className="relative bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(report || '');
                   const toastId = toastManager.add({ title: '리포트가 복사되었습니다.' } as any);
                   setTimeout(() => toastManager.close(toastId), 3000);
                 }}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-xl hover:bg-surface-50 hover:border-black hover:text-black transition-colors text-sm font-medium tracking-widest"
+                className="absolute top-6 right-6 p-2 text-surface-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="복사하기"
               >
-                텍스트 복사
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
               </button>
+              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide pr-8">
+                {report || '내용이 없습니다.'}
+              </p>
             </div>
           </div>
         </Modal>
