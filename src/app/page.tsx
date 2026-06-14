@@ -1,6 +1,7 @@
 import { getRecipientsWithStats } from './actions';
 import { AddRecipientForm } from '@/components/AddRecipientForm';
 import { RecipientList } from '@/components/RecipientList';
+import { connection } from 'next/server';
 
 function getWeekDates() {
   const today = new Date();
@@ -22,6 +23,8 @@ function getWeekDates() {
 }
 
 export default async function Home() {
+  await connection();
+
   const initialData = await getRecipientsWithStats('', null, 10);
   const weekDates = getWeekDates();
   const todayStr = new Date().toISOString().split('T')[0];
