@@ -17,5 +17,6 @@ export const records = sqliteTable('records', {
   cognitionContent: text('cognition_content'),
   behaviorContent: text('behavior_content'),
   combinedContent: text('combined_content'), // 주간 리포트 등에서 사용
+  status: text('status', { enum: ['PROCESSING', 'COMPLETED', 'FAILED'] }).default('COMPLETED').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
