@@ -105,7 +105,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
       title: '발간 작업 중 오류가 발생했습니다.',
       type: 'error',
     } as any);
-    setTimeout(() => toastManager.remove(toastId), 4000);
+    setTimeout(() => toastManager.close(toastId), 4000);
   };
 
   const startPolling = (id: string) => {
@@ -143,7 +143,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
     const toastId = toastManager.add({
       title: '백그라운드에서 주간 리포트 발간을 시작했습니다.',
     });
-    setTimeout(() => toastManager.remove(toastId), 3000);
+    setTimeout(() => toastManager.close(toastId), 3000);
 
     try {
       const res = await fetch('/api/generate-weekly', {
@@ -218,7 +218,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
                 onClick={() => {
                   navigator.clipboard.writeText(report || '');
                   const toastId = toastManager.add({ title: '리포트가 복사되었습니다.' } as any);
-                  setTimeout(() => toastManager.remove(toastId), 3000);
+                  setTimeout(() => toastManager.close(toastId), 3000);
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-xl hover:bg-surface-50 hover:border-black hover:text-black transition-colors text-sm font-medium tracking-widest"
               >
