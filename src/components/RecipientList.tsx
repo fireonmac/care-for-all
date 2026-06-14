@@ -116,7 +116,7 @@ export function RecipientList({
                   const hasRecord = r.weeklyRecords.includes(d.dateStr);
                   const isFuture = d.dateStr > todayStr;
                   return (
-                    <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${isFuture ? 'opacity-30' : ''}`}>
+                    <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${(isFuture || d.dayName === '일') ? 'opacity-30' : ''}`}>
                       <span className={`text-[11px] tracking-widest ${
                         d.dateStr === todayStr 
                           ? 'text-black font-semibold' 
@@ -129,7 +129,7 @@ export function RecipientList({
                       <div className="h-4 flex items-center justify-center">
                         {hasRecord ? (
                           <Check size={14} strokeWidth={4} className="text-status-success" />
-                        ) : !isFuture ? (
+                        ) : d.dayName === '일' ? null : !isFuture ? (
                           <div className="w-1.5 h-1.5 rounded-full bg-status-danger"></div>
                         ) : (
                           <div className="w-1.5 h-1.5 rounded-full bg-surface-500"></div>
