@@ -193,7 +193,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
           trigger={
             <button 
               onClick={() => setOpen(true)}
-              className="px-5 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-surface-800 tracking-widest transition-colors shadow-sm"
+              className="px-5 py-2.5 bg-white border border-black text-black text-sm font-medium rounded-lg hover:bg-surface-50 tracking-widest transition-colors shadow-sm"
             >
               주간 리포트 확인
             </button>
