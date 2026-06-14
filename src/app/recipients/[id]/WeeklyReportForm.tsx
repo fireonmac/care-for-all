@@ -46,6 +46,7 @@ function WeeklyReportFormInner({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -193,13 +194,13 @@ function WeeklyReportFormInner({
 
   const handleDelete = async () => {
     if (!recordId) return;
-    if (!window.confirm('정말 이 주간 리포트를 삭제하시겠습니까?')) return;
     
     setSaving(true);
     try {
       await deleteRecord(recordId);
       setStatus('IDLE');
       setOpen(false);
+      setDeleteModalOpen(false);
       const toastId = toastManager.add({ title: '주간 리포트가 성공적으로 삭제되었습니다.', type: 'success' } as any);
       setTimeout(() => toastManager.close(toastId), 3000);
       router.refresh();
@@ -275,9 +276,34 @@ function WeeklyReportFormInner({
                       <button onClick={handleEditClick} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
                         <Pencil size={14} /> <span>수정</span>
                       </button>
-                      <button onClick={handleDelete} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
-                        <Trash2 size={14} /> <span>삭제</span>
-                      </button>
+                      <Modal
+                        open={deleteModalOpen}
+                        onOpenChange={setDeleteModalOpen}
+                        title="주간 리포트 삭제"
+                        trigger={
+                          <button onClick={() => setDeleteModalOpen(true)} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
+                            <Trash2 size={14} /> <span>삭제</span>
+                          </button>
+                        }
+                        footer={
+                          <>
+                            <ModalClose className="text-base font-medium tracking-widest text-black hover:text-surface-600">
+                              취소
+                            </ModalClose>
+                            <button
+                              onClick={handleDelete}
+                              disabled={saving}
+                              className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
+                            >
+                              {saving ? '삭제 중...' : '삭제하기'}
+                            </button>
+                          </>
+                        }
+                      >
+                        <p className="text-black text-lg font-light leading-relaxed">
+                          정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다.
+                        </p>
+                      </Modal>
                     </>
                   )}
                 </div>
