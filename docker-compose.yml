@@ -6,7 +6,7 @@ services:
       context: .
       target: runner
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:13000:3000"
     volumes:
       - ./app_data:/app/data
     extra_hosts:
