@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: citycare-production
+  group: care-for-all-production
   cancel-in-progress: false
 
 permissions:
@@ -50,7 +50,7 @@ jobs:
       - self-hosted
       - macOS
       - ARM64
-      - gowncare-prod
+      - care-for-all-prod
     timeout-minutes: 30
     environment: production
 

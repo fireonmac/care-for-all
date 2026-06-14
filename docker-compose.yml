@@ -1,5 +1,7 @@
+name: care-for-all
+
 services:
-  citycare:
+  app:
     build:
       context: .
       target: runner

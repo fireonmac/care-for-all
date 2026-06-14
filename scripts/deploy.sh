@@ -54,7 +54,7 @@ echo "Validating Docker Compose configuration..."
 docker compose config >/dev/null
 
 echo "Building application and migration images..."
-docker compose build citycare migrate
+docker compose build app migrate
 
 if [ -s app_data/sqlite.db ]; then
   echo "Backing up the current database..."
@@ -66,18 +66,18 @@ echo "Applying database schema..."
 docker compose run --rm migrate
 
 echo "Starting the new application container..."
-docker compose up -d --no-deps citycare
+docker compose up -d --no-deps app
 
 echo "Waiting for the application health check..."
 attempt=1
 max_attempts=30
-until docker compose exec -T citycare node -e \
+until docker compose exec -T app node -e \
   "fetch('http://127.0.0.1:3000/api/test').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 do
   if [ "$attempt" -ge "$max_attempts" ]; then
     echo "Deployment health check failed." >&2
     docker compose ps >&2
-    docker compose logs --tail=200 citycare >&2
+    docker compose logs --tail=200 app >&2
     exit 1
   fi
 
