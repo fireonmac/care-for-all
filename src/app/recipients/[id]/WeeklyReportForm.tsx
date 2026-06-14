@@ -95,7 +95,9 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/records/${id}`, { cache: 'no-store' });
+        // 완벽한 캐시 무효화를 위해 URL 파라미터에 현재 시간(타임스탬프) 추가
+        const timestamp = Date.now();
+        const res = await fetch(`/api/records/${id}?t=${timestamp}`, { cache: 'no-store' });
         const data = await res.json();
         
         if (!res.ok || data.error) {
@@ -114,6 +116,8 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
         }
       } catch (error) {
         console.error('Polling error', error);
+        stopPolling();
+        setStatus('FAILED');
       }
     }, 3000);
   };
