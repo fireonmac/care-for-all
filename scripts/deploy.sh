@@ -3,9 +3,15 @@
 set -eu
 
 source_path="${1:?Usage: deploy.sh SOURCE_PATH DEPLOY_PATH [REVISION]}"
-deploy_path="${2:?Usage: deploy.sh SOURCE_PATH DEPLOY_PATH [REVISION]}"
+deploy_path_raw="${2:?Usage: deploy.sh SOURCE_PATH DEPLOY_PATH [REVISION]}"
+deploy_path=$(printf '%s' "$deploy_path_raw" | tr -d '\r\n')
 revision="${3:-unknown}"
 lock_dir="${deploy_path}.deploy-lock"
+
+if [ -z "$deploy_path" ]; then
+  echo "DEPLOY_PATH is empty after removing line endings." >&2
+  exit 1
+fi
 
 case "$deploy_path" in
   ""|"/"|"$HOME")
