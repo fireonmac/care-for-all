@@ -5,6 +5,8 @@ import { recipients } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
+import { format } from 'date-fns';
+import { getWeekData } from '@/lib/dateUtils';
 
 export async function getRecipients() {
   return await db.select().from(recipients).orderBy(desc(recipients.createdAt));
@@ -29,14 +31,8 @@ export async function getRecipientsWithStats(searchQuery = '', cursor: string | 
   const allRecipients = await db.select().from(recipients).orderBy(desc(recipients.createdAt));
   const allRecords = await db.select().from(records).orderBy(desc(records.date));
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const today = new Date();
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Monday
-  const monday = new Date(today.setDate(diff));
-  
-  const startOfWeek = monday.toISOString().split('T')[0];
-  const endOfWeek = new Date(monday.setDate(monday.getDate() + 6)).toISOString().split('T')[0];
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const { startOfWeek, endOfWeek } = getWeekData(todayStr);
 
   let stats = allRecipients.map(recipient => {
     const recipientRecords = allRecords.filter(r => r.recipientId === recipient.id);
@@ -82,7 +78,7 @@ export async function getRecipientsWithStats(searchQuery = '', cursor: string | 
   const nextCursor = sliced.length === limit && startIndex + limit < stats.length ? sliced[sliced.length - 1].id : null;
 
   return {
-    data: sliced,
+    items: sliced,
     nextCursor,
   };
 }

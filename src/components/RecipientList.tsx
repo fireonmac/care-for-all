@@ -6,56 +6,88 @@ import Link from 'next/link';
 import { Check, Search, Loader2 } from 'lucide-react';
 import { commonInputClasses } from '@/components/Textarea';
 
-type RecipientWithStats = Awaited<ReturnType<typeof getRecipientsWithStats>>['data'][number];
+type Recipients = Awaited<ReturnType<typeof getRecipientsWithStats>>;
+type RecipientWithStats = Recipients['items'][number];
+type SearchResult = {
+  query: string;
+} & Recipients;
+
+type RecipientListProps = {
+  recipientsListData: Recipients;
+  weekDates: { dateStr: string; dayName: string }[];
+  todayStr: string;
+};
+
+function removeDuplicates(recipients: RecipientWithStats[]) {
+  return recipients.filter(
+    (recipient, index) =>
+      recipients.findIndex(({ id }) => id === recipient.id) === index,
+  );
+}
 
 export function RecipientList({ 
-  initialData, 
+  recipientsListData,
   weekDates, 
   todayStr 
-}: { 
-  initialData: { data: RecipientWithStats[], nextCursor: string | null },
-  weekDates: { dateStr: string, dayName: string }[], 
-  todayStr: string 
-}) {
-  const [recipients, setRecipients] = useState(initialData.data);
-  const [nextCursor, setNextCursor] = useState(initialData.nextCursor);
+}: RecipientListProps) {
+  const [additionalRecipients, setAdditionalRecipients] = useState<RecipientWithStats[]>([]);
+  const [additionalNextCursor, setAdditionalNextCursor] = useState<string | null>();
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const [isTyping, setIsTyping] = useState(false);
-  const prevSearchQuery = useRef(searchQuery);
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  // 검색어 변경 시 데이터 리로드
-  useEffect(() => {
-    if (prevSearchQuery.current === searchQuery) {
-      return;
-    }
-    prevSearchQuery.current = searchQuery;
-    
-    setIsTyping(true);
-    const timer = setTimeout(async () => {
-      const res = await getRecipientsWithStats(searchQuery, null, 10);
-      setRecipients(res.data);
-      setNextCursor(res.nextCursor);
-      setIsTyping(false);
-    }, 300); // 디바운스
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const isSearching = searchQuery.trim().length > 0;
+  const currentSearchResult = searchResult?.query === searchQuery ? searchResult : null;
+  const isTyping = isSearching && !currentSearchResult;
+  const allRecipients = removeDuplicates([...recipientsListData.items, ...additionalRecipients]);
+  const visibleRecipients = isSearching
+    ? currentSearchResult?.items ?? []
+    : allRecipients;
+  const loadedNextCursor = additionalNextCursor === undefined
+    ? recipientsListData.nextCursor
+    : additionalNextCursor;
+  const visibleNextCursor = isSearching
+    ? currentSearchResult?.nextCursor ?? null
+    : loadedNextCursor;
 
-  // 무한 스크롤 로드
+  useEffect(() => {
+    if (!isSearching) return;
+
+    const timer = setTimeout(async () => {
+      const result = await getRecipientsWithStats(searchQuery);
+      setSearchResult({
+        query: searchQuery,
+        items: result.items,
+        nextCursor: result.nextCursor,
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [isSearching, searchQuery]);
+
   const loadMore = useCallback(async () => {
-    if (loading || !nextCursor) return;
+    if (loading || !visibleNextCursor) return;
+
     setLoading(true);
-    const res = await getRecipientsWithStats(searchQuery, nextCursor, 10);
-    setRecipients(prev => {
-      // 중복 방지 (커서 기반이므로 기본적으로 없지만 혹시 모를 안전장치)
-      const newItems = res.data.filter(newItem => !prev.some(p => p.id === newItem.id));
-      return [...prev, ...newItems];
-    });
-    setNextCursor(res.nextCursor);
+    const result = await getRecipientsWithStats(searchQuery, visibleNextCursor);
+
+    if (isSearching) {
+      setSearchResult((currentResult) => ({
+        query: searchQuery,
+        items: [...(currentResult?.items ?? []), ...result.items],
+        nextCursor: result.nextCursor,
+      }));
+    } else {
+      setAdditionalRecipients((currentRecipients) => [
+        ...currentRecipients,
+        ...result.items,
+      ]);
+      setAdditionalNextCursor(result.nextCursor);
+    }
+
     setLoading(false);
-  }, [loading, nextCursor, searchQuery]);
+  }, [isSearching, loading, searchQuery, visibleNextCursor]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -88,18 +120,22 @@ export function RecipientList({
           type="text"
           placeholder="어르신 성함 검색..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(event) => {
+            const query = event.target.value;
+            setSearchQuery(query);
+            if (!query.trim()) setSearchResult(null);
+          }}
           className={`sm:w-80 px-4 py-3 pl-12 text-lg ${commonInputClasses}`}
         />
       </div>
 
       <div className="flex flex-col gap-6">
-        {recipients.length === 0 && !loading ? (
+        {visibleRecipients.length === 0 && !loading && !isTyping ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-light mb-4 text-surface-900 tracking-tight">검색된 어르신이 없습니다.</p>
           </div>
         ) : (
-          recipients.map((r) => (
+          visibleRecipients.map((r) => (
             <Link 
               key={r.id} 
               href={`/recipients/${r.id}`}

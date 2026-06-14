@@ -1,33 +1,16 @@
 import { getRecipientsWithStats } from './actions';
 import { AddRecipientForm } from '@/components/AddRecipientForm';
 import { RecipientList } from '@/components/RecipientList';
+import { getWeekData } from '@/lib/dateUtils';
+import { format } from 'date-fns';
 import { connection } from 'next/server';
-
-function getWeekDates() {
-  const today = new Date();
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(today.setDate(diff));
-  
-  const week = [];
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    week.push({
-      dateStr: d.toISOString().split('T')[0],
-      dayName: dayNames[d.getDay()],
-    });
-  }
-  return week;
-}
 
 export default async function Home() {
   await connection();
 
-  const initialData = await getRecipientsWithStats('', null, 10);
-  const weekDates = getWeekDates();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const { weekDates } = getWeekData(todayStr);
+  const recipientsListData = await getRecipientsWithStats();
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-32 pb-24 min-h-screen">
@@ -40,10 +23,10 @@ export default async function Home() {
         </div>
       </header>
 
-      <RecipientList 
-        initialData={initialData} 
-        weekDates={weekDates} 
-        todayStr={todayStr} 
+      <RecipientList
+        recipientsListData={recipientsListData}
+        weekDates={weekDates}
+        todayStr={todayStr}
       />
     </main>
   );
