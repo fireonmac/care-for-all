@@ -128,6 +128,8 @@ function WeeklyReportFormInner({
           setStatus('COMPLETED');
           setRecordId(id);
           setReport(data.combinedContent);
+          const toastId = toastManager.add({ title: '주간 리포트 발간이 완료되었습니다!', type: 'success' } as any);
+          setTimeout(() => toastManager.close(toastId), 4000);
         } else if (data.status === 'FAILED') {
           handleFail();
         }
