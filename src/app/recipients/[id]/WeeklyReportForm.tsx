@@ -189,9 +189,12 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
           open={open}
           onOpenChange={setOpen}
           title="주간 요양보호기록 종합"
-          maxWidth="max-w-2xl"
+          maxWidth="max-w-3xl"
           trigger={
-            <button className="px-5 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-surface-800 tracking-widest transition-colors shadow-sm">
+            <button 
+              onClick={() => setOpen(true)}
+              className="px-5 py-2.5 bg-black text-white text-sm font-medium rounded-lg hover:bg-surface-800 tracking-widest transition-colors shadow-sm"
+            >
               주간 리포트 확인
             </button>
           }
@@ -203,12 +206,25 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
             </>
           }
         >
-          <div className="flex flex-col h-full min-h-[300px]">
-            <Textarea
-              className="text-lg h-64 shadow-inner"
-              value={report || ''}
-              readOnly
-            />
+          <div className="flex flex-col gap-6">
+            <div className="bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
+                {report || '내용이 없습니다.'}
+              </p>
+            </div>
+            
+            <div className="flex justify-end">
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(report || '');
+                  const toastId = toastManager.add({ title: '리포트가 복사되었습니다.' } as any);
+                  setTimeout(() => toastManager.remove(toastId), 3000);
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-surface-300 text-surface-700 rounded-xl hover:bg-surface-50 hover:border-black hover:text-black transition-colors text-sm font-medium tracking-widest"
+              >
+                텍스트 복사
+              </button>
+            </div>
           </div>
         </Modal>
       )}
