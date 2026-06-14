@@ -4,7 +4,6 @@ import { WeeklyReportForm } from './WeeklyReportForm';
 import { TodayRecordView } from './TodayRecordView';
 import { WeekSelector } from '@/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
-import { WeeklyReportSection } from '@/components/WeeklyReportSection';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
@@ -46,7 +45,7 @@ export default async function RecipientDetailPage({
           {recipient.name} <span className="text-2xl font-normal text-surface-700 ml-1">어르신</span>
         </h1>
         <div className="self-start sm:self-auto">
-          <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} />
+          <WeeklyReportForm recipientId={recipient.id} dailyRecordCount={dailyRecordCount} weekStartDate={weekDates[0].dateStr} />
         </div>
       </header>
 
@@ -98,8 +97,6 @@ export default async function RecipientDetailPage({
         ) : (
           <TodayRecordView record={targetRecord} recipientId={recipient.id} />
         )}
-
-        <WeeklyReportSection recipientId={recipient.id} weekStartDate={weekDates[0].dateStr} />
       </section>
     </main>
   );
