@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env*
+!.env.example
+sqlite.db
+*.db-wal
+*.db-shm
+app_data
+backups
+npm-debug.log*
+pnpm-debug.log*
