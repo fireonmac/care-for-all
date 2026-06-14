@@ -102,7 +102,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
         
         if (!res.ok || data.error) {
           stopPolling();
-          setStatus('FAILED');
+          setStatus('IDLE');
           return;
         }
 
