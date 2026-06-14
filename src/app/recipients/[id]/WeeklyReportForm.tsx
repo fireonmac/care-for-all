@@ -100,6 +100,12 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
         const res = await fetch(`/api/records/${id}`);
         const data = await res.json();
         
+        if (!res.ok || data.error) {
+          stopPolling();
+          setStatus('FAILED');
+          return;
+        }
+
         if (data.status === 'COMPLETED') {
           stopPolling();
           setStatus('COMPLETED');
