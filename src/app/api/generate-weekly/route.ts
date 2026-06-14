@@ -6,6 +6,8 @@ import { eq, and, gte, lt } from 'drizzle-orm';
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma4:26b';
 
+export const dynamic = 'force-dynamic';
+
 // 비동기 백그라운드 작업 (응답 후 계속 실행됨)
 async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string) {
   try {

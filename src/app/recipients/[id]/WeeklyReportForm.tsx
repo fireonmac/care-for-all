@@ -95,7 +95,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/records/${id}`);
+        const res = await fetch(`/api/records/${id}`, { cache: 'no-store' });
         const data = await res.json();
         
         if (!res.ok || data.error) {
