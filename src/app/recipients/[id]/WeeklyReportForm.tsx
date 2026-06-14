@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
-import { Loader2, AlertCircle, AlertTriangle, Check, Copy } from 'lucide-react';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import { Toast } from '@base-ui/react/toast';
+import { CopyButton } from '@/components/CopyButton';
 
 export function WeeklyReportForm(props: { 
   recipientId: string, 
@@ -19,37 +20,10 @@ export function WeeklyReportForm(props: {
     return null;
   }
 
-  return (
-    <Toast.Provider>
-      <WeeklyReportFormInner {...props} />
-      <Toast.Portal>
-        <Toast.Viewport className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 outline-none">
-          <ToastList />
-        </Toast.Viewport>
-      </Toast.Portal>
-    </Toast.Provider>
-  );
+  return <WeeklyReportFormInner {...props} />;
 }
 
-function ToastList() {
-  const { toasts } = Toast.useToastManager();
-  return toasts.map((toast: any) => (
-    <Toast.Root 
-      key={toast.id} 
-      toast={toast} 
-      className="bg-black text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 text-base font-medium tracking-widest transition-all duration-300 data-[starting-style]:-translate-y-4 data-[starting-style]:opacity-0 data-[ending-style]:-translate-y-4 data-[ending-style]:opacity-0"
-    >
-      {toast.type === 'error' ? (
-        <AlertCircle className="w-5 h-5 text-red-400" />
-      ) : null}
-      <Toast.Content>
-        <Toast.Title className={toast.type === 'error' ? 'text-red-400' : ''}>
-          {toast.title}
-        </Toast.Title>
-      </Toast.Content>
-    </Toast.Root>
-  ));
-}
+
 
 function WeeklyReportFormInner({ 
   recipientId, 
@@ -67,7 +41,6 @@ function WeeklyReportFormInner({
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const toastManager = Toast.useToastManager();
@@ -225,17 +198,7 @@ function WeeklyReportFormInner({
             <div>
               <div className="flex items-center gap-3 mb-4 px-1">
                 <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(report || '');
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="flex items-center text-surface-600 hover:text-black transition-colors"
-                  title="리포트 복사"
-                >
-                  {copied ? <Check size={18} /> : <Copy size={18} />}
-                </button>
+                <CopyButton text={report || ''} title="리포트 복사" />
               </div>
               
               <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">

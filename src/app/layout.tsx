@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import Link from 'next/link';
 
+import { GlobalToastProvider } from '@/components/GlobalToastProvider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,7 +41,9 @@ export default function RootLayout({
           </div>
         </header>
         <div className="flex-1 mt-16">
-          <NuqsAdapter>{children}</NuqsAdapter>
+          <GlobalToastProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </GlobalToastProvider>
         </div>
         <footer className="w-full border-t border-surface-100 pt-6 pb-8 mt-24">
           <div className="max-w-5xl mx-auto px-6 sm:px-12 text-center">

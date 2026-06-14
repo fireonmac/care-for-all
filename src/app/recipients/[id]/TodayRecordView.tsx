@@ -3,26 +3,15 @@
 import { useState } from 'react';
 import { deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
-import { Copy, Check, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Modal, ModalClose } from '@/components/Modal';
+import { CopyButton } from '@/components/CopyButton';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [saving, setSaving] = useState(false);
-  const [copiedCog, setCopiedCog] = useState(false);
-  const [copiedBeh, setCopiedBeh] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
 
-  const handleCopy = (text: string, type: 'cog' | 'beh') => {
-    navigator.clipboard.writeText(text);
-    if (type === 'cog') {
-      setCopiedCog(true);
-      setTimeout(() => setCopiedCog(false), 2000);
-    } else {
-      setCopiedBeh(true);
-      setTimeout(() => setCopiedBeh(false), 2000);
-    }
-  };
 
   const handleDelete = async () => {
     setSaving(true);
@@ -85,26 +74,14 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         <div>
           <div className="flex items-center gap-3 mb-6">
             <h3 className="text-base font-medium text-black tracking-widest">인지 영역</h3>
-            <button
-              onClick={() => handleCopy(record.cognitionContent, 'cog')}
-              className="flex items-center text-surface-600 hover:text-black transition-colors"
-              title="인지 영역 복사"
-            >
-              {copiedCog ? <Check size={18} /> : <Copy size={18} />}
-            </button>
+            <CopyButton text={record.cognitionContent} title="인지 영역 복사" />
           </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.cognitionContent}</p>
         </div>
         <div>
           <div className="flex items-center gap-3 mb-6">
             <h3 className="text-base font-medium text-black tracking-widest">행동 영역</h3>
-            <button
-              onClick={() => handleCopy(record.behaviorContent, 'beh')}
-              className="flex items-center text-surface-600 hover:text-black transition-colors"
-              title="행동 영역 복사"
-            >
-              {copiedBeh ? <Check size={18} /> : <Copy size={18} />}
-            </button>
+            <CopyButton text={record.behaviorContent} title="행동 영역 복사" />
           </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.behaviorContent}</p>
         </div>
