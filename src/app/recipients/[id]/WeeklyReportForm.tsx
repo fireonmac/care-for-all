@@ -206,7 +206,7 @@ function WeeklyReportFormInner({
         <Modal
           open={open}
           onOpenChange={setOpen}
-          title="주간 요양보호기록 종합"
+          title="주간 리포트 확인"
           maxWidth="max-w-3xl"
           trigger={
             <button 
@@ -217,15 +217,14 @@ function WeeklyReportFormInner({
             </button>
           }
         >
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap gap-2 px-1">
-              <span className="text-sm font-medium px-3 py-1.5 bg-surface-100 text-surface-700 rounded-md">대상: {recipientName} 어르신</span>
-              <span className="text-sm font-medium px-3 py-1.5 bg-surface-100 text-surface-700 rounded-md">시기: {currentMonth}월 {currentWeekOfMonth}째주</span>
+          <div className="flex flex-col gap-8">
+            <div className="px-1">
+              <p className="text-xl font-medium text-black tracking-tight">{recipientName} 어르신</p>
             </div>
 
-            <div className="bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-base font-medium text-black tracking-widest">주간 리포트 내용</h3>
+            <div>
+              <div className="flex items-center gap-3 mb-4 px-1">
+                <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(report || '');
@@ -238,9 +237,12 @@ function WeeklyReportFormInner({
                   {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
               </div>
-              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
-                {report || '내용이 없습니다.'}
-              </p>
+              
+              <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+                <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
+                  {report || '내용이 없습니다.'}
+                </p>
+              </div>
             </div>
           </div>
         </Modal>
