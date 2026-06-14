@@ -21,12 +21,15 @@ const PREDEFINED_EMOTIONS = [
   { id: 'angry', icon: '😡', label: '거부/화남', text: '거부 반응을 보이거나 화를 내심' },
 ];
 
+import { Toast } from '@base-ui/react/toast';
+
 export function KeywordInputForm({ recipientId, targetDate, recipientName }: { recipientId: string, targetDate: string, recipientName: string }) {
   const [events, setEvents] = useState<EventInput[]>([{ id: Math.random().toString(), event: '', emotion: '', isCustomEmotion: false, action: '' }]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
   const router = useRouter();
+  const toastManager = Toast.useToastManager();
   
   const todayStr = new Date().toISOString().split('T')[0];
   const isFuture = targetDate > todayStr;
@@ -106,7 +109,8 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
         setDraft({ cognition: currentCognition, behavior: currentBehavior });
       }
     } catch {
-      alert('생성 중 오류가 발생했습니다.');
+      const toastId = toastManager.add({ title: '생성 중 오류가 발생했습니다.', type: 'error' } as any);
+      setTimeout(() => toastManager.close(toastId), 4000);
       setDraft(null);
     } finally {
       setLoading(false);
@@ -116,9 +120,17 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
   const handleSave = async () => {
     if (!draft) return;
     setSaving(true);
-    await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
-    setSaving(false);
-    router.refresh();
+    try {
+      await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
+      const toastId = toastManager.add({ title: '성공적으로 저장되었습니다.', type: 'success' } as any);
+      setTimeout(() => toastManager.close(toastId), 3000);
+      router.refresh();
+    } catch (error) {
+      const toastId = toastManager.add({ title: '저장에 실패했습니다.', type: 'error' } as any);
+      setTimeout(() => toastManager.close(toastId), 4000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (draft) {
