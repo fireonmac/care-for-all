@@ -5,10 +5,11 @@ import { eq } from 'drizzle-orm';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const recordId = params.id;
+    const resolvedParams = await params;
+    const recordId = resolvedParams.id;
 
     if (!recordId) {
       return Response.json({ error: 'recordId is required' }, { status: 400 });
