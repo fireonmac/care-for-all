@@ -66,6 +66,8 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
       } else if (res.status === 202 && data.status === 'PROCESSING') {
         setStatus('PROCESSING');
         startPolling(data.recordId);
+      } else if (data.status === 'FAILED') {
+        setStatus('FAILED');
       } else {
         setStatus('IDLE');
       }

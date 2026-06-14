@@ -134,8 +134,15 @@ export async function POST(req: NextRequest) {
       } else if (existingRecord.status === 'COMPLETED') {
         return Response.json({ recordId: existingRecord.id, status: 'COMPLETED' }, { status: 200 });
       } else {
-        // FAILED 인 경우 재시도를 위해 삭제 후 재진행 하거나 업데이트
-        db.delete(records).where(eq(records.id, existingRecord.id)).run();
+        // FAILED 인 경우 재시도를 위해 해당 주차의 모든 실패 레코드를 일괄 삭제
+        db.delete(records).where(
+          and(
+            eq(records.recipientId, recipientId),
+            eq(records.type, 'weekly'),
+            eq(records.date, targetDate),
+            eq(records.status, 'FAILED')
+          )
+        ).run();
       }
     }
 
