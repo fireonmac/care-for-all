@@ -49,7 +49,7 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
         messages: [
           {
             role: 'system',
-            content: '요양보호시설의 주간 요양보호 기록 종합 작성기입니다. 제공된 한 주간의 일일 관찰 기록들을 종합하여 어르신의 주간 상태 변화와 주요 이슈를 요약된 하나의 리포트 문단으로 작성하세요.'
+            content: '요양보호시설의 주간 요양보호 기록 종합 작성기입니다. 제공된 한 주간의 일일 관찰 기록들을 종합하여 어르신의 주간 상태 변화와 주요 이슈를 요약된 하나의 리포트 문단으로 작성하세요. **절대 "[주간 요양보호 기록 종합 리포트]" 등의 제목이나 서론을 적지 마시고, 바로 본문 내용만 출력하세요.**'
           },
           {
             role: 'user',

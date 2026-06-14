@@ -21,10 +21,13 @@ export function Modal({ open, onOpenChange, trigger, title, children, footer, ma
         <Dialog.Backdrop className="fixed inset-0 bg-white/80 backdrop-blur-sm z-40" />
         <Dialog.Popup className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[90vw] ${maxWidth} shadow-2xl z-50 outline-none border border-surface-200 rounded-xl flex flex-col max-h-[85vh] overflow-hidden`}>
           
-          <div className="px-8 pt-8 pb-6 border-b border-surface-100 shrink-0">
+          <div className="px-8 pt-8 pb-6 border-b border-surface-100 shrink-0 flex items-center justify-between">
             <Dialog.Title className="text-2xl font-medium text-black tracking-tight">
               {title}
             </Dialog.Title>
+            <Dialog.Close className="text-surface-400 hover:text-black transition-colors rounded-lg p-1 hover:bg-surface-100 outline-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </Dialog.Close>
           </div>
           
           <div className="flex-1 overflow-y-auto p-8">

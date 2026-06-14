@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
-import { Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle, Check, Copy } from 'lucide-react';
 import { Toast } from '@base-ui/react/toast';
 
 export function WeeklyReportForm(props: { 
@@ -41,9 +41,7 @@ function ToastList() {
     >
       {toast.type === 'error' ? (
         <AlertCircle className="w-5 h-5 text-red-400" />
-      ) : (
-        <Loader2 className="w-5 h-5 animate-spin" />
-      )}
+      ) : null}
       <Toast.Content>
         <Toast.Title className={toast.type === 'error' ? 'text-red-400' : ''}>
           {toast.title}
@@ -69,6 +67,7 @@ function WeeklyReportFormInner({
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const toastManager = Toast.useToastManager();
@@ -207,38 +206,39 @@ function WeeklyReportFormInner({
         <Modal
           open={open}
           onOpenChange={setOpen}
-          title={`${currentMonth}월 ${currentWeekOfMonth}째주 ${recipientName} 어르신 주간 요양보호기록 종합`}
+          title="주간 요양보호기록 종합"
           maxWidth="max-w-3xl"
           trigger={
             <button 
               onClick={() => setOpen(true)}
-              className="px-5 py-2.5 bg-white border-2 border-black text-black text-sm font-medium rounded-lg hover:border-blue-600 hover:text-blue-600 tracking-widest transition-colors shadow-sm"
+              className="px-5 py-2.5 bg-white border-2 border-black text-black text-sm font-medium rounded-lg hover:bg-surface-50 tracking-widest transition-colors shadow-sm"
             >
               주간 리포트 확인
             </button>
           }
-          footer={
-            <>
-              <ModalClose className="text-base font-medium tracking-widest text-surface-500 hover:text-black">
-                닫기
-              </ModalClose>
-            </>
-          }
         >
           <div className="flex flex-col gap-6">
-            <div className="relative bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(report || '');
-                  const toastId = toastManager.add({ title: '리포트가 복사되었습니다.' } as any);
-                  setTimeout(() => toastManager.close(toastId), 3000);
-                }}
-                className="absolute top-6 right-6 p-2 text-surface-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="복사하기"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              </button>
-              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide pr-8">
+            <div className="flex flex-wrap gap-2 px-1">
+              <span className="text-sm font-medium px-3 py-1.5 bg-surface-100 text-surface-700 rounded-md">대상: {recipientName} 어르신</span>
+              <span className="text-sm font-medium px-3 py-1.5 bg-surface-100 text-surface-700 rounded-md">시기: {currentMonth}월 {currentWeekOfMonth}째주</span>
+            </div>
+
+            <div className="bg-[#FAFAFA] p-8 md:p-10 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+              <div className="flex items-center gap-3 mb-6">
+                <h3 className="text-base font-medium text-black tracking-widest">주간 리포트 내용</h3>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(report || '');
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="flex items-center text-surface-600 hover:text-black transition-colors"
+                  title="리포트 복사"
+                >
+                  {copied ? <Check size={18} /> : <Copy size={18} />}
+                </button>
+              </div>
+              <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
                 {report || '내용이 없습니다.'}
               </p>
             </div>
