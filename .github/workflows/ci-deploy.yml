@@ -1,0 +1,73 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: citycare-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.20.0"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Production build
+        run: pnpm run build
+
+  deploy:
+    name: Deploy to Mac Studio
+    needs: verify
+    runs-on:
+      - self-hosted
+      - macOS
+      - ARM64
+      - citycare-prod
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Check out verified source
+        uses: actions/checkout@v4
+
+      - name: Validate deployment path
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          if [ -z "$DEPLOY_PATH" ]; then
+            echo "Repository variable DEPLOY_PATH is required." >&2
+            exit 1
+          fi
+
+      - name: Deploy
+        env:
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: ./scripts/deploy.sh "$GITHUB_WORKSPACE" "$DEPLOY_PATH" "$GITHUB_SHA"
