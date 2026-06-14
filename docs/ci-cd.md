@@ -1,5 +1,7 @@
 # GitHub Actions CI/CD 운영 가이드
 
+이 문서는 `care-for-all` 저장소와 `케어포올` 운영 서비스 기준으로 작성한다.
+
 ## 1. 배포 구조
 
 `main` 브랜치에 push하면 다음 순서로 실행된다.
@@ -12,7 +14,7 @@
 6. Docker 이미지 빌드
 7. 현재 SQLite DB 온라인 백업
 8. Drizzle 스키마 적용
-9. `citycare` 컨테이너 교체
+9. `app` 컨테이너 교체
 10. `/api/test` 헬스체크
 
 운영 디렉터리의 `.env`, `app_data`, `backups`는 소스 동기화에서 제외되므로 push로 덮어쓰거나 삭제하지 않는다.
@@ -28,13 +30,21 @@ Mac Studio에서 다음 항목이 준비되어 있어야 한다.
 
 public 저장소나 신뢰할 수 없는 외부 기여자의 워크플로에 production runner를 제공하지 않는다.
 
+권장 디렉터리 구조:
+
+```text
+/Users/your-name/Projects/care-for-all   # VS Code 개발용
+/Users/your-name/services/care-for-all   # Docker 운영 전용
+/Users/your-name/actions-runner          # GitHub Actions runner
+```
+
 ## 3. 운영 디렉터리 준비
 
 예시:
 
 ```bash
-mkdir -p /Users/your-name/services/citycare-log-maker
-cd /Users/your-name/services/citycare-log-maker
+mkdir -p /Users/your-name/services/care-for-all
+cd /Users/your-name/services/care-for-all
 
 mkdir -p app_data backups
 cp /path/to/source/.env.example .env
@@ -57,7 +67,7 @@ GitHub 저장소에서 다음 메뉴로 이동한다.
 1. 운영체제는 `macOS`를 선택한다.
 2. 아키텍처는 `ARM64`를 선택한다.
 3. GitHub 화면에 표시된 다운로드 및 `config.sh` 명령을 Mac Studio에서 실행한다.
-4. runner 설정 시 추가 label로 `gowncare-prod`를 입력한다.
+4. runner 설정 시 추가 label로 `care-for-all-prod`를 입력한다.
 5. runner를 서비스로 설치하고 시작한다.
 
 ```bash
@@ -88,7 +98,7 @@ Repository variable을 추가한다.
 예:
 
 ```text
-/Users/your-name/services/citycare-log-maker
+/Users/your-name/services/care-for-all
 ```
 
 추가로 `Settings` → `Environments`에서 `production` 환경을 생성한다. 초기에는 승인 없이 자동 배포하고, 운영 안정화 후 필요한 경우 required reviewer를 설정한다.
@@ -102,9 +112,9 @@ Repository variable을 추가한다.
 GitHub 저장소의 `Actions` 탭에서 `CI and Deploy` 실행 상태를 확인한다. 성공 후 Mac Studio에서 다음 명령으로 확인한다.
 
 ```bash
-cd /Users/your-name/services/citycare-log-maker
+cd /Users/your-name/services/care-for-all
 docker compose ps
-docker compose logs --tail=100 citycare
+docker compose logs --tail=100 app
 cat .deploy-version
 ```
 

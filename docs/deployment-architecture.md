@@ -1,4 +1,4 @@
-# 시티케어 요양보호기록 작성기 - 배포 아키텍처 결정 문서 (ADR)
+# 케어포올 요양보호기록 작성기 - 배포 아키텍처 결정 문서 (ADR)
 
 ## 1. 상황과 제약
 
@@ -94,7 +94,7 @@ mkdir -p app_data backups
 docker compose run --rm migrate
 
 # 웹 서비스 시작
-docker compose up -d web
+docker compose up -d app
 ```
 
 마이그레이션 서비스는 Drizzle CLI가 포함된 전용 `migrator` 타깃을 사용한다. 운영용 `runner` 이미지에는 개발 도구를 포함하지 않는다.
@@ -103,7 +103,7 @@ docker compose up -d web
 
 ```bash
 docker compose ps
-docker compose logs --tail=100 web
+docker compose logs --tail=100 app
 curl --fail http://127.0.0.1:3000/api/test
 ```
 
@@ -111,9 +111,9 @@ curl --fail http://127.0.0.1:3000/api/test
 
 ```bash
 git pull
-docker compose build citycare migrate
+docker compose build app migrate
 docker compose run --rm migrate
-docker compose up -d citycare
+docker compose up -d app
 ```
 
 마이그레이션과 웹 재시작 사이에는 짧은 점검 시간을 잡는다. 호환되지 않는 스키마 변경은 별도의 데이터 변환 절차를 작성한 뒤 적용한다.
@@ -131,7 +131,7 @@ docker compose up -d citycare
 호스트에 `sqlite3` CLI가 필요하다. cron에서는 저장소의 절대 경로를 사용한다.
 
 ```cron
-0 3 * * * cd /absolute/path/to/citycare-log-maker && ./scripts/backup-sqlite.sh >> ./backups/backup.log 2>&1
+0 3 * * * cd /absolute/path/to/care-for-all && ./scripts/backup-sqlite.sh >> ./backups/backup.log 2>&1
 ```
 
 백업은 서버와 다른 저장장치에도 복제하고, 주기적으로 복구를 시험한다.
@@ -139,9 +139,9 @@ docker compose up -d citycare
 복구 절차:
 
 ```bash
-docker compose stop citycare
+docker compose stop app
 cp backups/sqlite-YYYYMMDD-HHMMSS.db app_data/sqlite.db
-docker compose up -d citycare
+docker compose up -d app
 ```
 
 복구 전에 현재 DB를 별도 이름으로 보관한다.

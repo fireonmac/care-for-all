@@ -1,43 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 케어포올
 
-## Getting Started
+케어포올은 요양보호 현장의 관찰 메모를 일일·주간 요양보호기록으로 정리하는 웹 애플리케이션입니다.
 
-First, run the development server:
+## 개발
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 기술 구성
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 16 App Router
+- Drizzle ORM
+- SQLite
+- Ollama
+- Docker Compose
+- GitHub Actions self-hosted runner
 
-## Learn More
+## 배포
 
-To learn more about Next.js, take a look at the following resources:
+- [배포 아키텍처](./docs/deployment-architecture.md)
+- [GitHub Actions CI/CD 운영 가이드](./docs/ci-cd.md)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+운영 서비스 식별자는 `care-for-all`, 화면 표시명은 `케어포올`을 사용합니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 브랜드 자산
 
-## Deployment
-
-This project is deployed as a self-hosted Docker service.
-
-- [Deployment architecture](./docs/deployment-architecture.md)
-- [GitHub Actions CI/CD guide](./docs/ci-cd.md)
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+현재 `public/brand/care-for-all-logo-placeholder.png`는 새 로고가 확정되기 전까지 사용하는 임시 자산입니다. 새 로고 적용 시 같은 경로의 파일과 `src/app/icon.png`, `src/app/apple-icon.png`, `src/app/favicon.ico`를 함께 교체합니다.
