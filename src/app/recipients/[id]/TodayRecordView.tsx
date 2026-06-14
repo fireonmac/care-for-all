@@ -6,19 +6,28 @@ import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Modal, ModalClose } from '@/components/Modal';
 import { CopyButton } from '@/components/CopyButton';
+import { Toast } from '@base-ui/react/toast';
 
 export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
   const [saving, setSaving] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
-
+  const toastManager = Toast.useToastManager();
 
   const handleDelete = async () => {
     setSaving(true);
-    await deleteRecord(record.id);
-    setSaving(false);
-    setDeleteModalOpen(false);
-    router.refresh();
+    try {
+      await deleteRecord(record.id);
+      const toastId = toastManager.add({ title: '기록이 성공적으로 삭제되었습니다.', type: 'success' } as any);
+      setTimeout(() => toastManager.close(toastId), 3000);
+      setDeleteModalOpen(false);
+      router.refresh();
+    } catch (error) {
+      const toastId = toastManager.add({ title: '기록 삭제에 실패했습니다.', type: 'error' } as any);
+      setTimeout(() => toastManager.close(toastId), 4000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
