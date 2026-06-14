@@ -16,7 +16,7 @@ export function CopyButton({ text, title = "복사하기", className }: { text: 
     const toastId = toastManager.add({
       title: '클립보드에 복사되었습니다. Ctrl + V로 붙여넣기하세요.',
       type: 'success',
-    } as any);
+    });
     setTimeout(() => toastManager.close(toastId), 3000);
   };
 

@@ -4,9 +4,8 @@ import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 
-export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate, startOfWeek }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string, startOfWeek: string }) {
-  const [dateParam, setDateParam] = useQueryState('date', { shallow: false });
-
+export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string }) {
+  const [, setDateParam] = useQueryState('date', { shallow: false });
 
   const handlePrev = () => {
     const newDate = addDays(new Date(targetDate), -7);

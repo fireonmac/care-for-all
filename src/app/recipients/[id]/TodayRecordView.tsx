@@ -7,8 +7,11 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Modal, ModalClose } from '@/components/Modal';
 import { CopyButton } from '@/components/CopyButton';
 import { Toast } from '@base-ui/react/toast';
+import type { records } from '@/db/schema';
 
-export function TodayRecordView({ record, recipientId }: { record: any, recipientId: string }) {
+type DailyRecord = typeof records.$inferSelect;
+
+export function TodayRecordView({ record, recipientId }: { record: DailyRecord, recipientId: string }) {
   const [saving, setSaving] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
@@ -18,12 +21,12 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
     setSaving(true);
     try {
       await deleteRecord(record.id);
-      const toastId = toastManager.add({ title: '기록이 성공적으로 삭제되었습니다.', type: 'success' } as any);
+      const toastId = toastManager.add({ title: '기록이 성공적으로 삭제되었습니다.', type: 'success' });
       setTimeout(() => toastManager.close(toastId), 3000);
       setDeleteModalOpen(false);
       router.refresh();
-    } catch (error) {
-      const toastId = toastManager.add({ title: '기록 삭제에 실패했습니다.', type: 'error' } as any);
+    } catch {
+      const toastId = toastManager.add({ title: '기록 삭제에 실패했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
     } finally {
       setSaving(false);
@@ -83,14 +86,14 @@ export function TodayRecordView({ record, recipientId }: { record: any, recipien
         <div>
           <div className="flex items-center gap-3 mb-6">
             <h3 className="text-base font-medium text-black tracking-widest">인지 영역</h3>
-            <CopyButton text={record.cognitionContent} title="인지 영역 복사" />
+            <CopyButton text={record.cognitionContent ?? ''} title="인지 영역 복사" />
           </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.cognitionContent}</p>
         </div>
         <div>
           <div className="flex items-center gap-3 mb-6">
             <h3 className="text-base font-medium text-black tracking-widest">행동 영역</h3>
-            <CopyButton text={record.behaviorContent} title="행동 영역 복사" />
+            <CopyButton text={record.behaviorContent ?? ''} title="행동 영역 복사" />
           </div>
           <p className="text-xl text-surface-700 font-light leading-[1.8] whitespace-pre-wrap bg-surface-100 p-6 rounded-lg">{record.behaviorContent}</p>
         </div>

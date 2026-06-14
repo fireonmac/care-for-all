@@ -23,8 +23,8 @@ const PREDEFINED_EMOTIONS = [
 
 import { Toast } from '@base-ui/react/toast';
 
-export function KeywordInputForm({ recipientId, targetDate, recipientName }: { recipientId: string, targetDate: string, recipientName: string }) {
-  const [events, setEvents] = useState<EventInput[]>([{ id: Math.random().toString(), event: '', emotion: '', isCustomEmotion: false, action: '' }]);
+export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
+  const [events, setEvents] = useState<EventInput[]>(() => [{ id: Math.random().toString(), event: '', emotion: '', isCustomEmotion: false, action: '' }]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
@@ -109,7 +109,7 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
         setDraft({ cognition: currentCognition, behavior: currentBehavior });
       }
     } catch {
-      const toastId = toastManager.add({ title: '생성 중 오류가 발생했습니다.', type: 'error' } as any);
+      const toastId = toastManager.add({ title: '생성 중 오류가 발생했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
       setDraft(null);
     } finally {
@@ -122,11 +122,11 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
     setSaving(true);
     try {
       await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
-      const toastId = toastManager.add({ title: '성공적으로 저장되었습니다.', type: 'success' } as any);
+      const toastId = toastManager.add({ title: '성공적으로 저장되었습니다.', type: 'success' });
       setTimeout(() => toastManager.close(toastId), 3000);
       router.refresh();
-    } catch (error) {
-      const toastId = toastManager.add({ title: '저장에 실패했습니다.', type: 'error' } as any);
+    } catch {
+      const toastId = toastManager.add({ title: '저장에 실패했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
     } finally {
       setSaving(false);

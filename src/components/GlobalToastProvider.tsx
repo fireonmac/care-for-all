@@ -19,7 +19,7 @@ export function GlobalToastProvider({ children }: { children: ReactNode }) {
 
 function ToastList() {
   const { toasts } = Toast.useToastManager();
-  return toasts.map((toast: any) => (
+  return toasts.map((toast) => (
     <Toast.Root 
       key={toast.id} 
       toast={toast} 

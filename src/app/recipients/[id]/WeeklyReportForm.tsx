@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
-import { AlertCircle, AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { deleteRecord, updateWeeklyRecord } from './actions';
 import { Toast } from '@base-ui/react/toast';
 import { CopyButton } from '@/components/CopyButton';
@@ -53,62 +53,32 @@ function WeeklyReportFormInner({
   const router = useRouter();
   const toastManager = Toast.useToastManager();
 
-  // 폴링 및 초기 상태 로직
-  useEffect(() => {
-    if (!weekStartDate) return;
-    checkInitialStatus();
-    return () => stopPolling();
-  }, [recipientId, weekStartDate]);
-
-  const checkInitialStatus = async () => {
-    try {
-      const timestamp = Date.now();
-      const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}&t=${timestamp}`, { cache: 'no-store' });
-      const data = await res.json();
-      
-      if (data.status === 'COMPLETED') {
-        setStatus('COMPLETED');
-        if(data.recordId) setRecordId(data.recordId);
-        fetchContent(data.recordId);
-      } else if (data.status === 'PROCESSING') {
-        setStatus('PROCESSING');
-        startPolling(data.recordId);
-      } else if (data.status === 'FAILED') {
-        setStatus('FAILED');
-      } else {
-        setStatus('IDLE');
-      }
-    } catch (e) {
-      setStatus('IDLE');
-    }
-  };
-
-  const fetchContent = async (id: string) => {
+  const fetchContent = useCallback(async (id: string) => {
     const res = await fetch(`/api/records/${id}`);
     const data = await res.json();
     if (data.combinedContent) {
       setReport(data.combinedContent);
     }
-  };
+  }, []);
 
-  const stopPolling = () => {
+  const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
-  };
+  }, []);
 
-  const handleFail = () => {
+  const handleFail = useCallback(() => {
     stopPolling();
     setStatus('FAILED');
     const toastId = toastManager.add({
       title: '발간 작업 중 오류가 발생했습니다.',
       type: 'error',
-    } as any);
+    });
     setTimeout(() => toastManager.close(toastId), 4000);
-  };
+  }, [stopPolling, toastManager]);
 
-  const startPolling = (id: string) => {
+  const startPolling = useCallback((id: string) => {
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
       try {
@@ -128,7 +98,7 @@ function WeeklyReportFormInner({
           setStatus('COMPLETED');
           setRecordId(id);
           setReport(data.combinedContent);
-          const toastId = toastManager.add({ title: '주간 리포트 발간이 완료되었습니다!', type: 'success' } as any);
+          const toastId = toastManager.add({ title: '주간 리포트 발간이 완료되었습니다!', type: 'success' });
           setTimeout(() => toastManager.close(toastId), 4000);
         } else if (data.status === 'FAILED') {
           handleFail();
@@ -138,7 +108,36 @@ function WeeklyReportFormInner({
         handleFail();
       }
     }, 3000);
-  };
+  }, [handleFail, stopPolling, toastManager]);
+
+  useEffect(() => {
+    if (!weekStartDate) return;
+
+    const checkInitialStatus = async () => {
+      try {
+        const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`, { cache: 'no-store' });
+        const data = await res.json();
+
+        if (data.status === 'COMPLETED' && data.recordId) {
+          setStatus('COMPLETED');
+          setRecordId(data.recordId);
+          void fetchContent(data.recordId);
+        } else if (data.status === 'PROCESSING' && data.recordId) {
+          setStatus('PROCESSING');
+          startPolling(data.recordId);
+        } else if (data.status === 'FAILED') {
+          setStatus('FAILED');
+        } else {
+          setStatus('IDLE');
+        }
+      } catch {
+        setStatus('IDLE');
+      }
+    };
+
+    void checkInitialStatus();
+    return stopPolling;
+  }, [fetchContent, recipientId, startPolling, stopPolling, weekStartDate]);
 
   const handleGenerate = async () => {
     setStatus('PROCESSING');
@@ -159,7 +158,7 @@ function WeeklyReportFormInner({
       if (data.recordId) {
         startPolling(data.recordId);
       }
-    } catch (error) {
+    } catch {
       handleFail();
     }
   };
@@ -183,11 +182,11 @@ function WeeklyReportFormInner({
       await updateWeeklyRecord(recordId, editContent);
       setReport(editContent);
       setIsEditing(false);
-      const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' } as any);
+      const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' });
       setTimeout(() => toastManager.close(toastId), 3000);
       router.refresh();
-    } catch (error) {
-      const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' } as any);
+    } catch {
+      const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
     } finally {
       setSaving(false);
@@ -203,11 +202,11 @@ function WeeklyReportFormInner({
       setStatus('IDLE');
       setOpen(false);
       setDeleteModalOpen(false);
-      const toastId = toastManager.add({ title: '주간 리포트가 성공적으로 삭제되었습니다.', type: 'success' } as any);
+      const toastId = toastManager.add({ title: '주간 리포트가 성공적으로 삭제되었습니다.', type: 'success' });
       setTimeout(() => toastManager.close(toastId), 3000);
       router.refresh();
-    } catch (error) {
-      const toastId = toastManager.add({ title: '삭제에 실패했습니다.', type: 'error' } as any);
+    } catch {
+      const toastId = toastManager.add({ title: '삭제에 실패했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
     } finally {
       setSaving(false);

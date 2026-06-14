@@ -59,15 +59,13 @@ export default async function RecipientDetailPage({
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section id="week-view" className="mb-24 scroll-mt-20">
         <div className="flex items-center mb-6">
-          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} startOfWeek={startOfWeek} />
+          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
         </div>
         
         <div className="grid grid-cols-7 gap-4 border-b border-surface-200 pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {
             const record = currentWeekRecords.find(r => r.date === dateStr);
             const isSelected = dateStr === targetDate;
-            const isToday = dateStr === todayStr;
-            
             return (
               <Link
                 key={dateStr}
@@ -100,7 +98,7 @@ export default async function RecipientDetailPage({
       {/* 하단: 컨텐츠 영역 */}
       <section className="flex-1 w-full mx-auto">
         {!hasTargetRecord ? (
-          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} recipientName={recipient.name} />
+          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
         ) : (
           <TodayRecordView record={targetRecord} recipientId={recipient.id} />
         )}

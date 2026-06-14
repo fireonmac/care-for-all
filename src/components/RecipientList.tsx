@@ -6,12 +6,14 @@ import Link from 'next/link';
 import { Check, Search, Loader2 } from 'lucide-react';
 import { commonInputClasses } from '@/components/Textarea';
 
+type RecipientWithStats = Awaited<ReturnType<typeof getRecipientsWithStats>>['data'][number];
+
 export function RecipientList({ 
   initialData, 
   weekDates, 
   todayStr 
 }: { 
-  initialData: { data: any[], nextCursor: string | null }, 
+  initialData: { data: RecipientWithStats[], nextCursor: string | null },
   weekDates: { dateStr: string, dayName: string }[], 
   todayStr: string 
 }) {
