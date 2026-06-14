@@ -179,8 +179,10 @@ function WeeklyReportFormInner({
         <Modal
           open={open}
           onOpenChange={setOpen}
-          title="주간 리포트 확인"
+          title="주간 요양보호기록 종합"
           maxWidth="max-w-3xl"
+          maxHeight="max-h-[70vh]"
+          bodyClassName="p-8 pb-12 min-h-[300px]"
           trigger={
             <button 
               onClick={() => setOpen(true)}

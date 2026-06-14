@@ -11,15 +11,17 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: string;
+  maxHeight?: string;
+  bodyClassName?: string;
 }
 
-export function Modal({ open, onOpenChange, trigger, title, children, footer, maxWidth = 'max-w-md' }: ModalProps) {
+export function Modal({ open, onOpenChange, trigger, title, children, footer, maxWidth = 'max-w-md', maxHeight = 'max-h-[85vh]', bodyClassName = 'p-8' }: ModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger}
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 bg-white/80 backdrop-blur-sm z-40" />
-        <Dialog.Popup className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[90vw] ${maxWidth} shadow-2xl z-50 outline-none border border-surface-200 rounded-xl flex flex-col max-h-[85vh] overflow-hidden`}>
+        <Dialog.Popup className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-[90vw] ${maxWidth} shadow-2xl z-50 outline-none border border-surface-200 rounded-xl flex flex-col ${maxHeight} overflow-hidden`}>
           
           <div className="px-8 pt-8 pb-6 border-b border-surface-100 shrink-0 flex items-center justify-between">
             <Dialog.Title className="text-2xl font-medium text-black tracking-tight">
@@ -30,7 +32,7 @@ export function Modal({ open, onOpenChange, trigger, title, children, footer, ma
             </Dialog.Close>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-8 pb-12 min-h-[300px] max-h-[70vh]">
+          <div className={`flex-1 overflow-y-auto ${bodyClassName}`}>
             {children}
           </div>
           
