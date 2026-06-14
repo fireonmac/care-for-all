@@ -40,11 +40,11 @@ export default async function RecipientDetailPage({
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <BackButton href="/" label="목록으로 돌아가기" />
 
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-black pb-8 mb-20 gap-6 min-h-[88px] sm:min-h-0">
         <h1 className="text-4xl font-medium text-black tracking-tight">
           {recipient.name} <span className="text-2xl font-normal text-surface-700 ml-1">어르신</span>
         </h1>
-        <div className="self-start sm:self-auto">
+        <div className="self-start sm:self-auto min-h-[44px] flex items-center">
           <WeeklyReportForm 
             recipientId={recipient.id} 
             recipientName={recipient.name}
