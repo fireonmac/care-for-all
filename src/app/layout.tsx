@@ -3,7 +3,7 @@ import Image from "next/image";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "고운케어",
+  title: "케어포올",
   description: "어르신 요양보호기록 자동 작성 시스템",
 };
 
@@ -30,13 +30,13 @@ export default function RootLayout({
               className="flex items-center gap-2 text-black hover:opacity-70 transition-opacity"
             >
               <Image
-                src="/brand/citycare-logo-v2.png"
-                alt=""
+                src="/brand/care-for-all-logo-placeholder.png"
+                alt="케어포올"
                 width={36}
                 height={36}
                 priority
               />
-              <span className="text-2xl tracking-tight">고운케어</span>
+              <span className="text-2xl tracking-tight">케어포올</span>
             </Link>
           </div>
         </header>
