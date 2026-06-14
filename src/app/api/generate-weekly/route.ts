@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/db';
 import { records } from '@/db/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
+import { getKSTDateStr } from '@/lib/dateUtils';
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma4:26b';
@@ -16,8 +17,8 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 7);
     
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
+    const startDateStr = getKSTDateStr(startDate);
+    const endDateStr = getKSTDateStr(endDate);
 
     const weeklyData = await db.select()
       .from(records)

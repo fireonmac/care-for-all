@@ -7,7 +7,7 @@ import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
-import { getWeekData } from '@/lib/dateUtils';
+import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 
 export default async function RecipientDetailPage({
   params,
@@ -22,7 +22,7 @@ export default async function RecipientDetailPage({
   const recipient = await getRecipientOr404(resolvedParams.id);
   const recentRecords = await getRecipientRecords(resolvedParams.id);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getKSTDateStr(new Date());
   const targetDate = resolvedSearch.date || todayStr;
   
   const targetRecord = recentRecords.find((r) => r.date === targetDate && r.type === 'daily');

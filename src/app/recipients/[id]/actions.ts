@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { formatKeywordsWithAI, formatWeeklyReportWithAI } from '@/lib/ai';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
+import { getKSTDateStr } from '@/lib/dateUtils';
 
 export async function getRecipientOr404(id: string) {
   const result = await db.select().from(recipients).where(eq(recipients.id, id));
@@ -28,7 +29,7 @@ export async function generateDraft(keywords: string) {
 }
 
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
-  const dateStr = targetDate || new Date().toISOString().split('T')[0];
+  const dateStr = targetDate || getKSTDateStr(new Date());
   
   await db.insert(records).values({
     id: randomUUID(),
@@ -58,7 +59,7 @@ export async function generateWeeklyDraft(recipientId: string) {
 }
 
 export async function saveWeeklyReport(recipientId: string, content: string) {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getKSTDateStr(new Date());
   
   await db.insert(records).values({
     id: randomUUID(),

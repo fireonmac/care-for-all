@@ -5,6 +5,7 @@ import { saveDailyRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Textarea, commonInputClasses } from '@/components/Textarea';
 import { Loader2 } from 'lucide-react';
+import { getKSTDateStr } from '@/lib/dateUtils';
 
 type EventInput = {
   id: string;
@@ -31,7 +32,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const router = useRouter();
   const toastManager = Toast.useToastManager();
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getKSTDateStr(new Date());
   const isFuture = targetDate > todayStr;
   
   const addEvent = () => {
