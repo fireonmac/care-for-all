@@ -25,12 +25,12 @@ export function Modal({ open, onOpenChange, trigger, title, children, footer, ma
             <Dialog.Title className="text-2xl font-medium text-black tracking-tight">
               {title}
             </Dialog.Title>
-            <Dialog.Close className="text-surface-400 hover:text-black transition-colors rounded-lg p-1 hover:bg-surface-100 outline-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <Dialog.Close className="text-surface-600 hover:text-black transition-colors rounded-lg p-1.5 hover:bg-surface-200 outline-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </Dialog.Close>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-8 pb-12 min-h-[300px] max-h-[70vh]">
             {children}
           </div>
           
