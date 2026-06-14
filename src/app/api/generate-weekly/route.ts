@@ -19,7 +19,7 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const weeklyData = db.select()
+    const weeklyData = await db.select()
       .from(records)
       .where(
         and(
@@ -89,10 +89,10 @@ export async function GET(req: NextRequest) {
     const targetDate = url.searchParams.get('targetDate');
 
     if (!recipientId || !targetDate) {
-      return Response.json({ error: 'Missing parameters' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const existingRecord = db.select().from(records)
+    const existingRecord = await db.select().from(records)
       .where(
         and(
           eq(records.recipientId, recipientId),
@@ -101,14 +101,18 @@ export async function GET(req: NextRequest) {
         )
       ).get();
 
+    console.log('[GET /api/generate-weekly] existingRecord:', existingRecord);
+
     if (existingRecord) {
-      return Response.json({ recordId: existingRecord.id, status: existingRecord.status }, { status: 200 });
+      console.log('[GET /api/generate-weekly] returning existing record status:', existingRecord.status);
+      return new Response(JSON.stringify({ recordId: existingRecord.id, status: existingRecord.status }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } else {
-      return Response.json({ status: 'IDLE' }, { status: 200 });
+      console.log('[GET /api/generate-weekly] returning IDLE');
+      return new Response('{"status":"IDLE"}', { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
   } catch (error) {
     console.error('API Error:', error);
-    return Response.json({ error: '서버 에러가 발생했습니다.' }, { status: 500 });
+    return new Response(JSON.stringify({ error: '서버 에러가 발생했습니다.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
@@ -117,11 +121,11 @@ export async function POST(req: NextRequest) {
     const { recipientId, targetDate } = await req.json();
 
     if (!recipientId || !targetDate) {
-      return Response.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+      return new Response(JSON.stringify({ error: '잘못된 요청입니다.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     // 1. 이미 진행 중이거나 완료된 주간 리포트가 있는지 확인
-    const existingRecord = db.select().from(records)
+    const existingRecord = await db.select().from(records)
       .where(
         and(
           eq(records.recipientId, recipientId),
@@ -132,9 +136,9 @@ export async function POST(req: NextRequest) {
 
     if (existingRecord) {
       if (existingRecord.status === 'PROCESSING') {
-        return Response.json({ recordId: existingRecord.id, status: 'PROCESSING' }, { status: 202 });
+        return new Response(JSON.stringify({ recordId: existingRecord.id, status: 'PROCESSING' }), { status: 202, headers: { 'Content-Type': 'application/json' } });
       } else if (existingRecord.status === 'COMPLETED') {
-        return Response.json({ recordId: existingRecord.id, status: 'COMPLETED' }, { status: 200 });
+        return new Response(JSON.stringify({ recordId: existingRecord.id, status: 'COMPLETED' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       } else {
         // FAILED 인 경우 재시도를 위해 해당 주차의 모든 실패 레코드를 일괄 삭제
         db.delete(records).where(
@@ -163,10 +167,10 @@ export async function POST(req: NextRequest) {
     processWeeklyReport(recordId, recipientId, targetDate);
 
     // 4. 즉시 202 Accepted 응답
-    return Response.json({ recordId, status: 'PROCESSING' }, { status: 202 });
+    return new Response(JSON.stringify({ recordId, status: 'PROCESSING' }), { status: 202, headers: { 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error('API Error:', error);
-    return Response.json({ error: '서버 에러가 발생했습니다.' }, { status: 500 });
+    return new Response(JSON.stringify({ error: '서버 에러가 발생했습니다.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }

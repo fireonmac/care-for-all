@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Toast } from '@base-ui/react/toast';
 
 export function WeeklyReportForm(props: { recipientId: string, dailyRecordCount: number, weekStartDate: string }) {
@@ -26,15 +26,21 @@ export function WeeklyReportForm(props: { recipientId: string, dailyRecordCount:
 
 function ToastList() {
   const { toasts } = Toast.useToastManager();
-  return toasts.map((toast) => (
+  return toasts.map((toast: any) => (
     <Toast.Root 
       key={toast.id} 
       toast={toast} 
       className="bg-black text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 text-base font-medium tracking-widest transition-all duration-300 data-[starting-style]:-translate-y-4 data-[starting-style]:opacity-0 data-[ending-style]:-translate-y-4 data-[ending-style]:opacity-0"
     >
-      <Loader2 className="w-5 h-5 animate-spin" />
+      {toast.type === 'error' ? (
+        <AlertCircle className="w-5 h-5 text-red-400" />
+      ) : (
+        <Loader2 className="w-5 h-5 animate-spin" />
+      )}
       <Toast.Content>
-        <Toast.Title>{toast.title}</Toast.Title>
+        <Toast.Title className={toast.type === 'error' ? 'text-red-400' : ''}>
+          {toast.title}
+        </Toast.Title>
       </Toast.Content>
     </Toast.Root>
   ));
@@ -57,13 +63,14 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
 
   const checkInitialStatus = async () => {
     try {
-      const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`);
+      const timestamp = Date.now();
+      const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}&t=${timestamp}`, { cache: 'no-store' });
       const data = await res.json();
       
-      if (res.status === 200 && data.status === 'COMPLETED') {
+      if (data.status === 'COMPLETED') {
         setStatus('COMPLETED');
         fetchContent(data.recordId);
-      } else if (res.status === 202 && data.status === 'PROCESSING') {
+      } else if (data.status === 'PROCESSING') {
         setStatus('PROCESSING');
         startPolling(data.recordId);
       } else if (data.status === 'FAILED') {
@@ -91,6 +98,16 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
     }
   };
 
+  const handleFail = () => {
+    stopPolling();
+    setStatus('FAILED');
+    const toastId = toastManager.add({
+      title: '발간 작업 중 오류가 발생했습니다.',
+      type: 'error',
+    } as any);
+    setTimeout(() => toastManager.remove(toastId), 4000);
+  };
+
   const startPolling = (id: string) => {
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
@@ -111,13 +128,11 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
           setStatus('COMPLETED');
           setReport(data.combinedContent);
         } else if (data.status === 'FAILED') {
-          stopPolling();
-          setStatus('FAILED');
+          handleFail();
         }
       } catch (error) {
         console.error('Polling error', error);
-        stopPolling();
-        setStatus('FAILED');
+        handleFail();
       }
     }, 3000);
   };
@@ -125,10 +140,10 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
   const handleGenerate = async () => {
     setStatus('PROCESSING');
     
-    // Base UI Toast 추가
-    toastManager.add({
+    const toastId = toastManager.add({
       title: '백그라운드에서 주간 리포트 발간을 시작했습니다.',
     });
+    setTimeout(() => toastManager.remove(toastId), 3000);
 
     try {
       const res = await fetch('/api/generate-weekly', {
@@ -142,7 +157,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
         startPolling(data.recordId);
       }
     } catch (error) {
-      setStatus('FAILED');
+      handleFail();
     }
   };
 
@@ -152,9 +167,14 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
       {status === 'IDLE' || status === 'FAILED' ? (
         <button
           onClick={handleGenerate}
-          className="px-5 py-2.5 bg-white border border-surface-300 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-50 hover:border-black hover:text-black tracking-widest transition-colors"
+          className={`px-5 py-2.5 bg-white border text-sm font-medium rounded-lg flex items-center gap-2 tracking-widest transition-colors ${
+            status === 'FAILED'
+              ? 'border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500'
+              : 'border-surface-300 text-surface-700 hover:bg-surface-50 hover:border-black hover:text-black'
+          }`}
         >
-          {status === 'FAILED' ? '발간 실패 (재시도)' : '주간 리포트 발간'}
+          {status === 'FAILED' && <AlertTriangle className="w-4 h-4" />}
+          {status === 'FAILED' ? '주간 리포트 재발간' : '주간 리포트 발간'}
         </button>
       ) : status === 'PROCESSING' ? (
         <button

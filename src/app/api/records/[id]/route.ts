@@ -14,22 +14,22 @@ export async function GET(
     const recordId = resolvedParams.id;
 
     if (!recordId) {
-      return Response.json({ error: 'recordId is required' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'recordId is required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const record = db.select().from(records).where(eq(records.id, recordId)).get();
+    const record = await db.select().from(records).where(eq(records.id, recordId)).get();
 
     if (!record) {
-      return Response.json({ error: 'Record not found' }, { status: 404 });
+      return new Response(JSON.stringify({ error: 'Record not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
-    return Response.json({
+    return new Response(JSON.stringify({
       id: record.id,
       status: record.status,
       combinedContent: record.combinedContent,
-    });
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Record Fetch Error:', error);
-    return Response.json({ error: 'Server error' }, { status: 500 });
+    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
