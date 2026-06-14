@@ -48,6 +48,7 @@ function WeeklyReportFormInner({
   const [saving, setSaving] = useState(false);
   
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const toastManager = Toast.useToastManager();
 
@@ -160,6 +161,18 @@ function WeeklyReportFormInner({
     }
   };
 
+  const handleEditClick = () => {
+    setEditContent(report || '');
+    setIsEditing(true);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.selectionStart = textareaRef.current.value.length;
+        textareaRef.current.selectionEnd = textareaRef.current.value.length;
+      }
+    }, 0);
+  };
+
   const handleEditSave = async () => {
     if (!recordId) return;
     setSaving(true);
@@ -259,7 +272,7 @@ function WeeklyReportFormInner({
                     </>
                   ) : (
                     <>
-                      <button onClick={() => { setEditContent(report || ''); setIsEditing(true); }} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
+                      <button onClick={handleEditClick} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
                         <Pencil size={14} /> <span>수정</span>
                       </button>
                       <button onClick={handleDelete} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
@@ -270,19 +283,20 @@ function WeeklyReportFormInner({
                 </div>
               </div>
               
-              <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
-                {isEditing ? (
-                  <Textarea
-                    className="w-full min-h-[400px] text-[1.05rem] leading-[2.2] tracking-wide text-surface-800 bg-transparent border-none focus:ring-0 resize-none outline-none p-0"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                ) : (
+              {isEditing ? (
+                <Textarea
+                  ref={textareaRef}
+                  className="w-full min-h-[400px] text-[1.05rem] leading-[2.2] tracking-wide text-surface-800 resize-none p-6 md:p-8"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                />
+              ) : (
+                <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
                   <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
                     {report || '내용이 없습니다.'}
                   </p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </Modal>
