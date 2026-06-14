@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
-import { AlertCircle, AlertTriangle } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { deleteRecord, updateWeeklyRecord } from './actions';
 import { Toast } from '@base-ui/react/toast';
 import { CopyButton } from '@/components/CopyButton';
 
@@ -41,6 +42,11 @@ function WeeklyReportFormInner({
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
+  const [recordId, setRecordId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const toastManager = Toast.useToastManager();
@@ -60,6 +66,7 @@ function WeeklyReportFormInner({
       
       if (data.status === 'COMPLETED') {
         setStatus('COMPLETED');
+        if(data.recordId) setRecordId(data.recordId);
         fetchContent(data.recordId);
       } else if (data.status === 'PROCESSING') {
         setStatus('PROCESSING');
@@ -117,6 +124,7 @@ function WeeklyReportFormInner({
         if (data.status === 'COMPLETED') {
           stopPolling();
           setStatus('COMPLETED');
+          setRecordId(id);
           setReport(data.combinedContent);
         } else if (data.status === 'FAILED') {
           handleFail();
@@ -149,6 +157,44 @@ function WeeklyReportFormInner({
       }
     } catch (error) {
       handleFail();
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!recordId) return;
+    setSaving(true);
+    try {
+      await updateWeeklyRecord(recordId, editContent);
+      setReport(editContent);
+      setIsEditing(false);
+      const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' } as any);
+      setTimeout(() => toastManager.close(toastId), 3000);
+      router.refresh();
+    } catch (error) {
+      const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' } as any);
+      setTimeout(() => toastManager.close(toastId), 4000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!recordId) return;
+    if (!window.confirm('정말 이 주간 리포트를 삭제하시겠습니까?')) return;
+    
+    setSaving(true);
+    try {
+      await deleteRecord(recordId);
+      setStatus('IDLE');
+      setOpen(false);
+      const toastId = toastManager.add({ title: '주간 리포트가 성공적으로 삭제되었습니다.', type: 'success' } as any);
+      setTimeout(() => toastManager.close(toastId), 3000);
+      router.refresh();
+    } catch (error) {
+      const toastId = toastManager.add({ title: '삭제에 실패했습니다.', type: 'error' } as any);
+      setTimeout(() => toastManager.close(toastId), 4000);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -198,15 +244,44 @@ function WeeklyReportFormInner({
             </div>
 
             <div>
-              <div className="flex items-center gap-3 mb-4 px-1">
-                <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
-                <CopyButton text={report || ''} title="리포트 복사" />
+              <div className="flex items-center justify-between gap-3 mb-4 px-1">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
+                  {!isEditing && <CopyButton text={report || ''} title="리포트 복사" />}
+                </div>
+                <div className="flex items-center gap-2">
+                  {isEditing ? (
+                    <>
+                      <button onClick={() => setIsEditing(false)} className="text-sm font-medium tracking-widest text-surface-500 hover:text-black px-3 py-1.5 transition-colors">취소</button>
+                      <button onClick={handleEditSave} disabled={saving} className="bg-black text-white text-sm font-medium tracking-widest px-4 py-1.5 rounded-md hover:bg-surface-800 disabled:opacity-50">
+                        {saving ? '저장 중...' : '저장'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => { setEditContent(report || ''); setIsEditing(true); }} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
+                        <Pencil size={14} /> <span>수정</span>
+                      </button>
+                      <button onClick={handleDelete} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
+                        <Trash2 size={14} /> <span>삭제</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               
-              <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-                <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
-                  {report || '내용이 없습니다.'}
-                </p>
+              <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
+                {isEditing ? (
+                  <Textarea
+                    className="w-full min-h-[400px] text-[1.05rem] leading-[2.2] tracking-wide text-surface-800 bg-transparent border-none focus:ring-0 resize-none outline-none p-0"
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                  />
+                ) : (
+                  <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
+                    {report || '내용이 없습니다.'}
+                  </p>
+                )}
               </div>
             </div>
           </div>

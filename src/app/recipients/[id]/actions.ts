@@ -83,6 +83,15 @@ export async function updateDailyRecord(recordId: string, cognition: string, beh
   if(record.length > 0) revalidatePath(`/recipients/${record[0].recipientId}`);
 }
 
+export async function updateWeeklyRecord(recordId: string, content: string) {
+  await db.update(records).set({
+    combinedContent: content
+  }).where(eq(records.id, recordId));
+  
+  const recordList = await db.select().from(records).where(eq(records.id, recordId));
+  if(recordList.length > 0) revalidatePath(`/recipients/${recordList[0].recipientId}`);
+}
+
 export async function deleteRecord(recordId: string) {
   const recordList = await db.select().from(records).where(eq(records.id, recordId));
   if(recordList.length > 0) {
