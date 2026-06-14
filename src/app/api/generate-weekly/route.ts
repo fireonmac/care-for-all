@@ -80,6 +80,36 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
   }
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const recipientId = url.searchParams.get('recipientId');
+    const targetDate = url.searchParams.get('targetDate');
+
+    if (!recipientId || !targetDate) {
+      return Response.json({ error: 'Missing parameters' }, { status: 400 });
+    }
+
+    const existingRecord = db.select().from(records)
+      .where(
+        and(
+          eq(records.recipientId, recipientId),
+          eq(records.type, 'weekly'),
+          eq(records.date, targetDate)
+        )
+      ).get();
+
+    if (existingRecord) {
+      return Response.json({ recordId: existingRecord.id, status: existingRecord.status }, { status: 200 });
+    } else {
+      return Response.json({ status: 'IDLE' }, { status: 200 });
+    }
+  } catch (error) {
+    console.error('API Error:', error);
+    return Response.json({ error: '서버 에러가 발생했습니다.' }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { recipientId, targetDate } = await req.json();

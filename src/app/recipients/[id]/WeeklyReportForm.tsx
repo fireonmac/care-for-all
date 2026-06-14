@@ -57,11 +57,7 @@ function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: st
 
   const checkInitialStatus = async () => {
     try {
-      const res = await fetch('/api/generate-weekly', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientId, targetDate: weekStartDate }),
-      });
+      const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`);
       const data = await res.json();
       
       if (res.status === 200 && data.status === 'COMPLETED') {
