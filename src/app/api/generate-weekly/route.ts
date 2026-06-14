@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { db } from '@/db';
 import { records } from '@/db/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 
 const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma4:26b';
@@ -111,7 +110,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. 새 주간 리포트 작업을 DB에 PROCESSING 상태로 삽입
-    const recordId = uuidv4();
+    const recordId = crypto.randomUUID();
     db.insert(records).values({
       id: recordId,
       recipientId,
