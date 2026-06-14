@@ -28,6 +28,19 @@ services:
       retries: 3
       start_period: 20s
     restart: unless-stopped
+  studio:
+    build:
+      context: .
+      target: migrator
+    profiles:
+      - tools
+    ports:
+      - "127.0.0.1:14983:4983"  # 스튜디오 포트 외부(localhost) 연결
+    volumes:
+      - ./app_data:/app/data
+    environment:
+      DATABASE_URL: file:/app/data/sqlite.db
+    command: ["pnpm", "exec", "drizzle-kit", "studio", "--host", "0.0.0.0"]
 
   migrate:
     build:
