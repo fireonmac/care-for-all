@@ -1,28 +1,58 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { getRecipientsWithStats } from '@/app/actions';
+import { useDeferredValue, useEffect, useState } from 'react';
+import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
 import Link from 'next/link';
 import { Check, Search, Loader2 } from 'lucide-react';
 import { commonInputClasses } from '@/components/Textarea';
-
-type Recipients = Awaited<ReturnType<typeof getRecipientsWithStats>>;
-type RecipientWithStats = Recipients['items'][number];
-type SearchResult = {
-  query: string;
-} & Recipients;
+import { recipientQueryKeys } from '@/features/recipients/queryKeys';
+import {
+  RECIPIENTS_PAGE_SIZE,
+  type RecipientListItem,
+  type RecipientsPage,
+} from '@/features/recipients/types';
 
 type RecipientListProps = {
-  recipientsListData: Recipients;
+  recipientsListData: RecipientsPage;
   weekDates: { dateStr: string; dayName: string }[];
   todayStr: string;
 };
 
-function removeDuplicates(recipients: RecipientWithStats[]) {
-  return recipients.filter(
-    (recipient, index) =>
-      recipients.findIndex(({ id }) => id === recipient.id) === index,
+function removeDuplicates(recipients: RecipientListItem[]) {
+  return Array.from(
+    new Map(recipients.map((recipient) => [recipient.id, recipient])).values(),
   );
+}
+
+async function fetchRecipientsPage({
+  searchQuery,
+  cursor,
+  signal,
+}: {
+  searchQuery: string;
+  cursor: string | null;
+  signal?: AbortSignal;
+}): Promise<RecipientsPage> {
+  const searchParams = new URLSearchParams({
+    q: searchQuery,
+    limit: String(RECIPIENTS_PAGE_SIZE),
+  });
+
+  if (cursor) {
+    searchParams.set('cursor', cursor);
+  }
+
+  const response = await fetch(`/api/recipients?${searchParams}`, {
+    cache: 'no-store',
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error('어르신 목록을 불러오지 못했습니다.');
+  }
+
+  return response.json();
 }
 
 export function RecipientList({ 
@@ -30,87 +60,66 @@ export function RecipientList({
   weekDates, 
   todayStr 
 }: RecipientListProps) {
-  const [additionalRecipients, setAdditionalRecipients] = useState<RecipientWithStats[]>([]);
-  const [additionalNextCursor, setAdditionalNextCursor] = useState<string | null>();
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim());
+  const { ref: loadMoreRef, inView } = useInView({
+    rootMargin: '200px',
+  });
 
-  const isSearching = searchQuery.trim().length > 0;
-  const currentSearchResult = searchResult?.query === searchQuery ? searchResult : null;
-  const isTyping = isSearching && !currentSearchResult;
-  const allRecipients = removeDuplicates([...recipientsListData.items, ...additionalRecipients]);
-  const visibleRecipients = isSearching
-    ? currentSearchResult?.items ?? []
-    : allRecipients;
-  const loadedNextCursor = additionalNextCursor === undefined
-    ? recipientsListData.nextCursor
-    : additionalNextCursor;
-  const visibleNextCursor = isSearching
-    ? currentSearchResult?.nextCursor ?? null
-    : loadedNextCursor;
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+    status,
+  } = useInfiniteQuery<
+    RecipientsPage,
+    Error,
+    InfiniteData<RecipientsPage, string | null>,
+    ReturnType<typeof recipientQueryKeys.list>,
+    string | null
+  >({
+    queryKey: recipientQueryKeys.list(deferredSearchQuery),
+    queryFn: ({ pageParam, signal }) =>
+      fetchRecipientsPage({
+        searchQuery: deferredSearchQuery,
+        cursor: pageParam,
+        signal,
+      }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialData:
+      deferredSearchQuery.length === 0
+        ? {
+            pages: [recipientsListData],
+            pageParams: [null],
+          }
+        : undefined,
+  });
 
-  useEffect(() => {
-    if (!isSearching) return;
-
-    const timer = setTimeout(async () => {
-      const result = await getRecipientsWithStats(searchQuery);
-      setSearchResult({
-        query: searchQuery,
-        items: result.items,
-        nextCursor: result.nextCursor,
-      });
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [isSearching, searchQuery]);
-
-  const loadMore = useCallback(async () => {
-    if (loading || !visibleNextCursor) return;
-
-    setLoading(true);
-    const result = await getRecipientsWithStats(searchQuery, visibleNextCursor);
-
-    if (isSearching) {
-      setSearchResult((currentResult) => ({
-        query: searchQuery,
-        items: [...(currentResult?.items ?? []), ...result.items],
-        nextCursor: result.nextCursor,
-      }));
-    } else {
-      setAdditionalRecipients((currentRecipients) => [
-        ...currentRecipients,
-        ...result.items,
-      ]);
-      setAdditionalNextCursor(result.nextCursor);
-    }
-
-    setLoading(false);
-  }, [isSearching, loading, searchQuery, visibleNextCursor]);
+  const isSearchPending = searchQuery.trim() !== deferredSearchQuery;
+  const visibleRecipients = isSearchPending
+    ? []
+    : removeDuplicates(data?.pages.flatMap((page) => page.items) ?? []);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
+    if (inView && hasNextPage && !isFetching) {
+      void fetchNextPage();
     }
+  }, [fetchNextPage, hasNextPage, inView, isFetching]);
 
-    return () => observer.disconnect();
-  }, [loadMore]);
+  const isInitialLoading =
+    isSearchPending || (isLoading && !isFetchingNextPage);
 
   return (
     <div className="flex flex-col">
       <div className="relative mb-12">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          {isTyping ? (
+          {isInitialLoading ? (
             <Loader2 className="h-5 w-5 text-surface-500 animate-spin" />
           ) : (
             <Search className="h-5 w-5 text-surface-500" />
@@ -120,17 +129,24 @@ export function RecipientList({
           type="text"
           placeholder="어르신 성함 검색..."
           value={searchQuery}
-          onChange={(event) => {
-            const query = event.target.value;
-            setSearchQuery(query);
-            if (!query.trim()) setSearchResult(null);
-          }}
+          onChange={(event) => setSearchQuery(event.target.value)}
           className={`sm:w-80 px-4 py-3 pl-12 text-lg ${commonInputClasses}`}
         />
       </div>
 
       <div className="flex flex-col gap-6">
-        {visibleRecipients.length === 0 && !loading && !isTyping ? (
+        {status === 'error' ? (
+          <div className="py-24 flex flex-col items-center justify-center gap-5 text-center">
+            <p className="text-xl text-status-danger">{error.message}</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="border border-black px-5 py-2.5 text-sm font-medium tracking-widest hover:bg-black hover:text-white"
+            >
+              다시 시도
+            </button>
+          </div>
+        ) : visibleRecipients.length === 0 && !isInitialLoading ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
             <p className="text-2xl font-light mb-4 text-surface-900 tracking-tight">검색된 어르신이 없습니다.</p>
           </div>
@@ -181,9 +197,19 @@ export function RecipientList({
           ))
         )}
         
-        {/* Infinite Scroll Trigger */}
-        <div ref={observerTarget} className="h-10 w-full flex items-center justify-center">
-          {loading && <span className="text-surface-400 text-sm tracking-widest font-light">불러오는 중...</span>}
+        <div
+          ref={loadMoreRef}
+          className="min-h-12 w-full flex items-center justify-center"
+        >
+          {isInitialLoading || isFetchingNextPage ? (
+            <span className="text-surface-400 text-sm tracking-widest font-light">
+              불러오는 중...
+            </span>
+          ) : !hasNextPage && visibleRecipients.length > 0 ? (
+            <span className="text-surface-400 text-sm tracking-widest font-light">
+              모든 어르신을 불러왔습니다.
+            </span>
+          ) : null}
         </div>
       </div>
     </div>

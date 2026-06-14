@@ -1,16 +1,15 @@
-import { getRecipientsWithStats } from './actions';
 import { AddRecipientForm } from '@/components/AddRecipientForm';
 import { RecipientList } from '@/components/RecipientList';
-import { getWeekData } from '@/lib/dateUtils';
-import { format } from 'date-fns';
+import { getRecipientsPage } from '@/features/recipients/queries';
+import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 import { connection } from 'next/server';
 
 export default async function Home() {
   await connection();
 
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayStr = getKSTDateStr(new Date());
   const { weekDates } = getWeekData(todayStr);
-  const recipientsListData = await getRecipientsWithStats();
+  const recipientsListData = await getRecipientsPage();
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-32 pb-24 min-h-screen">

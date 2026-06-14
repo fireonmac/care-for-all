@@ -11,6 +11,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import Link from 'next/link';
 
 import { GlobalToastProvider } from '@/components/GlobalToastProvider';
+import { QueryProvider } from '@/components/QueryProvider';
 
 export default function RootLayout({
   children,
@@ -42,7 +43,9 @@ export default function RootLayout({
         </header>
         <div className="flex-1 mt-16">
           <GlobalToastProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
+            <QueryProvider>
+              <NuqsAdapter>{children}</NuqsAdapter>
+            </QueryProvider>
           </GlobalToastProvider>
         </div>
         <footer className="w-full border-t border-surface-100 pt-6 pb-8 mt-24">

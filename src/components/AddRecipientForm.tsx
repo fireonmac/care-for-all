@@ -5,18 +5,26 @@ import { Modal, ModalClose } from './Modal';
 import { Dialog } from '@base-ui/react';
 import { addRecipient } from '@/app/actions';
 import { commonInputClasses } from './Textarea';
+import { recipientQueryKeys } from '@/features/recipients/queryKeys';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AddRecipientForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     setLoading(true);
-    await addRecipient(name);
+    const result = await addRecipient(name);
+    if (result.success) {
+      await queryClient.invalidateQueries({
+        queryKey: recipientQueryKeys.all,
+      });
+    }
     setLoading(false);
     setOpen(false);
     setName('');
