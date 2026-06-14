@@ -1,33 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, ModalClose } from './Modal';
 import { Dialog } from '@base-ui/react';
 import { addRecipient } from '@/app/actions';
 import { commonInputClasses } from './Textarea';
 import { recipientQueryKeys } from '@/features/recipients/queryKeys';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function AddRecipientForm() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+  const {
+    mutate,
+    reset,
+    isError,
+    isPending,
+    error,
+  } = useMutation({
+    mutationFn: async (submittedName: string) => {
+      const result = await addRecipient(submittedName);
 
-    setLoading(true);
-    const result = await addRecipient(name);
-    if (result.success) {
+      if (!result.success) {
+        throw new Error(result.error ?? '어르신 등록에 실패했습니다.');
+      }
+
+      return result;
+    },
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: recipientQueryKeys.all,
       });
+      setOpen(false);
+      setName('');
+    },
+  });
+
+  useEffect(() => {
+    if (!open) {
+      reset();
     }
-    setLoading(false);
-    setOpen(false);
-    setName('');
+  }, [open, reset]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedName = name.trim();
+    if (!trimmedName || isPending) return;
+
+    reset();
+    mutate(trimmedName);
   };
 
   return (
@@ -46,11 +70,12 @@ export function AddRecipientForm() {
             취소
           </ModalClose>
           <button
-            onClick={handleSubmit}
-            disabled={loading}
+            type="submit"
+            form="add-recipient-form"
+            disabled={isPending}
             className="px-8 py-3 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-50"
           >
-            {loading ? '추가 중...' : '추가하기'}
+            {isPending ? '추가 중...' : '추가하기'}
           </button>
         </>
       }
@@ -67,6 +92,13 @@ export function AddRecipientForm() {
             required
           />
         </div>
+        {isError && (
+          <p className="text-sm font-medium text-status-danger" role="alert">
+            {error instanceof Error
+              ? error.message
+              : '어르신 등록에 실패했습니다.'}
+          </p>
+        )}
       </form>
     </Modal>
   );
