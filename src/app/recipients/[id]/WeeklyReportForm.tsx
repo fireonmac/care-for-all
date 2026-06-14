@@ -5,18 +5,48 @@ import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
 import { Loader2 } from 'lucide-react';
+import { Toast } from '@base-ui/react/toast';
 
-export function WeeklyReportForm({ recipientId, dailyRecordCount, weekStartDate }: { recipientId: string, dailyRecordCount: number, weekStartDate: string }) {
+export function WeeklyReportForm(props: { recipientId: string, dailyRecordCount: number, weekStartDate: string }) {
+  if (props.dailyRecordCount < 2) {
+    return null;
+  }
+
+  return (
+    <Toast.Provider>
+      <WeeklyReportFormInner {...props} />
+      <Toast.Portal>
+        <Toast.Viewport className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 outline-none">
+          <ToastList />
+        </Toast.Viewport>
+      </Toast.Portal>
+    </Toast.Provider>
+  );
+}
+
+function ToastList() {
+  const { toasts } = Toast.useToastManager();
+  return toasts.map((toast) => (
+    <Toast.Root 
+      key={toast.id} 
+      toast={toast} 
+      className="bg-black text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 text-base font-medium tracking-widest transition-all duration-300 data-[starting-style]:-translate-y-4 data-[starting-style]:opacity-0 data-[ending-style]:-translate-y-4 data-[ending-style]:opacity-0"
+    >
+      <Loader2 className="w-5 h-5 animate-spin" />
+      <Toast.Content>
+        <Toast.Title>{toast.title}</Toast.Title>
+      </Toast.Content>
+    </Toast.Root>
+  ));
+}
+
+function WeeklyReportFormInner({ recipientId, weekStartDate }: { recipientId: string, weekStartDate: string }) {
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
-
-  if (dailyRecordCount < 2) {
-    return null;
-  }
+  const toastManager = Toast.useToastManager();
 
   // 폴링 및 초기 상태 로직
   useEffect(() => {
@@ -74,11 +104,9 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount, weekStartDate 
           stopPolling();
           setStatus('COMPLETED');
           setReport(data.combinedContent);
-          setToastVisible(false); // 토스트 숨김
         } else if (data.status === 'FAILED') {
           stopPolling();
           setStatus('FAILED');
-          setToastVisible(false);
         }
       } catch (error) {
         console.error('Polling error', error);
@@ -88,10 +116,11 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount, weekStartDate 
 
   const handleGenerate = async () => {
     setStatus('PROCESSING');
-    setToastVisible(true);
     
-    // 토스트는 3초 뒤 자동 숨김 (작업은 계속됨)
-    setTimeout(() => setToastVisible(false), 4000);
+    // Base UI Toast 추가
+    toastManager.add({
+      title: '백그라운드에서 주간 리포트 발간을 시작했습니다.',
+    });
 
     try {
       const res = await fetch('/api/generate-weekly', {
@@ -106,22 +135,11 @@ export function WeeklyReportForm({ recipientId, dailyRecordCount, weekStartDate 
       }
     } catch (error) {
       setStatus('FAILED');
-      setToastVisible(false);
     }
   };
 
   return (
     <>
-      {/* 화면 최상단 토스트 알림 */}
-      {toastVisible && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-5 duration-300">
-          <div className="bg-black text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 text-base font-medium tracking-widest">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            백그라운드에서 주간 리포트 발간을 시작했습니다.
-          </div>
-        </div>
-      )}
-
       {/* 상태별 상단 버튼 */}
       {status === 'IDLE' || status === 'FAILED' ? (
         <button
