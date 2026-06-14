@@ -35,8 +35,12 @@ export function KeywordInputForm({ recipientId, targetDate, recipientName }: { r
     const newId = Math.random().toString();
     setEvents([...events, { id: newId, event: '', emotion: '', isCustomEmotion: false, action: '' }]);
     setTimeout(() => {
-      document.getElementById(`event-input-${newId}`)?.focus();
-    }, 10);
+      const el = document.getElementById(`event-input-${newId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.focus({ preventScroll: true });
+      }
+    }, 50);
   };
 
   const removeEvent = (id: string) => {
