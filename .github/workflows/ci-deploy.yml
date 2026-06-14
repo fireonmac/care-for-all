@@ -50,7 +50,7 @@ jobs:
       - self-hosted
       - macOS
       - ARM64
-      - citycare-prod
+      - gowncare-prod
     timeout-minutes: 30
     environment: production
 

@@ -57,7 +57,7 @@ GitHub 저장소에서 다음 메뉴로 이동한다.
 1. 운영체제는 `macOS`를 선택한다.
 2. 아키텍처는 `ARM64`를 선택한다.
 3. GitHub 화면에 표시된 다운로드 및 `config.sh` 명령을 Mac Studio에서 실행한다.
-4. runner 설정 시 추가 label로 `citycare-prod`를 입력한다.
+4. runner 설정 시 추가 label로 `gowncare-prod`를 입력한다.
 5. runner를 서비스로 설치하고 시작한다.
 
 ```bash
