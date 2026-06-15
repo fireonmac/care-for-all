@@ -76,7 +76,7 @@
 - 사용자가 작업 맥락을 잃지 않도록 불필요한 페이지 이동을 줄인다.
 - 상태와 결과를 명확한 텍스트로 설명하고 장식보다 기록 작업에 집중한다.
 - 색상은 `src/app/globals.css`에 정의된 의미 기반 토큰을 사용한다.
-- 접근성이 필요한 복합 UI는 Base UI 같은 headless primitive를 사용한다.
+- 접근성이 필요한 복합 UI는 Base UI (headless primitive)를 사용한다.
 
 ## 개인정보 기준
 

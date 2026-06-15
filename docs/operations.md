@@ -70,6 +70,10 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
+`pnpm install`은 Husky Git 훅을 설정한다. 커밋할 때는 스테이징된 JavaScript와
+TypeScript 파일에 `eslint --fix`를 실행하며, 수정할 수 없는 린트 오류가 남으면
+커밋을 중단한다.
+
 `main` 브랜치 push 시 GitHub 호스팅 runner도 타입 검사와 production build를
 통과해야 배포를 시작한다.
 
