@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { saveDailyRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Textarea, commonInputClasses } from '@/components/Textarea';
@@ -15,6 +15,16 @@ type EventInput = {
   action: string;
 };
 
+function createEmptyEvent(id: string): EventInput {
+  return {
+    id,
+    event: '',
+    emotion: '',
+    isCustomEmotion: false,
+    action: '',
+  };
+}
+
 const PREDEFINED_EMOTIONS = [
   { id: 'happy', icon: '🥰', label: '편안/기분좋음', text: '편안하고 기분 좋은 상태이심' },
   { id: 'neutral', icon: '😌', label: '차분함', text: '특별한 감정 동요 없이 차분하심' },
@@ -25,7 +35,10 @@ const PREDEFINED_EMOTIONS = [
 import { Toast } from '@base-ui/react/toast';
 
 export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
-  const [events, setEvents] = useState<EventInput[]>(() => [{ id: Math.random().toString(), event: '', emotion: '', isCustomEmotion: false, action: '' }]);
+  const initialEventId = useId();
+  const [events, setEvents] = useState<EventInput[]>(() => [
+    createEmptyEvent(initialEventId),
+  ]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
@@ -34,10 +47,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   
   const todayStr = getKSTDateStr(new Date());
   const isFuture = targetDate > todayStr;
+  const hasRequiredEvent = events.some(({ event }) => event.trim().length > 0);
   
   const addEvent = () => {
-    const newId = Math.random().toString();
-    setEvents([...events, { id: newId, event: '', emotion: '', isCustomEmotion: false, action: '' }]);
+    const newId = crypto.randomUUID();
+    setEvents((currentEvents) => [
+      ...currentEvents,
+      createEmptyEvent(newId),
+    ]);
     setTimeout(() => {
       const el = document.getElementById(`event-input-${newId}`);
       if (el) {
@@ -48,7 +65,9 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   };
 
   const removeEvent = (id: string) => {
-    setEvents(events.filter(e => e.id !== id));
+    setEvents((currentEvents) =>
+      currentEvents.filter((event) => event.id !== id),
+    );
   };
 
   const updateEvent = (id: string, fields: Partial<EventInput>) => {
@@ -58,7 +77,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validEvents = events.filter(ev => ev.event.trim() || ev.emotion.trim() || ev.action.trim());
+    const validEvents = events.filter(({ event }) => event.trim());
     if (validEvents.length === 0 || loading) return;
     
     const keywords = validEvents.map((ev, index) => {
@@ -329,7 +348,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <div className="flex justify-end mt-4">
           <button
             type="submit"
-            disabled={loading || events.every(ev => !ev.event.trim() && !ev.emotion.trim() && !ev.action.trim()) || isFuture}
+            disabled={loading || !hasRequiredEvent || isFuture}
             className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-30"
           >
             {loading ? '생성 중...' : '기록 초안 생성'}
