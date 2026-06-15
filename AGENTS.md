@@ -15,7 +15,8 @@
 | 주제 | SSOT |
 | --- | --- |
 | 제품 목표, 기록 원칙, MVP 범위 | `docs/product.md` |
-| 현재 시스템 구조와 코드 경계 | `docs/architecture.md` |
+| 기술 스택, 현재 시스템 구조와 코드 경계 | `docs/architecture.md` |
+| 코드 작성 규칙과 개발 컨벤션 | `docs/conventions.md` |
 | 로컬 실행, 배포, 백업, 복구 | `docs/operations.md` |
 | 미구현 항목과 우선순위 | `docs/roadmap.md` |
 | 패키지 버전과 명령 | `package.json` |

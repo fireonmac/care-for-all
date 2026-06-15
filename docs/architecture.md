@@ -23,6 +23,25 @@ flowchart LR
 정확한 패키지와 버전은 [`package.json`](../package.json), 데이터 필드는
 [`src/db/schema.ts`](../src/db/schema.ts)가 기준이다.
 
+## 기술 스택
+
+| 영역 | 선택 |
+| --- | --- |
+| 런타임과 패키지 관리 | Node.js, pnpm |
+| 웹 애플리케이션 | Next.js App Router, React, TypeScript |
+| 스타일링과 UI | Tailwind CSS, PostCSS, Base UI, Lucide |
+| 클라이언트 서버 상태 | TanStack Query |
+| URL 상태 | nuqs |
+| 데이터베이스 | SQLite(libSQL client), Drizzle ORM |
+| 날짜 처리 | date-fns, KST 기준 유틸리티 |
+| AI 연동 | Ollama 또는 OpenAI 호환 Chat Completions API |
+| 품질 관리 | ESLint, TypeScript, Husky, lint-staged |
+| 빌드와 운영 | Next.js standalone, Docker Compose, GitHub Actions |
+
+이 표는 역할과 기술 선택만 설명한다. 설치 버전과 실행 명령은
+[`package.json`](../package.json), 운영 환경은 [운영 가이드](./operations.md)를
+따른다.
+
 ## 코드 경계
 
 | 경로 | 책임 |
