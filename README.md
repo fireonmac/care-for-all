@@ -1,35 +1,57 @@
 # 케어포올
 
-케어포올은 요양보호 현장의 관찰 메모를 일일·주간 요양보호기록으로 정리하는 웹 애플리케이션입니다.
+케어포올은 요양보호사의 짧은 관찰 메모를 정돈된 요양보호기록 초안으로
+바꿔주는 웹 애플리케이션입니다.
 
-## 개발
+사용자는 대상자와 날짜를 선택해 그날 있었던 일을 입력합니다. 케어포올은
+메모를 일일 인지·행동 기록으로 나누어 작성하고, 한 주의 기록이 모이면 주간
+기록을 생성합니다. 모든 결과는 저장하기 전에 직접 확인하고 수정할 수 있습니다.
+
+## 기획 의도
+요양보호사 일을 하는 어머니 박정원 여사가 퇴근 후에도 요양 일지를 작성하며 쉬지 못하는 모습이 안타까워서 제작을 하게 되었습니다. 
+
+요양보호일지 작성에서 체크, 식사 횟수, 대소변 횟수 등은 매일 비슷하기 때문에 빠르게 입력이 가능합니다. 그러나 당일의 일을 하나의 정돈된 문장으로 만드는 란에서 좋은 문장을 만드는데 고민을 하는 과정에서 병목이 발견되었습니다.
+
+케어포올은 사용자가 사건을 입력하면 AI가 대신 문장을 만듭니다. 사용자에게 완벽한 문장을 떠올리는게 아닌 단순 사실만을 입력하도록 유도하여 사용자가 일지를 작성하면서 주로 겪는 병목을 제거하여 빠른 일지 작성을 돕습니다.
+
+## 주요 기능
+
+- 대상자 등록과 날짜별 기록 관리
+- 관찰 메모를 일일 인지·행동 기록으로 변환
+- 생성 결과 검토, 수정, 복사, 삭제
+- 일일 기록을 바탕으로 주간 기록 생성
+- 로컬 Ollama와 SQLite를 이용한 단일 서버 운영
+
+## 로컬 실행
 
 ```bash
 pnpm install
+cp .env.example .env
 mkdir -p app_data
 pnpm db:push
 pnpm dev
 ```
 
-개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
-로컬 SQLite 데이터는 기본적으로 `app_data/sqlite.db`에 저장됩니다.
+`.env`에 지정한 모델이 Ollama에 설치되어 있어야 합니다. 개발 서버는 기본적으로
+<http://localhost:3000>에서 실행됩니다.
 
-## 기술 구성
+## 문서
 
-- Next.js 16 App Router
-- Drizzle ORM
-- SQLite
-- Ollama
-- Docker Compose
-- GitHub Actions self-hosted runner
+제품 원칙, 시스템 구조, 배포 절차와 향후 작업은
+[문서 안내](./docs/README.md)에서 찾을 수 있습니다.
 
-## 배포
+## 저장소 구조
 
-- [배포 아키텍처](./docs/deployment-architecture.md)
-- [GitHub Actions CI/CD 운영 가이드](./docs/ci-cd.md)
+```text
+src/app/         화면, Route Handler, Server Action
+src/components/  여러 화면에서 공유하는 UI
+src/features/    기능 단위 쿼리, 타입, 키
+src/db/          Drizzle 연결과 스키마
+src/lib/         AI와 날짜 등 외부·공통 로직
+scripts/         배포와 백업 스크립트
+docs/            제품, 아키텍처, 운영, 로드맵
+```
 
-운영 서비스 식별자는 `care-for-all`, 화면 표시명은 `케어포올`을 사용합니다.
-
-## 브랜드 자산
-
-현재 `public/brand/care-for-all-logo-placeholder.png`는 새 로고가 확정되기 전까지 사용하는 임시 자산입니다. 새 로고 적용 시 같은 경로의 파일과 `src/app/icon.png`, `src/app/apple-icon.png`, `src/app/favicon.ico`를 함께 교체합니다.
+패키지 명령은 [`package.json`](./package.json), 환경변수 예시는
+[`.env.example`](./.env.example), 데이터 모델은
+[`src/db/schema.ts`](./src/db/schema.ts)가 기준입니다.
