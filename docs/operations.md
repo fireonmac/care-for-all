@@ -10,7 +10,8 @@
 
 ## 로컬 개발
 
-Node.js 20, `pnpm`, Ollama가 필요하다.
+Node.js 20과 `pnpm`이 필요하다. 기본 AI 공급자를 사용할 경우 Ollama도
+실행되어 있어야 한다.
 
 ```bash
 pnpm install
@@ -20,11 +21,46 @@ pnpm db:push
 pnpm dev
 ```
 
-Ollama에서 `.env`의 `OLLAMA_MODEL`과 같은 모델 태그가 설치되어 있어야 한다.
+기본 설정에서는 Ollama에 `.env`의 `AI_MODEL`과 같은 모델 태그가 설치되어
+있어야 한다.
 
 ```bash
 ollama list
 ```
+
+## AI 공급자 설정
+
+애플리케이션은 다음 공통 환경변수로 모델 API를 선택한다.
+
+| 환경변수 | 설명 |
+| --- | --- |
+| `AI_PROVIDER` | `ollama` 또는 `openai-compatible` |
+| `AI_MODEL` | 공급자에 전달할 모델 식별자 |
+| `AI_BASE_URL` | 공급자 API의 base URL |
+| `AI_API_KEY` | Bearer API key. 필요한 공급자에서만 설정 |
+
+로컬 Ollama:
+
+```dotenv
+AI_PROVIDER=ollama
+AI_MODEL=gemma4:26b
+```
+
+로컬 앱은 `AI_BASE_URL`이 없으면 `http://127.0.0.1:11434`를 사용하고,
+Docker 앱은 Compose 기본값인 `http://host.docker.internal:11434`를 사용한다.
+
+OpenAI 호환 API:
+
+```dotenv
+AI_PROVIDER=openai-compatible
+AI_MODEL=your-model
+AI_BASE_URL=https://provider.example.com/v1
+AI_API_KEY=your-api-key
+```
+
+`openai-compatible`은 `/chat/completions`와 SSE 스트리밍 규격을 지원하는
+서비스에 사용할 수 있다. 공급자마다 지원 옵션이 다를 수 있으므로 모델명과
+base URL은 해당 서비스 문서를 확인한다.
 
 ## 검증
 
@@ -66,7 +102,9 @@ mkdir -p app_data backups
 cp /path/to/source/.env.example .env
 ```
 
-`.env`의 모델 태그를 운영 Ollama에 설치된 값으로 변경한다.
+Ollama를 사용한다면 `.env`의 `AI_MODEL`을 운영 호스트에 설치된 태그로
+변경한다. 외부 API를 사용한다면 `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`를
+해당 공급자 값으로 설정한다.
 
 Self-hosted runner는 저장소의 `Settings > Actions > Runners`에서 macOS ARM64로
 등록하고 `care-for-all-prod` label을 추가한다. 서비스 설치 후 runner 계정에서

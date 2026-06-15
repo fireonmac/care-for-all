@@ -3,9 +3,7 @@ import { db } from '@/db';
 import { records } from '@/db/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
 import { getKSTDateStr } from '@/lib/dateUtils';
-
-const OLLAMA_URL = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma4:26b';
+import { generateWeeklyRecord } from '@/lib/ai';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,37 +34,13 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
       return;
     }
 
-    // 2. AI에게 전달할 데이터 구성
-    const promptData = weeklyData.map(d => 
-      `[${d.date}]\n인지: ${d.cognitionContent || '없음'}\n행동: ${d.behaviorContent || '없음'}`
-    ).join('\n\n');
-
-    // 3. AI 모델 호출 (스트리밍 끄고 전체 응답 대기)
-    const response = await fetch(`${OLLAMA_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: OLLAMA_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: '요양보호시설의 주간 요양보호 기록 종합 작성기입니다. 제공된 한 주간의 일일 관찰 기록들을 종합하여 어르신의 주간 상태 변화와 주요 이슈를 요약된 하나의 리포트 문단으로 작성하세요. **절대 "[주간 요양보호 기록 종합 리포트]" 등의 제목이나 서론을 적지 마시고, 바로 본문 내용만 출력하세요.**'
-          },
-          {
-            role: 'user',
-            content: `다음은 어르신의 한 주간 관찰 기록입니다. 주간 리포트를 작성해 주세요.\n\n${promptData}`
-          }
-        ],
-        stream: false, // 백그라운드 작업이므로 스트리밍 불필요
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('AI 서비스 연결 실패');
-    }
-
-    const result = await response.json();
-    const finalContent = result.message?.content || '리포트 생성 실패';
+    const finalContent = await generateWeeklyRecord(
+      weeklyData.map((record) => ({
+        date: record.date,
+        cognition: record.cognitionContent,
+        behavior: record.behaviorContent,
+      })),
+    );
 
     // 4. DB 상태 완료로 업데이트
     db.update(records)
