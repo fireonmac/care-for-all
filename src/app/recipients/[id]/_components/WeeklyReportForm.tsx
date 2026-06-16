@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Modal, ModalClose } from '@/components/Modal';
+import { Modal } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
 import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { deleteRecord, updateWeeklyRecord } from '../actions';
@@ -40,10 +40,11 @@ export function WeeklyReportForm({
   const queryClient = useQueryClient();
 
   // 1. 초기 상태 확인
-  const { data: initialData } = useQuery({
+  const { data: initialData, isError: initialError } = useQuery({
     queryKey: ['weeklyReportInitial', recipientId, weekStartDate],
     queryFn: async () => {
       const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Fetch failed');
       return res.json();
     },
     enabled: !!weekStartDate,
@@ -77,21 +78,8 @@ export function WeeklyReportForm({
     else if (initialData.status === 'PROCESSING') status = 'PROCESSING';
   }
 
-  if (recordError) status = 'FAILED';
+  if (recordError || initialError) status = 'FAILED';
 
-  // 3. 발간 상태 변화 감지 및 토스트
-  const prevStatus = useRef(status);
-  useEffect(() => {
-    if (prevStatus.current === 'PROCESSING' && status === 'COMPLETED') {
-      showSuccess('주간 리포트 발간이 완료되었습니다!');
-    }
-    if (prevStatus.current === 'PROCESSING' && status === 'FAILED') {
-      showError('발간 작업 중 오류가 발생했습니다.');
-    }
-    prevStatus.current = status;
-  }, [status, showSuccess, showError]);
-
-  // 4. 발간 트리거 (Mutation)
   const { mutate: generateReport, isPending: isGenerating } = useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/generate-weekly', {
@@ -109,6 +97,18 @@ export function WeeklyReportForm({
   });
 
   if (isGenerating) status = 'PROCESSING';
+
+  // 3. 발간 상태 변화 감지 및 토스트
+  const prevStatus = useRef(status);
+  useEffect(() => {
+    if (prevStatus.current === 'PROCESSING' && status === 'COMPLETED') {
+      showSuccess('주간 리포트 발간이 완료되었습니다!');
+    }
+    if (prevStatus.current === 'PROCESSING' && status === 'FAILED') {
+      showError('발간 작업 중 오류가 발생했습니다.');
+    }
+    prevStatus.current = status;
+  }, [status, showSuccess, showError]);
 
   const reportContent = recordData?.combinedContent || null;
 
