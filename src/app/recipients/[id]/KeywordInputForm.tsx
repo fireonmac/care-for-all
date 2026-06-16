@@ -4,8 +4,9 @@ import { useId, useState } from 'react';
 import { saveDailyRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Textarea, commonInputClasses } from '@/components/Textarea';
-import { Loader2 } from 'lucide-react';
 import { getKSTDateStr } from '@/lib/dateUtils';
+import { useToast } from '@/hooks/useToast';
+import { DraftReviewView } from './DraftReviewView';
 
 type EventInput = {
   id: string;
@@ -32,8 +33,6 @@ const PREDEFINED_EMOTIONS = [
   { id: 'angry', icon: '😡', label: '거부/화남', text: '거부 반응을 보이거나 화를 내심' },
 ];
 
-import { Toast } from '@base-ui/react/toast';
-
 export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
   const initialEventId = useId();
   const [events, setEvents] = useState<EventInput[]>(() => [
@@ -41,14 +40,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   ]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<{cognition: string; behavior: string} | null>(null);
+  const [draft, setDraft] = useState<{ cognition: string; behavior: string } | null>(null);
   const router = useRouter();
-  const toastManager = Toast.useToastManager();
-  
+  const { showSuccess, showError } = useToast();
+
   const todayStr = getKSTDateStr(new Date());
   const isFuture = targetDate > todayStr;
   const hasRequiredEvent = events.some(({ event }) => event.trim().length > 0);
-  
+
   const addEvent = () => {
     const newId = crypto.randomUUID();
     setEvents((currentEvents) => [
@@ -73,13 +72,13 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const updateEvent = (id: string, fields: Partial<EventInput>) => {
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
   };
-  
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validEvents = events.filter(({ event }) => event.trim());
     if (validEvents.length === 0 || loading) return;
-    
+
     const keywords = validEvents.map((ev, index) => {
       let text = `[사건 ${index + 1}]`;
       if (ev.event.trim()) text += `\n- 일어난 사건: ${ev.event.trim()}`;
@@ -87,11 +86,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       if (ev.action.trim()) text += `\n- 요양보호사의 조치: ${ev.action.trim()}`;
       return text;
     }).join('\n\n');
-    
+
     setLoading(true);
-    // 즉시 리뷰 화면으로 전환
     setDraft({ cognition: '', behavior: '' });
-    
+
     try {
       const res = await fetch('/api/generate-daily', {
         method: 'POST',
@@ -103,16 +101,16 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         throw new Error(`Generation failed: ${res.status}`);
       }
       if (!res.body) throw new Error('No body');
-      
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      
+
       let fullText = '';
-      
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         fullText += decoder.decode(value, { stream: true });
 
         let currentCognition = '';
@@ -129,8 +127,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         setDraft({ cognition: currentCognition, behavior: currentBehavior });
       }
     } catch {
-      const toastId = toastManager.add({ title: '생성 중 오류가 발생했습니다.', type: 'error' });
-      setTimeout(() => toastManager.close(toastId), 4000);
+      showError('생성 중 오류가 발생했습니다.');
       setDraft(null);
     } finally {
       setLoading(false);
@@ -142,12 +139,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
     setSaving(true);
     try {
       await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
-      const toastId = toastManager.add({ title: '성공적으로 저장되었습니다.', type: 'success' });
-      setTimeout(() => toastManager.close(toastId), 3000);
+      showSuccess('성공적으로 저장되었습니다.');
       router.refresh();
     } catch {
-      const toastId = toastManager.add({ title: '저장에 실패했습니다.', type: 'error' });
-      setTimeout(() => toastManager.close(toastId), 4000);
+      showError('저장에 실패했습니다.');
     } finally {
       setSaving(false);
     }
@@ -155,61 +150,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
 
   if (draft) {
     return (
-      <div>
-        <div className="mb-8 flex items-center gap-4">
-          <h2 className="text-3xl font-medium text-black tracking-tight">생성된 기록 검토</h2>
-          {loading && <Loader2 className="h-6 w-6 text-surface-400 animate-spin" />}
-        </div>
-        
-        <div className="flex flex-col gap-16 mb-16">
-          <div className="flex flex-col relative">
-            <h3 className="text-base font-medium text-black tracking-widest mb-6">인지 영역</h3>
-            <Textarea
-              className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.cognition ? 'bg-surface-50 animate-pulse text-surface-700 border-surface-300' : ''}`}
-              value={draft.cognition}
-              placeholder={loading && !draft.cognition ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
-              readOnly={loading}
-              maxLength={1000}
-              onChange={(e) => setDraft({...draft, cognition: e.target.value})}
-            />
-            <span className="absolute bottom-4 right-6 text-sm text-surface-500 font-light tracking-widest">
-              {draft.cognition.length}/1000
-            </span>
-          </div>
-          
-          <div className="flex flex-col relative">
-            <h3 className="text-base font-medium text-black tracking-widest mb-6">행동 영역</h3>
-            <Textarea
-              className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.behavior ? 'bg-surface-50 animate-pulse text-surface-700 border-surface-300' : ''}`}
-              value={draft.behavior}
-              placeholder={loading && !draft.behavior && draft.cognition ? '인지 영역 완료. 행동 영역 작성을 준비합니다...' : loading && !draft.behavior ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
-              readOnly={loading}
-              maxLength={1000}
-              onChange={(e) => setDraft({...draft, behavior: e.target.value})}
-            />
-            <span className="absolute bottom-4 right-6 text-sm text-surface-500 font-light tracking-widest">
-              {draft.behavior.length}/1000
-            </span>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-6 border-t border-surface-200 pt-8">
-          <button
-            onClick={() => setDraft(null)}
-            disabled={loading}
-            className="text-base font-medium tracking-widest text-surface-600 hover:text-black disabled:opacity-30"
-          >
-            다시 쓰기
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-50"
-          >
-            {saving ? '저장 중...' : '최종 저장'}
-          </button>
-        </div>
-      </div>
+      <DraftReviewView
+        draft={draft}
+        loading={loading}
+        saving={saving}
+        onDraftChange={setDraft}
+        onDiscard={() => setDraft(null)}
+        onSave={handleSave}
+      />
     );
   }
 
@@ -234,21 +182,21 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <h2 className="text-3xl font-medium text-black tracking-tight">관찰 내용 입력</h2>
       </div>
       <p className="text-surface-600 mb-12 text-xl font-medium leading-relaxed">
-        일어난 사건과 어르신의 감정, 그리고 선생님의 조치를 나누어 적어주세요. <br /> 
+        일어난 사건과 어르신의 감정, 그리고 선생님의 조치를 나누어 적어주세요. <br />
         시스템이 이를 분석하여 훨씬 더 풍부하고 전문적인 일지로 바꾸어줍니다.
       </p>
-      
+
       <form onSubmit={handleGenerate} className="flex flex-col gap-8">
         {events.map((e, i) => {
           const isEventEmpty = !e.event.trim();
-          
+
           return (
           <div key={e.id} className="relative bg-white p-8 md:p-10 rounded-3xl border-2 border-surface-300 flex flex-col gap-8 mb-4">
             <div className="flex items-center justify-between pb-2">
               <span className="text-base font-medium text-black tracking-widest">사건 {i + 1}</span>
               {events.length > 1 && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => removeEvent(e.id)}
                   className="text-surface-500 hover:text-status-danger text-sm tracking-widest font-medium transition-colors"
                 >
@@ -256,7 +204,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                 </button>
               )}
             </div>
-            
+
             <div className="flex flex-col gap-2">
               <label className="text-base tracking-widest text-black flex items-baseline">
                 일어난 사건 <span className="text-sm text-surface-600 font-normal ml-2">(필수)</span>
@@ -284,8 +232,8 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                     onClick={() => updateEvent(e.id, { emotion: emo.text, isCustomEmotion: false })}
                     disabled={isFuture || isEventEmpty}
                     className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
-                      !e.isCustomEmotion && e.emotion === emo.text 
-                        ? 'bg-white border-2 border-black text-black' 
+                      !e.isCustomEmotion && e.emotion === emo.text
+                        ? 'bg-white border-2 border-black text-black'
                         : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
                     }`}
                   >
@@ -297,8 +245,8 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                   onClick={() => updateEvent(e.id, { isCustomEmotion: true, emotion: '' })}
                   disabled={isFuture || isEventEmpty}
                   className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
-                    e.isCustomEmotion 
-                      ? 'bg-white border-2 border-black text-black' 
+                    e.isCustomEmotion
+                      ? 'bg-white border-2 border-black text-black'
                       : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
                   }`}
                 >
@@ -333,7 +281,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           </div>
         );
       })}
-        
+
         <div className="flex flex-col mb-8 mt-2">
           <button
             type="button"
@@ -344,7 +292,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
             <span className="text-2xl font-light mb-0.5">+</span> 새로운 사건 추가
           </button>
         </div>
-        
+
         <div className="flex justify-end mt-4">
           <button
             type="submit"
