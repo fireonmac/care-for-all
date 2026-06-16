@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Dialog } from '@base-ui/react';
-import { addRecipient } from '@/app/actions';
+import { addRecipient } from '@/features/recipients/actions';
 import { commonInputClasses } from '@/components/Textarea';
 import { recipientQueryKeys } from '@/features/recipients/queryKeys';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
