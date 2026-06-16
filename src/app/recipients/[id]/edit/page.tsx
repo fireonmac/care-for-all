@@ -1,4 +1,4 @@
-import { getRecipientRecords, getRecipientOr404 } from '../actions';
+import { getRecipientRecords, getRecipientOr404 } from '../_queries';
 import { RecordEditForm } from './RecordEditForm';
 import { redirect } from 'next/navigation';
 
