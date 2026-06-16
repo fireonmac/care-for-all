@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
 import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
-import { deleteRecord, updateWeeklyRecord } from './actions';
+import { deleteRecord, updateWeeklyRecord } from '../actions';
 import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 import { useToast } from '@/hooks/useToast';

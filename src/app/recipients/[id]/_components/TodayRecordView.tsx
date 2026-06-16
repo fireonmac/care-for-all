@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { deleteRecord } from './actions';
+import { deleteRecord } from '../actions';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton';

@@ -1,7 +1,7 @@
-import { getRecipientOr404, getRecipientRecords } from './_queries';
-import { KeywordInputForm } from './KeywordInputForm';
-import { WeeklyReportForm } from './WeeklyReportForm';
-import { TodayRecordView } from './TodayRecordView';
+import { getRecipientOr404, getRecipientRecords } from './queries';
+import { KeywordInputForm } from './_components/KeywordInputForm';
+import { WeeklyReportForm } from './_components/WeeklyReportForm';
+import { TodayRecordView } from './_components/TodayRecordView';
 import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
