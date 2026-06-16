@@ -72,6 +72,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
               canRemove={events.length > 1}
               onUpdate={(fields) => updateEvent(e.id, fields)}
               onRemove={() => removeEvent(e.id)}
+              autoFocus={activeEventId.includes(e.id)}
             />
           ))}
         </Accordion.Root>
