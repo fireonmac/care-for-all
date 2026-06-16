@@ -1,7 +1,6 @@
 'use client';
 
 import { Accordion } from '@base-ui/react';
-import { Textarea, commonInputClasses } from '@/components/Textarea';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { DraftReviewView } from './DraftReviewView';
 import { useKeywordInputForm } from './useKeywordInputForm';

@@ -67,7 +67,7 @@ export async function getRecipientsPage(
     if (r.date) latestByRecipient.set(r.recipientId, r.date);
   }
 
-  let recipientsWithStats = allRecipients.map((recipient) => {
+  const recipientsWithStats = allRecipients.map((recipient) => {
     const hasTodayRecord = todaySet.has(recipient.id);
     const weeklyRecords = weeklyByRecipient.get(recipient.id) ?? [];
     const latestRecordDate = latestByRecipient.get(recipient.id) ?? null;
