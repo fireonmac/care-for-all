@@ -42,7 +42,7 @@ export function EventInputItem({
           <div className="flex items-center justify-between w-full">
             <span className="text-xl font-bold text-black tracking-widest flex items-center gap-2">
               사건 {index + 1}
-              <ChevronDown className="w-6 h-6 text-surface-400 transition-opacity duration-300 group-data-[open]:opacity-0" />
+              <ChevronDown className="w-6 h-6 text-black transition-opacity duration-300 group-data-[open]:opacity-0" />
             </span>
           </div>
           {/* 요약 뷰: 아코디언이 닫혀있을 때만 보임 */}
