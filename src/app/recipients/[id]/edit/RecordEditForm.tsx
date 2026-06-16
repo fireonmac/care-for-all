@@ -7,31 +7,28 @@ import { BackButton } from '@/components/BackButton';
 import { Textarea } from '@/components/Textarea';
 import { Toast } from '@base-ui/react/toast';
 import type { records } from '@/db/schema';
+import { useMutation } from '@tanstack/react-query';
 
 type DailyRecord = typeof records.$inferSelect;
 
 export function RecordEditForm({ record, recipientId, recipientName, date }: { record: DailyRecord, recipientId: string, recipientName: string, date: string }) {
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
-  const [saving, setSaving] = useState(false);
   const router = useRouter();
   const toastManager = Toast.useToastManager();
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateDailyRecord(record.id, cognition, behavior);
+  const { mutate: handleSave, isPending: saving } = useMutation({
+    mutationFn: () => updateDailyRecord(record.id, cognition, behavior),
+    onSuccess: () => {
       const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' });
       setTimeout(() => toastManager.close(toastId), 3000);
       router.push(`/recipients/${recipientId}?date=${date}`);
       router.refresh();
-    } catch {
+    },
+    onError: () => {
       const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' });
       setTimeout(() => toastManager.close(toastId), 4000);
-    } finally {
-      setSaving(false);
     }
-  };
+  });
 
   // 날짜 포맷 (YYYY-MM-DD -> YYYY년 M월 D일)
   const [year, month, day] = date.split('-');
