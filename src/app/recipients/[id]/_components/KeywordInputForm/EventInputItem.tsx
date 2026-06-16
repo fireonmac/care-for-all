@@ -32,6 +32,14 @@ export function EventInputItem({
   const isEventEmpty = !event.event.trim();
   const summaryText = isEventEmpty ? '내용을 입력해주세요' : event.event;
 
+  // 감정 아이콘 및 라벨 찾기
+  const predefinedEmotion = !event.isCustomEmotion
+    ? PREDEFINED_EMOTIONS.find((e) => e.text === event.emotion)
+    : null;
+  const emotionDisplay = predefinedEmotion
+    ? `${predefinedEmotion.icon} ${predefinedEmotion.label}`
+    : event.emotion;
+
   return (
     <Accordion.Item 
       value={event.id} 
@@ -46,9 +54,25 @@ export function EventInputItem({
             </span>
           </div>
           {/* 요약 뷰: 아코디언이 닫혀있을 때만 보임 */}
-          <span className="text-surface-500 truncate max-w-[80%] mt-3 group-data-[open]:hidden block text-lg font-medium pr-12">
-            {summaryText}
-          </span>
+          <div className="group-data-[open]:hidden mt-3 flex flex-col gap-2 pr-12">
+            <span className="text-surface-500 truncate max-w-[90%] text-lg font-medium">
+              {summaryText}
+            </span>
+            {(event.emotion || event.action) && (
+              <div className="flex items-center gap-3 text-sm font-medium mt-1">
+                {event.emotion && (
+                  <span className="flex items-center gap-1.5 bg-surface-100 text-surface-600 px-2.5 py-1 rounded-lg">
+                    {emotionDisplay}
+                  </span>
+                )}
+                {event.action && (
+                  <span className="truncate max-w-[60%] text-surface-500 flex items-center gap-1">
+                    <span className="text-surface-300">↳</span> {event.action}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </Accordion.Trigger>
         {canRemove && (
           <button
