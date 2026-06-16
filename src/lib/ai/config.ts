@@ -36,14 +36,8 @@ export function getAiConfig(): AiConfig {
 
   return {
     provider,
-    model:
-      process.env.AI_MODEL ??
-      (provider === 'ollama' ? process.env.OLLAMA_MODEL : undefined) ??
-      defaults.model,
-    baseUrl:
-      process.env.AI_BASE_URL ??
-      (provider === 'ollama' ? process.env.OLLAMA_URL : undefined) ??
-      defaults.baseUrl,
+    model: process.env.AI_MODEL ?? defaults.model,
+    baseUrl: process.env.AI_BASE_URL ?? defaults.baseUrl,
     apiKey: process.env.AI_API_KEY,
   };
 }

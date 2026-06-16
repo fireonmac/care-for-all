@@ -58,8 +58,7 @@ export async function generateWeeklyRecord(
   });
 }
 
-export const formatKeywordsWithAI = generateDailyRecord;
-export const formatWeeklyReportWithAI = generateWeeklyRecord;
+
 
 function parseDailyRecord(text: string): DailyRecordDraft {
   const cognitionMarker = '[인지]';
