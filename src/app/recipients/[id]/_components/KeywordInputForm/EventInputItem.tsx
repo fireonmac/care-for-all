@@ -1,4 +1,5 @@
 import { Accordion } from '@base-ui/react';
+import { ChevronDown } from 'lucide-react';
 import { commonInputClasses } from '@/components/Textarea';
 import { EventInput } from './useKeywordInputForm';
 
@@ -39,7 +40,10 @@ export function EventInputItem({
       <Accordion.Header className="flex w-full relative">
         <Accordion.Trigger className="w-full text-left p-8 md:p-10 flex flex-col data-[panel-open]:pb-0 transition-all focus:outline-none">
           <div className="flex items-center justify-between w-full">
-            <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
+              <ChevronDown className="w-5 h-5 text-surface-400 transition-transform duration-300 group-data-[panel-open]:rotate-180" />
+            </div>
           </div>
           {/* 요약 뷰: 아코디언이 닫혀있을 때만 보임 */}
           <span className="text-surface-500 truncate max-w-md mt-2 group-data-[panel-open]:hidden block text-lg font-normal pr-12">

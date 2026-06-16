@@ -59,7 +59,9 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <Accordion.Root
           value={activeEventId}
-          onValueChange={(val) => setActiveEventId(val as string[])}
+          onValueChange={(val) => {
+            if (val.length > 0) setActiveEventId(val as string[]);
+          }}
           className="flex flex-col gap-4"
         >
           {events.map((e, i) => (
