@@ -1,0 +1,120 @@
+import { commonInputClasses } from '@/components/Textarea';
+import { EventInput } from './useKeywordInputForm';
+
+const PREDEFINED_EMOTIONS = [
+  { id: 'happy', icon: '🥰', label: '편안/기분좋음', text: '편안하고 기분 좋은 상태이심' },
+  { id: 'neutral', icon: '😌', label: '차분함', text: '특별한 감정 동요 없이 차분하심' },
+  { id: 'anxious', icon: '😰', label: '우울/불안', text: '우울해하거나 불안해하심' },
+  { id: 'angry', icon: '😡', label: '거부/화남', text: '거부 반응을 보이거나 화를 내심' },
+];
+
+interface EventInputItemProps {
+  event: EventInput;
+  index: number;
+  isFuture: boolean;
+  canRemove: boolean;
+  onUpdate: (fields: Partial<EventInput>) => void;
+  onRemove: () => void;
+}
+
+export function EventInputItem({
+  event,
+  index,
+  isFuture,
+  canRemove,
+  onUpdate,
+  onRemove,
+}: EventInputItemProps) {
+  const isEventEmpty = !event.event.trim();
+
+  return (
+    <div className="relative bg-white p-8 md:p-10 rounded-3xl border-2 border-surface-300 flex flex-col gap-8 mb-4">
+      <div className="flex items-center justify-between pb-2">
+        <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
+        {canRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-surface-500 hover:text-status-danger text-sm tracking-widest font-medium transition-colors"
+          >
+            삭제
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-base tracking-widest text-black flex items-baseline">
+          일어난 사건 <span className="text-sm text-surface-600 font-normal ml-2">(필수)</span>
+        </label>
+        <input
+          id={`event-input-${event.id}`}
+          type="text"
+          value={event.event}
+          onChange={(ev) => onUpdate({ event: ev.target.value })}
+          disabled={isFuture}
+          placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
+          className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+        />
+      </div>
+
+      <div className={`flex flex-col gap-3 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
+        <label className="text-base tracking-widest text-black flex items-baseline">
+          어르신의 감정 및 반응 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
+        </label>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {PREDEFINED_EMOTIONS.map(emo => (
+            <button
+              key={emo.id}
+              type="button"
+              onClick={() => onUpdate({ emotion: emo.text, isCustomEmotion: false })}
+              disabled={isFuture || isEventEmpty}
+              className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
+                !event.isCustomEmotion && event.emotion === emo.text
+                  ? 'bg-white border-2 border-black text-black'
+                  : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
+              }`}
+            >
+              {emo.icon} {emo.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => onUpdate({ isCustomEmotion: true, emotion: '' })}
+            disabled={isFuture || isEventEmpty}
+            className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
+              event.isCustomEmotion
+                ? 'bg-white border-2 border-black text-black'
+                : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
+            }`}
+          >
+            ✏️ 직접 입력
+          </button>
+        </div>
+        {event.isCustomEmotion && (
+          <input
+            type="text"
+            value={event.emotion}
+            onChange={(ev) => onUpdate({ emotion: ev.target.value })}
+            disabled={isFuture || isEventEmpty}
+            placeholder="직접 감정이나 반응을 입력해주세요"
+            className={`mt-2 px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+          />
+        )}
+      </div>
+
+      <div className={`flex flex-col gap-2 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
+        <label className="text-base tracking-widest text-black flex items-baseline">
+          요양보호사의 조치 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
+        </label>
+        <input
+          type="text"
+          value={event.action}
+          onChange={(ev) => onUpdate({ action: ev.target.value })}
+          disabled={isFuture || isEventEmpty}
+          placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
+          className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+        />
+      </div>
+    </div>
+  );
+}
