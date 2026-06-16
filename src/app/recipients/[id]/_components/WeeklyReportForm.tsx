@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Modal, ModalClose } from '@/components/Modal';
+import { Modal } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
 import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
-import { deleteRecord, updateWeeklyRecord } from './actions';
+import { deleteRecord, updateWeeklyRecord } from '../actions';
 import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 import { useToast } from '@/hooks/useToast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WeeklyReportFormProps {
   recipientId: string;
@@ -27,123 +28,92 @@ export function WeeklyReportForm({
   dailyRecordCount,
   weekStartDate,
 }: WeeklyReportFormProps) {
-  const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
-  const [report, setReport] = useState<string | null>(null);
-  const [recordId, setRecordId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
-  const [saving, setSaving] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [generatedRecordId, setGeneratedRecordId] = useState<string | null>(null);
 
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useToast();
+  const queryClient = useQueryClient();
 
-  const stopPolling = () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  };
+  // 1. 초기 상태 확인
+  const { data: initialData, isError: initialError } = useQuery({
+    queryKey: ['weeklyReportInitial', recipientId, weekStartDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Fetch failed');
+      return res.json();
+    },
+    enabled: !!weekStartDate,
+  });
 
-  const handleFail = () => {
-    stopPolling();
-    setStatus('FAILED');
-    showError('발간 작업 중 오류가 발생했습니다.');
-  };
+  const activeRecordId = generatedRecordId || initialData?.recordId;
 
-  const fetchContent = async (id: string) => {
-    const res = await fetch(`/api/records/${id}`);
-    const data = await res.json();
-    if (data.combinedContent) {
-      setReport(data.combinedContent);
-    }
-  };
+  // 2. 레코드 상세 조회 및 폴링 (선언적)
+  const { data: recordData, isError: recordError } = useQuery({
+    queryKey: ['weeklyRecord', activeRecordId],
+    queryFn: async () => {
+      const res = await fetch(`/api/records/${activeRecordId}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Fetch failed');
+      return res.json();
+    },
+    refetchInterval: (query) => {
+      return query.state.data?.status === 'PROCESSING' ? 3000 : false;
+    },
+    enabled: !!activeRecordId,
+  });
 
-  const startPolling = (id: string) => {
-    stopPolling();
-    pollingIntervalRef.current = setInterval(async () => {
-      try {
-        const timestamp = Date.now();
-        const res = await fetch(`/api/records/${id}?t=${timestamp}`, { cache: 'no-store' });
-        const data = await res.json();
+  // 상태 파생 (Derived State)
+  let status: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED' = 'IDLE';
 
-        if (!res.ok || data.error) {
-          stopPolling();
-          setStatus('IDLE');
-          return;
-        }
+  if (recordData) {
+    if (recordData.status === 'COMPLETED') status = 'COMPLETED';
+    else if (recordData.status === 'FAILED') status = 'FAILED';
+    else if (recordData.status === 'PROCESSING') status = 'PROCESSING';
+  } else if (initialData) {
+    if (initialData.status === 'FAILED') status = 'FAILED';
+    else if (initialData.status === 'PROCESSING') status = 'PROCESSING';
+  }
 
-        if (data.status === 'COMPLETED') {
-          stopPolling();
-          setStatus('COMPLETED');
-          setRecordId(id);
-          setReport(data.combinedContent);
-          showSuccess('주간 리포트 발간이 완료되었습니다!');
-        } else if (data.status === 'FAILED') {
-          handleFail();
-        }
-      } catch (error) {
-        console.error('Polling error', error);
-        handleFail();
-      }
-    }, 3000);
-  };
+  if (recordError || initialError) status = 'FAILED';
 
-  useEffect(() => {
-    if (!weekStartDate) return;
-
-    const checkInitialStatus = async () => {
-      try {
-        const res = await fetch(`/api/generate-weekly?recipientId=${recipientId}&targetDate=${weekStartDate}`, { cache: 'no-store' });
-        const data = await res.json();
-
-        if (data.status === 'COMPLETED' && data.recordId) {
-          setStatus('COMPLETED');
-          setRecordId(data.recordId);
-          void fetchContent(data.recordId);
-        } else if (data.status === 'PROCESSING' && data.recordId) {
-          setStatus('PROCESSING');
-          startPolling(data.recordId);
-        } else if (data.status === 'FAILED') {
-          setStatus('FAILED');
-        } else {
-          setStatus('IDLE');
-        }
-      } catch {
-        setStatus('IDLE');
-      }
-    };
-
-    void checkInitialStatus();
-    return stopPolling;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipientId, weekStartDate]);
-
-  const handleGenerate = async () => {
-    setStatus('PROCESSING');
-    showInfo('백그라운드에서 주간 리포트 발간을 시작했습니다.');
-
-    try {
+  const { mutate: generateReport, isPending: isGenerating } = useMutation({
+    mutationFn: async () => {
       const res = await fetch('/api/generate-weekly', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipientId, targetDate: weekStartDate }),
       });
       const data = await res.json();
+      if (!data.recordId) throw new Error('No recordId');
+      return data;
+    },
+    onMutate: () => showInfo('백그라운드에서 주간 리포트 발간을 시작했습니다.'),
+    onSuccess: (data) => setGeneratedRecordId(data.recordId),
+    onError: () => showError('발간 작업 중 오류가 발생했습니다.')
+  });
 
-      if (data.recordId) {
-        startPolling(data.recordId);
-      }
-    } catch {
-      handleFail();
+  if (isGenerating) status = 'PROCESSING';
+
+  // 3. 발간 상태 변화 감지 및 토스트
+  const prevStatus = useRef(status);
+  useEffect(() => {
+    if (prevStatus.current === 'PROCESSING' && status === 'COMPLETED') {
+      showSuccess('주간 리포트 발간이 완료되었습니다!');
     }
-  };
+    if (prevStatus.current === 'PROCESSING' && status === 'FAILED') {
+      showError('발간 작업 중 오류가 발생했습니다.');
+    }
+    prevStatus.current = status;
+  }, [status, showSuccess, showError]);
+
+  const reportContent = recordData?.combinedContent || null;
 
   const handleEditClick = () => {
-    setEditContent(report || '');
+    setEditContent(reportContent || '');
     setIsEditing(true);
     setTimeout(() => {
       if (textareaRef.current) {
@@ -154,38 +124,35 @@ export function WeeklyReportForm({
     }, 0);
   };
 
-  const handleEditSave = async () => {
-    if (!recordId) return;
-    setSaving(true);
-    try {
-      await updateWeeklyRecord(recordId, editContent);
-      setReport(editContent);
+  const { mutate: saveEdit, isPending: isSavingEdit } = useMutation({
+    mutationFn: () => {
+      if (!activeRecordId) throw new Error('No active record ID');
+      return updateWeeklyRecord(activeRecordId, editContent);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyRecord', activeRecordId] });
       setIsEditing(false);
       showSuccess('성공적으로 수정되었습니다.');
       router.refresh();
-    } catch {
-      showError('수정에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    onError: () => showError('수정에 실패했습니다.')
+  });
 
-  const handleDelete = async () => {
-    if (!recordId) return;
-    setSaving(true);
-    try {
-      await deleteRecord(recordId);
-      setStatus('IDLE');
+  const { mutate: handleDeleteRecord, isPending: isDeleting } = useMutation({
+    mutationFn: () => {
+      if (!activeRecordId) throw new Error('No active record ID');
+      return deleteRecord(activeRecordId);
+    },
+    onSuccess: () => {
+      setGeneratedRecordId(null);
+      queryClient.invalidateQueries({ queryKey: ['weeklyReportInitial', recipientId, weekStartDate] });
       setOpen(false);
       setDeleteModalOpen(false);
       showSuccess('주간 리포트가 성공적으로 삭제되었습니다.');
       router.refresh();
-    } catch {
-      showError('삭제에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    onError: () => showError('삭제에 실패했습니다.')
+  });
 
   if (dailyRecordCount < 2) return null;
 
@@ -193,7 +160,7 @@ export function WeeklyReportForm({
     <>
       {status === 'IDLE' || status === 'FAILED' ? (
         <button
-          onClick={handleGenerate}
+          onClick={() => generateReport()}
           className={`px-5 py-2.5 bg-white border text-sm font-medium rounded-lg flex items-center gap-2 tracking-widest transition-colors ${
             status === 'FAILED'
               ? 'border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500'
@@ -237,14 +204,14 @@ export function WeeklyReportForm({
               <div className="flex items-center justify-between gap-3 mb-4 px-1">
                 <div className="flex items-center gap-3">
                   <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
-                  {!isEditing && <CopyButton text={report || ''} title="리포트 복사" />}
+                  {!isEditing && <CopyButton text={reportContent || ''} title="리포트 복사" />}
                 </div>
                 <div className="flex items-center gap-2">
                   {isEditing ? (
                     <>
                       <button onClick={() => setIsEditing(false)} className="text-sm font-medium tracking-widest text-surface-500 hover:text-black px-3 py-1.5 transition-colors">취소</button>
-                      <button onClick={handleEditSave} disabled={saving} className="bg-black text-white text-sm font-medium tracking-widest px-4 py-1.5 rounded-md hover:bg-surface-800 disabled:opacity-50">
-                        {saving ? '저장 중...' : '저장'}
+                      <button onClick={() => saveEdit()} disabled={isSavingEdit} className="bg-black text-white text-sm font-medium tracking-widest px-4 py-1.5 rounded-md hover:bg-surface-800 disabled:opacity-50">
+                        {isSavingEdit ? '저장 중...' : '저장'}
                       </button>
                     </>
                   ) : (
@@ -257,8 +224,8 @@ export function WeeklyReportForm({
                         onOpenChange={setDeleteModalOpen}
                         title="주간 리포트 삭제"
                         message="정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다."
-                        onConfirm={handleDelete}
-                        isLoading={saving}
+                        onConfirm={() => handleDeleteRecord()}
+                        isLoading={isDeleting}
                         trigger={
                           <button onClick={() => setDeleteModalOpen(true)} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
                             <Trash2 size={14} /> <span>삭제</span>
@@ -280,7 +247,7 @@ export function WeeklyReportForm({
               ) : (
                 <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
                   <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
-                    {report || '내용이 없습니다.'}
+                    {reportContent || '내용이 없습니다.'}
                   </p>
                 </div>
               )}

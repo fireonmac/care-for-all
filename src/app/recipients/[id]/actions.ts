@@ -7,7 +7,7 @@ import { generateDailyRecord, generateWeeklyRecord } from '@/lib/ai';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { getKSTDateStr } from '@/lib/dateUtils';
-import { getRecipientRecords } from './_queries';
+import { getRecipientRecords } from './queries';
 
 export async function generateDraft(keywords: string) {
   return await generateDailyRecord(keywords);

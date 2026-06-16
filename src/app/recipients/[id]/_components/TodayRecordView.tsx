@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { deleteRecord } from './actions';
+import { useState, useTransition } from 'react';
+import { deleteRecord } from '../actions';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton';
@@ -12,23 +12,22 @@ import type { records } from '@/db/schema';
 type DailyRecord = typeof records.$inferSelect;
 
 export function TodayRecordView({ record, recipientId }: { record: DailyRecord, recipientId: string }) {
-  const [saving, setSaving] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const { showSuccess, showError } = useToast();
+  const [saving, startTransition] = useTransition();
 
-  const handleDelete = async () => {
-    setSaving(true);
-    try {
-      await deleteRecord(record.id);
-      showSuccess('기록이 성공적으로 삭제되었습니다.');
-      setDeleteModalOpen(false);
-      router.refresh();
-    } catch {
-      showError('기록 삭제에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
+  const handleDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteRecord(record.id);
+        showSuccess('기록이 성공적으로 삭제되었습니다.');
+        setDeleteModalOpen(false);
+        router.refresh();
+      } catch {
+        showError('기록 삭제에 실패했습니다.');
+      }
+    });
   };
 
   return (

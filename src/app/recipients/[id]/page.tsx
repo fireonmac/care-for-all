@@ -1,12 +1,13 @@
-import { getRecipientOr404, getRecipientRecords } from './_queries';
-import { KeywordInputForm } from './KeywordInputForm';
-import { WeeklyReportForm } from './WeeklyReportForm';
-import { TodayRecordView } from './TodayRecordView';
+import { getRecipientOr404, getRecipientRecords } from './queries';
+import { KeywordInputForm } from './_components/KeywordInputForm/KeywordInputForm';
+import { WeeklyReportForm } from './_components/WeeklyReportForm';
+import { TodayRecordView } from './_components/TodayRecordView';
 import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
+import { isSunday } from 'date-fns';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 
 export default async function RecipientDetailPage({
@@ -97,10 +98,19 @@ export default async function RecipientDetailPage({
 
       {/* 하단: 컨텐츠 영역 */}
       <section className="flex-1 w-full mx-auto">
-        {!hasTargetRecord ? (
-          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
-        ) : (
+        {hasTargetRecord ? (
           <TodayRecordView record={targetRecord} recipientId={recipient.id} />
+        ) : isSunday(new Date(targetDate + 'T00:00:00')) ? (
+          <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-surface-50 rounded-[2rem] border border-surface-200 mt-4">
+            <span className="text-5xl mb-6">☕️</span>
+            <h2 className="text-2xl font-semibold text-black mb-3 tracking-tight">일요일은 휴무일입니다</h2>
+            <p className="text-surface-500 text-lg leading-relaxed max-w-sm">
+              오늘은 어르신을 뵙지 않는 날이네요.<br/>
+              선생님도 편안하고 따뜻한 휴식 보내시길 바랍니다!
+            </p>
+          </div>
+        ) : (
+          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
         )}
       </section>
     </main>
