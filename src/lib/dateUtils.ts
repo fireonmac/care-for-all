@@ -45,13 +45,7 @@ export function getWeekData(targetDateStr: string) {
   };
 }
 
-// UTC 환경(도커 등)에서도 항상 한국 시간(KST) 기준의 YYYY-MM-DD를 반환하는 헬퍼 함수
 export function getKSTDateStr(date: Date = new Date()) {
-  const kstOptions = { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
-  const parts = new Intl.DateTimeFormat('ko-KR', kstOptions).formatToParts(date);
-  const year = parts.find(p => p.type === 'year')?.value;
-  const month = parts.find(p => p.type === 'month')?.value;
-  const day = parts.find(p => p.type === 'day')?.value;
-  return `${year}-${month}-${day}`;
+  return format(date, 'yyyy-MM-dd');
 }
 
