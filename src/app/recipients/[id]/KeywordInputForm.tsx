@@ -1,30 +1,9 @@
 'use client';
 
-import { useId, useState } from 'react';
-import { saveDailyRecord } from './actions';
-import { useRouter } from 'next/navigation';
 import { Textarea, commonInputClasses } from '@/components/Textarea';
 import { getKSTDateStr } from '@/lib/dateUtils';
-import { useToast } from '@/hooks/useToast';
 import { DraftReviewView } from './DraftReviewView';
-
-type EventInput = {
-  id: string;
-  event: string;
-  emotion: string;
-  isCustomEmotion: boolean;
-  action: string;
-};
-
-function createEmptyEvent(id: string): EventInput {
-  return {
-    id,
-    event: '',
-    emotion: '',
-    isCustomEmotion: false,
-    action: '',
-  };
-}
+import { useKeywordInputForm } from './useKeywordInputForm';
 
 const PREDEFINED_EMOTIONS = [
   { id: 'happy', icon: '🥰', label: '편안/기분좋음', text: '편안하고 기분 좋은 상태이심' },
@@ -34,134 +13,41 @@ const PREDEFINED_EMOTIONS = [
 ];
 
 export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
-  const initialEventId = useId();
-  const [events, setEvents] = useState<EventInput[]>(() => [
-    createEmptyEvent(initialEventId),
-  ]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<{ cognition: string; behavior: string } | null>(null);
-  const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const {
+    events,
+    addEvent,
+    removeEvent,
+    updateEvent,
+    hasRequiredEvent,
+    draft,
+    setDraft,
+    generateDraft,
+    isGenerating,
+    saveDraft,
+    isSaving,
+    discardDraft,
+  } = useKeywordInputForm(recipientId, targetDate);
 
   const todayStr = getKSTDateStr(new Date());
   const isFuture = targetDate > todayStr;
-  const hasRequiredEvent = events.some(({ event }) => event.trim().length > 0);
 
-  const addEvent = () => {
-    const newId = crypto.randomUUID();
-    setEvents((currentEvents) => [
-      ...currentEvents,
-      createEmptyEvent(newId),
-    ]);
-    setTimeout(() => {
-      const el = document.getElementById(`event-input-${newId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'auto', block: 'center' });
-        el.focus({ preventScroll: true });
-      }
-    }, 10);
-  };
-
-  const removeEvent = (id: string) => {
-    setEvents((currentEvents) =>
-      currentEvents.filter((event) => event.id !== id),
-    );
-  };
-
-  const updateEvent = (id: string, fields: Partial<EventInput>) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
-  };
-
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validEvents = events.filter(({ event }) => event.trim());
-    if (validEvents.length === 0 || loading) return;
-
-    const keywords = validEvents.map((ev, index) => {
-      let text = `[사건 ${index + 1}]`;
-      if (ev.event.trim()) text += `\n- 일어난 사건: ${ev.event.trim()}`;
-      if (ev.emotion.trim()) text += `\n- 어르신의 감정 및 반응: ${ev.emotion.trim()}`;
-      if (ev.action.trim()) text += `\n- 요양보호사의 조치: ${ev.action.trim()}`;
-      return text;
-    }).join('\n\n');
-
-    setLoading(true);
-    setDraft({ cognition: '', behavior: '' });
-
-    try {
-      const res = await fetch('/api/generate-daily', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keywords })
-      });
-
-      if (!res.ok) {
-        throw new Error(`Generation failed: ${res.status}`);
-      }
-      if (!res.body) throw new Error('No body');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-
-      let fullText = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        fullText += decoder.decode(value, { stream: true });
-
-        let currentCognition = '';
-        let currentBehavior = '';
-
-        if (fullText.includes('[행동]')) {
-          const [cognition, behavior = ''] = fullText.split('[행동]', 2);
-          currentCognition = cognition.replace('[인지]', '').trim();
-          currentBehavior = behavior.trim();
-        } else {
-          currentCognition = fullText.replace('[인지]', '').trim();
-        }
-
-        setDraft({ cognition: currentCognition, behavior: currentBehavior });
-      }
-    } catch {
-      showError('생성 중 오류가 발생했습니다.');
-      setDraft(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!draft) return;
-    setSaving(true);
-    try {
-      await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
-      showSuccess('성공적으로 저장되었습니다.');
-      router.refresh();
-    } catch {
-      showError('저장에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
+    void generateDraft();
   };
 
   if (draft) {
     return (
       <DraftReviewView
         draft={draft}
-        loading={loading}
-        saving={saving}
+        loading={isGenerating}
+        saving={isSaving}
         onDraftChange={setDraft}
-        onDiscard={() => setDraft(null)}
-        onSave={handleSave}
+        onDiscard={discardDraft}
+        onSave={() => saveDraft()}
       />
     );
   }
-
-
 
   return (
     <div>
@@ -173,7 +59,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         시스템이 이를 분석하여 훨씬 더 풍부하고 전문적인 일지로 바꾸어줍니다.
       </p>
 
-      <form onSubmit={handleGenerate} className="flex flex-col gap-8">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         {events.map((e, i) => {
           const isEventEmpty = !e.event.trim();
 
@@ -283,10 +169,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <div className="flex justify-end mt-4">
           <button
             type="submit"
-            disabled={loading || !hasRequiredEvent || isFuture}
+            disabled={isGenerating || !hasRequiredEvent || isFuture}
             className="px-10 py-4 bg-black text-white text-base font-medium tracking-widest rounded-lg hover:bg-surface-800 disabled:opacity-30"
           >
-            {loading ? '생성 중...' : '기록 초안 생성'}
+            {isGenerating ? '생성 중...' : '기록 초안 생성'}
           </button>
         </div>
       </form>
