@@ -1,5 +1,6 @@
 'use client';
 
+import { Accordion } from '@base-ui/react';
 import { Textarea, commonInputClasses } from '@/components/Textarea';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { DraftReviewView } from './DraftReviewView';
@@ -9,6 +10,8 @@ import { EventInputItem } from './EventInputItem';
 export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
   const {
     events,
+    activeEventId,
+    setActiveEventId,
     addEvent,
     removeEvent,
     updateEvent,
@@ -54,18 +57,23 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        {events.map((e, i) => (
-          <EventInputItem
-            key={e.id}
-            event={e}
-            index={i}
-            isFuture={isFuture}
-            canRemove={events.length > 1}
-            onUpdate={(fields) => updateEvent(e.id, fields)}
-            onRemove={() => removeEvent(e.id)}
-            autoFocus={i === events.length - 1 && events.length > 1}
-          />
-        ))}
+        <Accordion.Root
+          value={activeEventId}
+          onValueChange={(val) => setActiveEventId(val as string | null)}
+          className="flex flex-col gap-4"
+        >
+          {events.map((e, i) => (
+            <EventInputItem
+              key={e.id}
+              event={e}
+              index={i}
+              isFuture={isFuture}
+              canRemove={events.length > 1}
+              onUpdate={(fields) => updateEvent(e.id, fields)}
+              onRemove={() => removeEvent(e.id)}
+            />
+          ))}
+        </Accordion.Root>
 
         <div className="flex flex-col mb-8 mt-2">
           <button

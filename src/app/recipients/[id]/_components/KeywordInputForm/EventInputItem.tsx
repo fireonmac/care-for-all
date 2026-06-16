@@ -1,3 +1,4 @@
+import { Accordion } from '@base-ui/react';
 import { commonInputClasses } from '@/components/Textarea';
 import { EventInput } from './useKeywordInputForm';
 
@@ -28,96 +29,110 @@ export function EventInputItem({
   autoFocus,
 }: EventInputItemProps) {
   const isEventEmpty = !event.event.trim();
+  const summaryText = isEventEmpty ? '내용을 입력해주세요' : event.event;
 
   return (
-    <div className="relative bg-white p-8 md:p-10 rounded-3xl border-2 border-surface-300 flex flex-col gap-8 mb-4">
-      <div className="flex items-center justify-between pb-2">
-        <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
+    <Accordion.Item 
+      value={event.id} 
+      className="group relative bg-white rounded-3xl border-2 border-surface-300 flex flex-col mb-4 overflow-hidden"
+    >
+      <Accordion.Header className="flex w-full relative">
+        <Accordion.Trigger className="w-full text-left p-8 md:p-10 flex flex-col data-[panel-open]:pb-0 transition-all focus:outline-none">
+          <div className="flex items-center justify-between w-full">
+            <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
+          </div>
+          {/* 요약 뷰: 아코디언이 닫혀있을 때만 보임 */}
+          <span className="text-surface-500 truncate max-w-md mt-2 group-data-[panel-open]:hidden block text-lg font-normal pr-12">
+            {summaryText}
+          </span>
+        </Accordion.Trigger>
         {canRemove && (
           <button
             type="button"
             onClick={onRemove}
-            className="text-surface-500 hover:text-status-danger text-sm tracking-widest font-medium transition-colors"
+            className="absolute top-8 right-8 md:top-10 md:right-10 text-surface-500 hover:text-status-danger text-sm tracking-widest font-medium transition-colors z-10 p-2"
           >
             삭제
           </button>
         )}
-      </div>
+      </Accordion.Header>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-base tracking-widest text-black flex items-baseline">
-          일어난 사건 <span className="text-sm text-surface-600 font-normal ml-2">(필수)</span>
-        </label>
-        <input
-          id={`event-input-${event.id}`}
-          type="text"
-          value={event.event}
-          onChange={(ev) => onUpdate({ event: ev.target.value })}
-          disabled={isFuture}
-          placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
-          className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
-          autoFocus={autoFocus}
-        />
-      </div>
+      <Accordion.Panel className="px-8 md:px-10 pb-8 md:pb-10 pt-6 flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <label className="text-base tracking-widest text-black flex items-baseline">
+            일어난 사건 <span className="text-sm text-surface-600 font-normal ml-2">(필수)</span>
+          </label>
+          <input
+            id={`event-input-${event.id}`}
+            type="text"
+            value={event.event}
+            onChange={(ev) => onUpdate({ event: ev.target.value })}
+            disabled={isFuture}
+            placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
+            className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+            autoFocus={autoFocus}
+          />
+        </div>
 
-      <div className={`flex flex-col gap-3 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
-        <label className="text-base tracking-widest text-black flex items-baseline">
-          어르신의 감정 및 반응 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
-        </label>
-        <div className="flex flex-wrap gap-2 mt-1">
-          {PREDEFINED_EMOTIONS.map(emo => (
+        <div className={`flex flex-col gap-3 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
+          <label className="text-base tracking-widest text-black flex items-baseline">
+            어르신의 감정 및 반응 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
+          </label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {PREDEFINED_EMOTIONS.map(emo => (
+              <button
+                key={emo.id}
+                type="button"
+                onClick={() => onUpdate({ emotion: emo.text, isCustomEmotion: false })}
+                disabled={isFuture || isEventEmpty}
+                className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
+                  !event.isCustomEmotion && event.emotion === emo.text
+                    ? 'bg-white border-2 border-black text-black'
+                    : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
+                }`}
+              >
+                {emo.icon} {emo.label}
+              </button>
+            ))}
             <button
-              key={emo.id}
               type="button"
-              onClick={() => onUpdate({ emotion: emo.text, isCustomEmotion: false })}
+              onClick={() => onUpdate({ isCustomEmotion: true, emotion: '' })}
               disabled={isFuture || isEventEmpty}
               className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
-                !event.isCustomEmotion && event.emotion === emo.text
+                event.isCustomEmotion
                   ? 'bg-white border-2 border-black text-black'
                   : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
               }`}
             >
-              {emo.icon} {emo.label}
+              ✏️ 직접 입력
             </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => onUpdate({ isCustomEmotion: true, emotion: '' })}
-            disabled={isFuture || isEventEmpty}
-            className={`px-5 py-2.5 rounded-full text-base font-medium transition-all disabled:cursor-not-allowed ${
-              event.isCustomEmotion
-                ? 'bg-white border-2 border-black text-black'
-                : 'bg-white border-2 border-surface-200 text-surface-500 hover:border-surface-400 hover:text-surface-700'
-            }`}
-          >
-            ✏️ 직접 입력
-          </button>
+          </div>
+          {event.isCustomEmotion && (
+            <input
+              type="text"
+              value={event.emotion}
+              onChange={(ev) => onUpdate({ emotion: ev.target.value })}
+              disabled={isFuture || isEventEmpty}
+              placeholder="직접 감정이나 반응을 입력해주세요"
+              className={`mt-2 px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+            />
+          )}
         </div>
-        {event.isCustomEmotion && (
+
+        <div className={`flex flex-col gap-2 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
+          <label className="text-base tracking-widest text-black flex items-baseline">
+            요양보호사의 조치 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
+          </label>
           <input
             type="text"
-            value={event.emotion}
-            onChange={(ev) => onUpdate({ emotion: ev.target.value })}
+            value={event.action}
+            onChange={(ev) => onUpdate({ action: ev.target.value })}
             disabled={isFuture || isEventEmpty}
-            placeholder="직접 감정이나 반응을 입력해주세요"
-            className={`mt-2 px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+            placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
+            className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
           />
-        )}
-      </div>
-
-      <div className={`flex flex-col gap-2 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
-        <label className="text-base tracking-widest text-black flex items-baseline">
-          요양보호사의 조치 <span className="text-sm text-surface-500 font-normal ml-2">(선택)</span>
-        </label>
-        <input
-          type="text"
-          value={event.action}
-          onChange={(ev) => onUpdate({ action: ev.target.value })}
-          disabled={isFuture || isEventEmpty}
-          placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
-          className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
-        />
-      </div>
-    </div>
+        </div>
+      </Accordion.Panel>
+    </Accordion.Item>
   );
 }
