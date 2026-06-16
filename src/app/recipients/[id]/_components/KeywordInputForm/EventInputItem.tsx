@@ -35,33 +35,40 @@ export function EventInputItem({
   return (
     <Accordion.Item 
       value={event.id} 
-      className="group relative bg-white rounded-3xl border-2 border-surface-300 flex flex-col mb-4 overflow-hidden"
+      className="group relative rounded-3xl border-2 border-surface-200 bg-surface-50 flex flex-col mb-4 overflow-hidden transition-all duration-300 data-[open]:border-black data-[open]:shadow-xl data-[open]:bg-white data-[open]:scale-[1.01]"
     >
       <Accordion.Header className="flex w-full relative">
-        <Accordion.Trigger className="w-full text-left p-8 md:p-10 flex flex-col data-[panel-open]:pb-0 transition-all focus:outline-none">
+        <Accordion.Trigger className="w-full text-left p-6 md:p-8 flex flex-col transition-all focus:outline-none hover:bg-surface-100/50 group-data-[open]:hover:bg-transparent">
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-medium text-black tracking-widest">사건 {index + 1}</span>
-              <ChevronDown className="w-5 h-5 text-surface-400 transition-transform duration-300 group-data-[panel-open]:rotate-180" />
+            <span className="text-xl font-bold text-black tracking-widest flex items-center gap-3">
+              사건 {index + 1}
+            </span>
+            <div className="flex items-center gap-4">
+              {/* 명확하고 모던한 토글 아이콘 (캐럿) */}
+              <div className="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center text-black transition-all duration-300 group-data-[open]:bg-black group-data-[open]:text-white group-hover:scale-105">
+                <ChevronDown className="w-6 h-6 transition-transform duration-500 group-data-[open]:rotate-180" />
+              </div>
             </div>
           </div>
           {/* 요약 뷰: 아코디언이 닫혀있을 때만 보임 */}
-          <span className="text-surface-500 truncate max-w-md mt-2 group-data-[panel-open]:hidden block text-lg font-normal pr-12">
+          <span className="text-surface-500 truncate max-w-[80%] mt-3 group-data-[open]:hidden block text-lg font-medium">
             {summaryText}
           </span>
         </Accordion.Trigger>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="absolute top-8 right-8 md:top-10 md:right-10 text-surface-500 hover:text-status-danger text-sm tracking-widest font-medium transition-colors z-10 p-2"
-          >
-            삭제
-          </button>
-        )}
       </Accordion.Header>
 
-      <Accordion.Panel className="px-8 md:px-10 pb-8 md:pb-10 pt-6 flex flex-col gap-8">
+      <Accordion.Panel className="px-6 md:px-8 pb-8 md:pb-10 pt-4 flex flex-col gap-8">
+        <div className="flex items-center justify-end -mt-2 mb-2">
+          {canRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="text-surface-500 hover:bg-status-danger/10 hover:text-status-danger px-4 py-2 rounded-xl text-sm tracking-widest font-bold transition-colors"
+            >
+              이 사건 삭제하기
+            </button>
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           <label className="text-base tracking-widest text-black flex items-baseline">
             일어난 사건 <span className="text-sm text-surface-600 font-normal ml-2">(필수)</span>
