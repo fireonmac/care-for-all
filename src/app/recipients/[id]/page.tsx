@@ -100,7 +100,7 @@ export default async function RecipientDetailPage({
       <section className="flex-1 w-full mx-auto">
         {hasTargetRecord ? (
           <TodayRecordView record={targetRecord} recipientId={recipient.id} />
-        ) : isSunday(new Date(targetDate)) ? (
+        ) : isSunday(new Date(targetDate + 'T00:00:00')) ? (
           <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-surface-50 rounded-[2rem] border border-surface-200 mt-4">
             <span className="text-5xl mb-6">☕️</span>
             <h2 className="text-2xl font-semibold text-black mb-3 tracking-tight">일요일은 휴무일입니다</h2>
