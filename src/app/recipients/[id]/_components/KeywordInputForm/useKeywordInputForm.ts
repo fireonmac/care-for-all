@@ -1,7 +1,7 @@
 import { useState, useId, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
-import { saveDailyRecord } from '../actions';
+import { saveDailyRecord } from '../../actions';
 
 export type EventInput = {
   id: string;

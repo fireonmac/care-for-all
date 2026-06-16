@@ -1,5 +1,5 @@
 import { getRecipientOr404, getRecipientRecords } from './queries';
-import { KeywordInputForm } from './_components/KeywordInputForm';
+import { KeywordInputForm } from './_components/KeywordInputForm/KeywordInputForm';
 import { WeeklyReportForm } from './_components/WeeklyReportForm';
 import { TodayRecordView } from './_components/TodayRecordView';
 import { WeekSelector } from '@/features/recipients/components/WeekSelector';
