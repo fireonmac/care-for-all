@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
@@ -41,28 +41,28 @@ export function WeeklyReportForm({
   const router = useRouter();
   const { showSuccess, showError, showInfo } = useToast();
 
-  const fetchContent = useCallback(async (id: string) => {
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  const handleFail = () => {
+    stopPolling();
+    setStatus('FAILED');
+    showError('발간 작업 중 오류가 발생했습니다.');
+  };
+
+  const fetchContent = async (id: string) => {
     const res = await fetch(`/api/records/${id}`);
     const data = await res.json();
     if (data.combinedContent) {
       setReport(data.combinedContent);
     }
-  }, []);
+  };
 
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  }, []);
-
-  const handleFail = useCallback(() => {
-    stopPolling();
-    setStatus('FAILED');
-    showError('발간 작업 중 오류가 발생했습니다.');
-  }, [stopPolling, showError]);
-
-  const startPolling = useCallback((id: string) => {
+  const startPolling = (id: string) => {
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
       try {
@@ -90,7 +90,7 @@ export function WeeklyReportForm({
         handleFail();
       }
     }, 3000);
-  }, [handleFail, stopPolling, showSuccess]);
+  };
 
   useEffect(() => {
     if (!weekStartDate) return;
@@ -119,7 +119,8 @@ export function WeeklyReportForm({
 
     void checkInitialStatus();
     return stopPolling;
-  }, [fetchContent, recipientId, startPolling, stopPolling, weekStartDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipientId, weekStartDate]);
 
   const handleGenerate = async () => {
     setStatus('PROCESSING');
@@ -186,12 +187,10 @@ export function WeeklyReportForm({
     }
   };
 
-  // 일일 기록이 2개 미만이면 버튼 자체를 표시하지 않음
   if (dailyRecordCount < 2) return null;
 
   return (
     <>
-      {/* 상태별 상단 버튼 */}
       {status === 'IDLE' || status === 'FAILED' ? (
         <button
           onClick={handleGenerate}
