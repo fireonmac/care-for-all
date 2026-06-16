@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { updateDailyRecord } from '../actions';
 import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/BackButton';
 import { Textarea } from '@/components/Textarea';
 import { Toast } from '@base-ui/react/toast';
 import type { records } from '@/db/schema';
-import { useMutation } from '@tanstack/react-query';
 
 type DailyRecord = typeof records.$inferSelect;
 
@@ -16,19 +15,22 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
   const router = useRouter();
   const toastManager = Toast.useToastManager();
-  const { mutate: handleSave, isPending: saving } = useMutation({
-    mutationFn: () => updateDailyRecord(record.id, cognition, behavior),
-    onSuccess: () => {
-      const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' });
-      setTimeout(() => toastManager.close(toastId), 3000);
-      router.push(`/recipients/${recipientId}?date=${date}`);
-      router.refresh();
-    },
-    onError: () => {
-      const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' });
-      setTimeout(() => toastManager.close(toastId), 4000);
-    }
-  });
+  const [saving, startTransition] = useTransition();
+
+  const handleSave = () => {
+    startTransition(async () => {
+      try {
+        await updateDailyRecord(record.id, cognition, behavior);
+        const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' });
+        setTimeout(() => toastManager.close(toastId), 3000);
+        router.push(`/recipients/${recipientId}?date=${date}`);
+        router.refresh();
+      } catch {
+        const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' });
+        setTimeout(() => toastManager.close(toastId), 4000);
+      }
+    });
+  };
 
   // 날짜 포맷 (YYYY-MM-DD -> YYYY년 M월 D일)
   const [year, month, day] = date.split('-');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { deleteRecord } from './actions';
 import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -8,7 +8,6 @@ import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 import { useToast } from '@/hooks/useToast';
 import type { records } from '@/db/schema';
-import { useMutation } from '@tanstack/react-query';
 
 type DailyRecord = typeof records.$inferSelect;
 
@@ -16,17 +15,20 @@ export function TodayRecordView({ record, recipientId }: { record: DailyRecord, 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const { showSuccess, showError } = useToast();
-  const { mutate: handleDelete, isPending: saving } = useMutation({
-    mutationFn: () => deleteRecord(record.id),
-    onSuccess: () => {
-      showSuccess('기록이 성공적으로 삭제되었습니다.');
-      setDeleteModalOpen(false);
-      router.refresh();
-    },
-    onError: () => {
-      showError('기록 삭제에 실패했습니다.');
-    }
-  });
+  const [saving, startTransition] = useTransition();
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteRecord(record.id);
+        showSuccess('기록이 성공적으로 삭제되었습니다.');
+        setDeleteModalOpen(false);
+        router.refresh();
+      } catch {
+        showError('기록 삭제에 실패했습니다.');
+      }
+    });
+  };
 
   return (
     <div>

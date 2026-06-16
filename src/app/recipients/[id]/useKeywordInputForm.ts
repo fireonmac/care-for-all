@@ -1,8 +1,7 @@
-import { useState, useId } from 'react';
+import { useState, useId, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
 import { saveDailyRecord } from './actions';
-import { useMutation } from '@tanstack/react-query';
 
 export type EventInput = {
   id: string;
@@ -110,19 +109,20 @@ export function useKeywordInputForm(recipientId: string, targetDate: string) {
     }
   };
 
-  const { mutate: saveDraft, isPending: isSaving } = useMutation({
-    mutationFn: async () => {
-      if (!draft) throw new Error('No draft to save');
-      await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
-    },
-    onSuccess: () => {
-      showSuccess('성공적으로 저장되었습니다.');
-      router.refresh();
-    },
-    onError: () => {
-      showError('저장에 실패했습니다.');
-    }
-  });
+  const [isSaving, startTransition] = useTransition();
+
+  const saveDraft = () => {
+    startTransition(async () => {
+      try {
+        if (!draft) throw new Error('No draft to save');
+        await saveDailyRecord(recipientId, draft.cognition, draft.behavior, targetDate);
+        showSuccess('성공적으로 저장되었습니다.');
+        router.refresh();
+      } catch {
+        showError('저장에 실패했습니다.');
+      }
+    });
+  };
 
   const discardDraft = () => setDraft(null);
 
