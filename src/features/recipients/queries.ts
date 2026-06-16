@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { recipients, records } from '@/db/schema';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
-import { desc, eq, and, gte, lte, ilike } from 'drizzle-orm';
+import { desc, eq, and, gte, lte, ilike, max } from 'drizzle-orm';
 
 import {
   RECIPIENTS_PAGE_SIZE,
@@ -45,14 +45,14 @@ export async function getRecipientsPage(
     .from(records)
     .where(and(eq(records.type, 'daily'), eq(records.date, todayStr)));
 
-  // 각 대상자의 최근 일일 기록 날짜 조회 (가장 최신 1건씩)
+  // 각 대상자의 가장 최신 일일 기록 날짜를 DB에서 직접 집계
   const latestRecordsRaw = await db
-    .select({ recipientId: records.recipientId, date: records.date })
+    .select({ recipientId: records.recipientId, date: max(records.date) })
     .from(records)
     .where(eq(records.type, 'daily'))
-    .orderBy(desc(records.date));
+    .groupBy(records.recipientId);
 
-  // 메모리에서 집계 (조회 범위가 이미 DB에서 좁혀진 상태)
+  // 메모리 집계
   const todaySet = new Set(todayRecordsRaw.map((r) => r.recipientId));
 
   const weeklyByRecipient = new Map<string, string[]>();
@@ -64,9 +64,7 @@ export async function getRecipientsPage(
 
   const latestByRecipient = new Map<string, string>();
   for (const r of latestRecordsRaw) {
-    if (!latestByRecipient.has(r.recipientId)) {
-      latestByRecipient.set(r.recipientId, r.date);
-    }
+    if (r.date) latestByRecipient.set(r.recipientId, r.date);
   }
 
   let recipientsWithStats = allRecipients.map((recipient) => {
