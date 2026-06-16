@@ -1,5 +1,5 @@
-import { AddRecipientForm } from '@/components/AddRecipientForm';
-import { RecipientList } from '@/components/RecipientList';
+import { AddRecipientForm } from '@/features/recipients/components/AddRecipientForm';
+import { RecipientList } from '@/features/recipients/components/RecipientList';
 import { getRecipientsPage } from '@/features/recipients/queries';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 import { connection } from 'next/server';
