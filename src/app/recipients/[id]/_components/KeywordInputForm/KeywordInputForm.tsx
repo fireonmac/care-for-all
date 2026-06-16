@@ -63,6 +63,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
             canRemove={events.length > 1}
             onUpdate={(fields) => updateEvent(e.id, fields)}
             onRemove={() => removeEvent(e.id)}
+            autoFocus={i === events.length - 1 && events.length > 1}
           />
         ))}
 

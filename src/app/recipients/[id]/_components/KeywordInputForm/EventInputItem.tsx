@@ -15,6 +15,7 @@ interface EventInputItemProps {
   canRemove: boolean;
   onUpdate: (fields: Partial<EventInput>) => void;
   onRemove: () => void;
+  autoFocus?: boolean;
 }
 
 export function EventInputItem({
@@ -24,6 +25,7 @@ export function EventInputItem({
   canRemove,
   onUpdate,
   onRemove,
+  autoFocus,
 }: EventInputItemProps) {
   const isEventEmpty = !event.event.trim();
 
@@ -54,6 +56,7 @@ export function EventInputItem({
           disabled={isFuture}
           placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
           className={`px-5 py-3.5 text-lg font-normal ${commonInputClasses}`}
+          autoFocus={autoFocus}
         />
       </div>
 

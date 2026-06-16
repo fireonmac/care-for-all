@@ -35,13 +35,6 @@ export function useKeywordInputForm(recipientId: string, targetDate: string) {
   const addEvent = () => {
     const newId = crypto.randomUUID();
     setEvents((currentEvents) => [...currentEvents, createEmptyEvent(newId)]);
-    setTimeout(() => {
-      const el = document.getElementById(`event-input-${newId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'auto', block: 'center' });
-        el.focus({ preventScroll: true });
-      }
-    }, 10);
   };
 
   const removeEvent = (id: string) => {
