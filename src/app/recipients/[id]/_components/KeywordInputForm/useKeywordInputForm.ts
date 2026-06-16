@@ -26,6 +26,7 @@ export function useKeywordInputForm(recipientId: string, targetDate: string) {
   const [events, setEvents] = useState<EventInput[]>(() => [
     createEmptyEvent(initialEventId),
   ]);
+  const [activeEventId, setActiveEventId] = useState<string[]>([initialEventId]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [draft, setDraft] = useState<{ cognition: string; behavior: string } | null>(null);
 
@@ -35,10 +36,17 @@ export function useKeywordInputForm(recipientId: string, targetDate: string) {
   const addEvent = () => {
     const newId = crypto.randomUUID();
     setEvents((currentEvents) => [...currentEvents, createEmptyEvent(newId)]);
+    setActiveEventId([newId]);
   };
 
   const removeEvent = (id: string) => {
-    setEvents((currentEvents) => currentEvents.filter((event) => event.id !== id));
+    setEvents((currentEvents) => {
+      const newEvents = currentEvents.filter((event) => event.id !== id);
+      if (activeEventId.includes(id)) {
+        setActiveEventId(newEvents.length > 0 ? [newEvents[newEvents.length - 1].id] : []);
+      }
+      return newEvents;
+    });
   };
 
   const updateEvent = (id: string, fields: Partial<EventInput>) => {
@@ -123,6 +131,8 @@ export function useKeywordInputForm(recipientId: string, targetDate: string) {
 
   return {
     events,
+    activeEventId,
+    setActiveEventId,
     addEvent,
     removeEvent,
     updateEvent,
