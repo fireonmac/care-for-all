@@ -1,44 +1,32 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalClose } from '@/components/Modal';
 import { Textarea } from '@/components/Textarea';
 import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { deleteRecord, updateWeeklyRecord } from './actions';
-import { Toast } from '@base-ui/react/toast';
 import { CopyButton } from '@/components/CopyButton';
+import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
+import { useToast } from '@/hooks/useToast';
 
-export function WeeklyReportForm(props: { 
-  recipientId: string, 
-  recipientName: string,
-  currentMonth: number,
-  currentWeekOfMonth: number,
-  dailyRecordCount: number, 
-  weekStartDate: string 
-}) {
-  if (props.dailyRecordCount < 2) {
-    return null;
-  }
-
-  return <WeeklyReportFormInner {...props} />;
+interface WeeklyReportFormProps {
+  recipientId: string;
+  recipientName: string;
+  currentMonth: number;
+  currentWeekOfMonth: number;
+  dailyRecordCount: number;
+  weekStartDate: string;
 }
 
-
-
-function WeeklyReportFormInner({ 
-  recipientId, 
+export function WeeklyReportForm({
+  recipientId,
   recipientName,
   currentMonth,
   currentWeekOfMonth,
-  weekStartDate 
-}: { 
-  recipientId: string, 
-  recipientName: string,
-  currentMonth: number,
-  currentWeekOfMonth: number,
-  weekStartDate: string 
-}) {
+  dailyRecordCount,
+  weekStartDate,
+}: WeeklyReportFormProps) {
   const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED'>('IDLE');
   const [open, setOpen] = useState(false);
   const [report, setReport] = useState<string | null>(null);
@@ -47,46 +35,41 @@ function WeeklyReportFormInner({
   const [editContent, setEditContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  
+
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
-  const toastManager = Toast.useToastManager();
+  const { showSuccess, showError, showInfo } = useToast();
 
-  const fetchContent = useCallback(async (id: string) => {
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  };
+
+  const handleFail = () => {
+    stopPolling();
+    setStatus('FAILED');
+    showError('발간 작업 중 오류가 발생했습니다.');
+  };
+
+  const fetchContent = async (id: string) => {
     const res = await fetch(`/api/records/${id}`);
     const data = await res.json();
     if (data.combinedContent) {
       setReport(data.combinedContent);
     }
-  }, []);
+  };
 
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  }, []);
-
-  const handleFail = useCallback(() => {
-    stopPolling();
-    setStatus('FAILED');
-    const toastId = toastManager.add({
-      title: '발간 작업 중 오류가 발생했습니다.',
-      type: 'error',
-    });
-    setTimeout(() => toastManager.close(toastId), 4000);
-  }, [stopPolling, toastManager]);
-
-  const startPolling = useCallback((id: string) => {
+  const startPolling = (id: string) => {
     stopPolling();
     pollingIntervalRef.current = setInterval(async () => {
       try {
-        // 완벽한 캐시 무효화를 위해 URL 파라미터에 현재 시간(타임스탬프) 추가
         const timestamp = Date.now();
         const res = await fetch(`/api/records/${id}?t=${timestamp}`, { cache: 'no-store' });
         const data = await res.json();
-        
+
         if (!res.ok || data.error) {
           stopPolling();
           setStatus('IDLE');
@@ -98,8 +81,7 @@ function WeeklyReportFormInner({
           setStatus('COMPLETED');
           setRecordId(id);
           setReport(data.combinedContent);
-          const toastId = toastManager.add({ title: '주간 리포트 발간이 완료되었습니다!', type: 'success' });
-          setTimeout(() => toastManager.close(toastId), 4000);
+          showSuccess('주간 리포트 발간이 완료되었습니다!');
         } else if (data.status === 'FAILED') {
           handleFail();
         }
@@ -108,7 +90,7 @@ function WeeklyReportFormInner({
         handleFail();
       }
     }, 3000);
-  }, [handleFail, stopPolling, toastManager]);
+  };
 
   useEffect(() => {
     if (!weekStartDate) return;
@@ -137,15 +119,12 @@ function WeeklyReportFormInner({
 
     void checkInitialStatus();
     return stopPolling;
-  }, [fetchContent, recipientId, startPolling, stopPolling, weekStartDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipientId, weekStartDate]);
 
   const handleGenerate = async () => {
     setStatus('PROCESSING');
-    
-    const toastId = toastManager.add({
-      title: '백그라운드에서 주간 리포트 발간을 시작했습니다.',
-    });
-    setTimeout(() => toastManager.close(toastId), 3000);
+    showInfo('백그라운드에서 주간 리포트 발간을 시작했습니다.');
 
     try {
       const res = await fetch('/api/generate-weekly', {
@@ -154,7 +133,7 @@ function WeeklyReportFormInner({
         body: JSON.stringify({ recipientId, targetDate: weekStartDate }),
       });
       const data = await res.json();
-      
+
       if (data.recordId) {
         startPolling(data.recordId);
       }
@@ -182,12 +161,10 @@ function WeeklyReportFormInner({
       await updateWeeklyRecord(recordId, editContent);
       setReport(editContent);
       setIsEditing(false);
-      const toastId = toastManager.add({ title: '성공적으로 수정되었습니다.', type: 'success' });
-      setTimeout(() => toastManager.close(toastId), 3000);
+      showSuccess('성공적으로 수정되었습니다.');
       router.refresh();
     } catch {
-      const toastId = toastManager.add({ title: '수정에 실패했습니다.', type: 'error' });
-      setTimeout(() => toastManager.close(toastId), 4000);
+      showError('수정에 실패했습니다.');
     } finally {
       setSaving(false);
     }
@@ -195,27 +172,25 @@ function WeeklyReportFormInner({
 
   const handleDelete = async () => {
     if (!recordId) return;
-    
     setSaving(true);
     try {
       await deleteRecord(recordId);
       setStatus('IDLE');
       setOpen(false);
       setDeleteModalOpen(false);
-      const toastId = toastManager.add({ title: '주간 리포트가 성공적으로 삭제되었습니다.', type: 'success' });
-      setTimeout(() => toastManager.close(toastId), 3000);
+      showSuccess('주간 리포트가 성공적으로 삭제되었습니다.');
       router.refresh();
     } catch {
-      const toastId = toastManager.add({ title: '삭제에 실패했습니다.', type: 'error' });
-      setTimeout(() => toastManager.close(toastId), 4000);
+      showError('삭제에 실패했습니다.');
     } finally {
       setSaving(false);
     }
   };
 
+  if (dailyRecordCount < 2) return null;
+
   return (
     <>
-      {/* 상태별 상단 버튼 */}
       {status === 'IDLE' || status === 'FAILED' ? (
         <button
           onClick={handleGenerate}
@@ -245,7 +220,7 @@ function WeeklyReportFormInner({
           maxHeight="max-h-[70vh]"
           bodyClassName="p-8 pb-12 min-h-[300px]"
           trigger={
-            <button 
+            <button
               onClick={() => setOpen(true)}
               className="px-5 py-2.5 bg-white border-2 border-black text-black text-sm font-medium rounded-lg hover:bg-surface-50 tracking-widest transition-colors shadow-sm"
             >
@@ -277,39 +252,24 @@ function WeeklyReportFormInner({
                       <button onClick={handleEditClick} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
                         <Pencil size={14} /> <span>수정</span>
                       </button>
-                      <Modal
+                      <ConfirmDeleteModal
                         open={deleteModalOpen}
                         onOpenChange={setDeleteModalOpen}
                         title="주간 리포트 삭제"
+                        message="정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다."
+                        onConfirm={handleDelete}
+                        isLoading={saving}
                         trigger={
                           <button onClick={() => setDeleteModalOpen(true)} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
                             <Trash2 size={14} /> <span>삭제</span>
                           </button>
                         }
-                        footer={
-                          <>
-                            <ModalClose className="text-base font-medium tracking-widest text-black hover:text-surface-600">
-                              취소
-                            </ModalClose>
-                            <button
-                              onClick={handleDelete}
-                              disabled={saving}
-                              className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
-                            >
-                              {saving ? '삭제 중...' : '삭제하기'}
-                            </button>
-                          </>
-                        }
-                      >
-                        <p className="text-black text-lg font-light leading-relaxed">
-                          정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다.
-                        </p>
-                      </Modal>
+                      />
                     </>
                   )}
                 </div>
               </div>
-              
+
               {isEditing ? (
                 <Textarea
                   ref={textareaRef}

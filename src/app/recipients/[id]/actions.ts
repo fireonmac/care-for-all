@@ -1,31 +1,16 @@
 'use server';
 
 import { db } from '@/db';
-import { records, recipients } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
-import { notFound } from 'next/navigation';
-import { formatKeywordsWithAI, formatWeeklyReportWithAI } from '@/lib/ai';
+import { records } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { generateDailyRecord, generateWeeklyRecord } from '@/lib/ai';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { getKSTDateStr } from '@/lib/dateUtils';
-
-export async function getRecipientOr404(id: string) {
-  const result = await db.select().from(recipients).where(eq(recipients.id, id));
-  if (result.length === 0) {
-    notFound();
-  }
-  return result[0];
-}
-
-export async function getRecipientRecords(recipientId: string) {
-  return await db.select()
-    .from(records)
-    .where(eq(records.recipientId, recipientId))
-    .orderBy(desc(records.date));
-}
+import { getRecipientRecords } from './_queries';
 
 export async function generateDraft(keywords: string) {
-  return await formatKeywordsWithAI(keywords);
+  return await generateDailyRecord(keywords);
 }
 
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
@@ -55,7 +40,7 @@ export async function generateWeeklyDraft(recipientId: string) {
     behavior: r.behaviorContent
   }));
 
-  return await formatWeeklyReportWithAI(formattedForAI);
+  return await generateWeeklyRecord(formattedForAI);
 }
 
 export async function saveWeeklyReport(recipientId: string, content: string) {

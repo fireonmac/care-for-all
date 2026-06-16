@@ -1,8 +1,8 @@
-import { getRecipientOr404, getRecipientRecords } from './actions';
+import { getRecipientOr404, getRecipientRecords } from './_queries';
 import { KeywordInputForm } from './KeywordInputForm';
 import { WeeklyReportForm } from './WeeklyReportForm';
 import { TodayRecordView } from './TodayRecordView';
-import { WeekSelector } from '@/components/WeekSelector';
+import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
