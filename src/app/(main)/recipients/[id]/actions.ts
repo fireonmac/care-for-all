@@ -8,17 +8,16 @@ import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { getRecipientRecords } from './queries';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 
 export async function generateDraft(keywords: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   return await generateDailyRecord(keywords);
 }
 
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   const dateStr = targetDate || getKSTDateStr(new Date());
   
@@ -37,7 +36,7 @@ export async function saveDailyRecord(recipientId: string, cognition: string, be
 }
 
 export async function generateWeeklyDraft(recipientId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   const allRecords = await getRecipientRecords(recipientId);
   const dailyRecords = allRecords.filter(r => r.type === 'daily').slice(0, 7);
@@ -52,7 +51,7 @@ export async function generateWeeklyDraft(recipientId: string) {
 }
 
 export async function saveWeeklyReport(recipientId: string, content: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   const todayStr = getKSTDateStr(new Date());
   
@@ -70,7 +69,7 @@ export async function saveWeeklyReport(recipientId: string, content: string) {
 }
 
 export async function updateDailyRecord(recordId: string, cognition: string, behavior: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   await db.update(records).set({
     cognitionContent: cognition,
@@ -82,7 +81,7 @@ export async function updateDailyRecord(recordId: string, cognition: string, beh
 }
 
 export async function updateWeeklyRecord(recordId: string, content: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   await db.update(records).set({
     combinedContent: content
@@ -93,7 +92,7 @@ export async function updateWeeklyRecord(recordId: string, content: string) {
 }
 
 export async function deleteRecord(recordId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
   const recordList = await db.select().from(records).where(eq(records.id, recordId));
   if(recordList.length > 0) {
