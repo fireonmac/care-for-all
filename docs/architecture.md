@@ -30,6 +30,7 @@ flowchart LR
 | 런타임과 패키지 관리 | Node.js, pnpm |
 | 웹 애플리케이션 | Next.js App Router, React, TypeScript |
 | 스타일링과 UI | Tailwind CSS, PostCSS, Base UI, Lucide |
+| 인증 및 인가 | better-auth (Google OAuth) |
 | 클라이언트 서버 상태 | TanStack Query |
 | URL 상태 | nuqs |
 | 데이터베이스 | SQLite(libSQL client), Drizzle ORM |
