@@ -30,6 +30,8 @@ flowchart LR
 | 런타임과 패키지 관리 | Node.js, pnpm |
 | 웹 애플리케이션 | Next.js App Router, React, TypeScript |
 | 스타일링과 UI | Tailwind CSS, PostCSS, Base UI, Lucide |
+| 인증 및 인가 | better-auth (Google OAuth) |
+| 환경변수 검증 | Zod |
 | 클라이언트 서버 상태 | TanStack Query |
 | URL 상태 | nuqs |
 | 데이터베이스 | SQLite(libSQL client), Drizzle ORM |
@@ -46,6 +48,8 @@ flowchart LR
 
 | 경로 | 책임 |
 | --- | --- |
+| `src/proxy.ts` | Next.js 16 컨벤션의 미들웨어 (인증 라우팅 보호) |
+| `src/env.ts` | Zod 기반 전역 환경변수 파싱 및 유효성 검증 |
 | `src/app` | 라우트, 페이지 조합, Route Handler, 해당 화면 전용 Action/UI |
 | `src/components` | 여러 라우트에서 재사용하는 UI |
 | `src/features` | 도메인별 쿼리, 타입, 클라이언트 쿼리 키 |
