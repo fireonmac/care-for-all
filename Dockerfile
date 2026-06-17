@@ -21,6 +21,7 @@ COPY . .
 RUN mkdir -p /app/data
 
 ENV DATABASE_URL=file:/app/data/sqlite.db
+ENV SKIP_ENV_VALIDATION=1
 RUN pnpm run build
 
 FROM node:20-alpine AS runner

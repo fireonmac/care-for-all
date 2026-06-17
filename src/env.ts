@@ -15,11 +15,19 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1, "구글 시크릿 키(GOOGLE_CLIENT_SECRET)가 설정되지 않았습니다."),
 });
 
-const parsedEnv = envSchema.safeParse(process.env);
+const isBuild = process.env.SKIP_ENV_VALIDATION === "1" || process.env.npm_lifecycle_event === "build";
 
-if (!parsedEnv.success) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let parsedEnv: any;
+if (isBuild) {
+  parsedEnv = { success: true, data: process.env };
+} else {
+  parsedEnv = envSchema.safeParse(process.env);
+}
+
+if (!parsedEnv?.success) {
   console.error("❌ 서버 환경변수(.env) 설정 오류:", parsedEnv.error.format());
   throw new Error("필수 환경변수가 누락되었거나 형식이 올바르지 않습니다. .env 파일을 확인해주세요.");
 }
 
-export const env = parsedEnv.data;
+export const env = parsedEnv.data as z.infer<typeof envSchema>;
