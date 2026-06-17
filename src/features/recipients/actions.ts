@@ -4,11 +4,10 @@ import { db } from '@/db';
 import { recipients } from '@/db/schema';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { getSession } from '@/lib/auth';
 
 export async function addRecipient(name: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     return { success: false, error: '로그인이 필요합니다.' };
   }
@@ -25,3 +24,4 @@ export async function addRecipient(name: string) {
   revalidatePath('/');
   return { success: true };
 }
+
