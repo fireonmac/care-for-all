@@ -5,7 +5,7 @@ import { eq, and, gte, lt } from 'drizzle-orm';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { generateWeeklyRecord } from '@/lib/ai';
 import { getSession } from '@/lib/auth';
-import { headers } from 'next/headers';
+
 
 export const dynamic = 'force-dynamic';
 
