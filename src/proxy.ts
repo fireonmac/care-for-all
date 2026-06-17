@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Check for the existence of the better-auth session cookie.
   // Note: For secure production use, better-auth session cookie names might vary by secure/__Host prefix.
   // This is a lightweight check to redirect away from the login page.
