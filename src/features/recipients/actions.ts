@@ -4,8 +4,15 @@ import { db } from '@/db';
 import { recipients } from '@/db/schema';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export async function addRecipient(name: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return { success: false, error: '로그인이 필요합니다.' };
+  }
+
   if (!name.trim()) return { error: '성함을 입력해주세요.' };
   
   await db.insert(recipients).values({

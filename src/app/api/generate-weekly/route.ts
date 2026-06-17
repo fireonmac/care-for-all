@@ -4,6 +4,8 @@ import { records } from '@/db/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { generateWeeklyRecord } from '@/lib/ai';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +95,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+      return new Response(JSON.stringify({ error: '로그인이 필요합니다.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    }
+
     const { recipientId, targetDate } = await req.json();
 
     if (!recipientId || !targetDate) {

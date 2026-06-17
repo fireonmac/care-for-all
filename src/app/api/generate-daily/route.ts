@@ -1,7 +1,14 @@
 import { NextRequest } from 'next/server';
 import { streamDailyRecord } from '@/lib/ai';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
 export async function POST(req: NextRequest) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+
   const { keywords } = await req.json();
 
   if (typeof keywords !== 'string' || !keywords.trim()) {
