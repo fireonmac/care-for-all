@@ -254,7 +254,7 @@ export function WeeklyReportForm({
                       onChange={(e) => setEditContent(e.target.value)}
                     />
                   ) : (
-                    <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-border shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
+                    <div className="bg-muted p-6 md:p-8 rounded-2xl border border-border shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
                       <p className="text-foreground leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
                         {reportContent || '내용이 없습니다.'}
                       </p>
