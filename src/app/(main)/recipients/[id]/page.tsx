@@ -1,6 +1,6 @@
 import { getRecipientOr404, getRecipientRecords } from './queries';
 import { KeywordInputForm } from './_components/KeywordInputForm/KeywordInputForm';
-import { WeeklyReportForm } from './_components/WeeklyReportForm';
+import { WeeklyReportForm } from './_components/WeeklyReportForm/WeeklyReportForm';
 import { TodayRecordView } from './_components/TodayRecordView';
 import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
@@ -45,7 +45,7 @@ export default async function RecipientDetailPage({
         <h1 className="text-4xl font-medium text-foreground tracking-tight">
           {recipient.name} <span className="text-2xl font-normal text-foreground/80 ml-1">어르신</span>
         </h1>
-        <div className="self-start sm:self-auto min-h-[44px] flex items-center">
+        <div className="self-start sm:self-auto min-h-11 flex items-center">
           <WeeklyReportForm 
             recipientId={recipient.id} 
             recipientName={recipient.name}

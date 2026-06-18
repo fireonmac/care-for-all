@@ -26,7 +26,7 @@ export function getWeekData(targetDateStr: string) {
   const today = startOfDay(new Date());
   const days = eachDayOfInterval({ start, end });
   const weekDates = days.map((d) => {
-    const dateStr = format(d, 'yyyy-MM-dd');
+    const dateStr = getKSTDateStr(d);
     const isFuture = d > today;
     
     return {
@@ -37,8 +37,8 @@ export function getWeekData(targetDateStr: string) {
   });
 
   return {
-    startOfWeek: format(start, 'yyyy-MM-dd'),
-    endOfWeek: format(end, 'yyyy-MM-dd'),
+    startOfWeek: getKSTDateStr(start),
+    endOfWeek: getKSTDateStr(end),
     currentMonth,
     currentWeekOfMonth,
     weekDates,
