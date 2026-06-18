@@ -9,11 +9,11 @@ export default function MainLayout({
 }>) {
   return (
     <>
-      <header className="fixed top-0 w-full border-b border-surface-200 bg-white/80 backdrop-blur-md z-50">
+      <header className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-md z-50">
         <div className="max-w-5xl mx-auto px-6 sm:px-12 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-black hover:opacity-70 transition-opacity"
+            className="flex items-center gap-2 text-foreground hover:opacity-70 transition-opacity"
           >
             <Image
               src="/brand/care-for-all-logo-placeholder.png"
@@ -30,9 +30,9 @@ export default function MainLayout({
       <div className="flex-1 mt-16">
         {children}
       </div>
-      <footer className="w-full border-t border-surface-100 pt-6 pb-8 mt-24">
+      <footer className="w-full border-t border-border pt-6 pb-8 mt-24">
         <div className="max-w-5xl mx-auto px-6 sm:px-12 text-center">
-          <span className="text-surface-500 text-sm tracking-widest font-light">고운마음시티주야간보호센터 <span className="opacity-30">|</span> 박정원</span>
+          <span className="text-muted-foreground text-sm tracking-widest font-light">고운마음시티주야간보호센터 <span className="opacity-30">|</span> 박정원</span>
         </div>
       </footer>
     </>

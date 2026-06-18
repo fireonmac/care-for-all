@@ -3,6 +3,7 @@
 import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string }) {
   const [, setDateParam] = useQueryState('date', { shallow: false });
@@ -19,15 +20,15 @@ export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate }: {
 
   return (
     <div className="flex items-center gap-4">
-      <button onClick={handlePrev} className="p-1 hover:bg-surface-100 rounded text-surface-600 hover:text-black transition-colors" title="이전 주차">
+      <Button variant="ghost" size="icon" onClick={handlePrev} className="w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted" title="이전 주차">
         <ChevronLeft size={20} />
-      </button>
-      <span className="text-lg font-medium text-black tracking-widest">
+      </Button>
+      <span className="text-lg font-medium text-foreground tracking-widest">
         {currentMonth}월 {currentWeekOfMonth}주차
       </span>
-      <button onClick={handleNext} className="p-1 hover:bg-surface-100 rounded text-surface-600 hover:text-black transition-colors" title="다음 주차">
+      <Button variant="ghost" size="icon" onClick={handleNext} className="w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted" title="다음 주차">
         <ChevronRight size={20} />
-      </button>
+      </Button>
     </div>
   );
 }
