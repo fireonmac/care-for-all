@@ -106,7 +106,17 @@ export function WeeklyReportForm({
 
   return (
     <>
-      {reportStatus === 'IDLE' || reportStatus === 'FAILED' ? (
+      {initialQuery.isLoading ? (
+        <Button
+          disabled
+          variant="secondary"
+          size="sm"
+          className="bg-muted border-border text-muted-foreground cursor-wait"
+        >
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          로딩 중...
+        </Button>
+      ) : reportStatus === 'IDLE' || reportStatus === 'FAILED' ? (
         <Button
           onClick={handleGenerate}
           variant="secondary"
