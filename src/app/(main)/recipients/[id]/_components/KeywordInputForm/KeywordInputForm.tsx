@@ -135,9 +135,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
               isFuture={isFuture}
               canRemove={fields.length > 1}
               onUpdate={(updates) => {
-                Object.entries(updates).forEach(([key, val]) => {
-                  setValue(`events.${index}.${key as keyof typeof events[number]}`, val);
-                });
+                setValue(`events.${index}`, { ...events[index], ...updates });
               }}
               onRemove={() => remove(index)}
               autoFocus={activeEventId.includes(events[index]?.id)}
