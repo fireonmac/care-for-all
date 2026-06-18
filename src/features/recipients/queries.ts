@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { recipients, records } from '@/db/schema';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
-import { desc, eq, and, gte, lte, ilike, max } from 'drizzle-orm';
+import { desc, eq, and, gte, lte, like, max } from 'drizzle-orm';
 
 import {
   RECIPIENTS_PAGE_SIZE,
@@ -19,7 +19,7 @@ export async function getRecipientsPage(
 
   // 이름 검색 조건
   const normalized = searchQuery.trim();
-  const whereClause = normalized ? ilike(recipients.name, `%${normalized}%`) : undefined;
+  const whereClause = normalized ? like(recipients.name, `%${normalized}%`) : undefined;
 
   const allRecipients = await db
     .select()
