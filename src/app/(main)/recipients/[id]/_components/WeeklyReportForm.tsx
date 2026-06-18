@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Modal } from '@/components/Modal';
-import { Textarea } from '@/components/Textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogBody,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangle, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { deleteRecord, updateWeeklyRecord } from '../actions';
 import { CopyButton } from '@/components/CopyButton';
@@ -159,101 +167,104 @@ export function WeeklyReportForm({
   return (
     <>
       {status === 'IDLE' || status === 'FAILED' ? (
-        <button
+        <Button
           onClick={() => generateReport()}
-          className={`px-5 py-2.5 bg-white border text-sm font-medium rounded-lg flex items-center gap-2 tracking-widest transition-colors ${
-            status === 'FAILED'
-              ? 'border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500'
-              : 'border-surface-300 text-surface-700 hover:bg-surface-50 hover:border-black hover:text-black'
-          }`}
+          variant="secondary"
+          size="sm"
+          className={status === 'FAILED' ? 'border-red-300 text-red-600 hover:bg-red-50 hover:border-red-500' : ''}
         >
           {status === 'FAILED' && <AlertTriangle className="w-4 h-4" />}
           {status === 'FAILED' ? '주간 리포트 재발간' : '주간 리포트 발간'}
-        </button>
+        </Button>
       ) : status === 'PROCESSING' ? (
-        <button
+        <Button
           disabled
-          className="px-5 py-2.5 bg-surface-100 border border-surface-200 text-surface-600 text-sm font-medium rounded-lg flex items-center gap-2 tracking-widest cursor-wait"
+          variant="secondary"
+          size="sm"
+          className="bg-muted border-border text-muted-foreground cursor-wait"
         >
           <Loader2 className="w-4 h-4 animate-spin" />
           발간 중...
-        </button>
+        </Button>
       ) : (
-        <Modal
-          open={open}
-          onOpenChange={setOpen}
-          title="주간 요양보호기록 종합"
-          maxWidth="max-w-3xl"
-          maxHeight="max-h-[70vh]"
-          bodyClassName="p-8 pb-12 min-h-[300px]"
-          trigger={
-            <button
-              onClick={() => setOpen(true)}
-              className="px-5 py-2.5 bg-white border-2 border-black text-black text-sm font-medium rounded-lg hover:bg-surface-50 tracking-widest transition-colors shadow-sm"
-            >
-              주간 리포트 확인
-            </button>
-          }
-        >
-          <div className="flex flex-col gap-8">
-            <div className="px-1">
-              <p className="text-xl font-medium text-black tracking-tight">{recipientName} 어르신</p>
-            </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger
+            render={
+              <Button
+                variant="outline"
+                size="sm"
+              >
+                주간 리포트 확인
+              </Button>
+            }
+          />
+          <DialogContent className="max-w-4xl sm:max-w-4xl max-h-[70vh]">
+            <DialogHeader>
+              <DialogTitle>주간 요양보호기록 종합</DialogTitle>
+            </DialogHeader>
 
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-4 px-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-base font-medium text-black tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
-                  {!isEditing && <CopyButton text={reportContent || ''} title="리포트 복사" />}
+            <DialogBody className="pb-12 min-h-75">
+              <div className="flex flex-col gap-8">
+                <div className="px-1">
+                  <p className="text-xl font-medium text-foreground tracking-tight">{recipientName} 어르신</p>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-4 px-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-base font-medium text-foreground tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
+                      {!isEditing && <CopyButton text={reportContent || ''} title="리포트 복사" />}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <>
+                          <Button onClick={() => setIsEditing(false)} variant="ghost" size="xs">취소</Button>
+                          <Button onClick={() => saveEdit()} disabled={isSavingEdit} size="xs" className="px-4">
+                            {isSavingEdit ? '저장 중...' : '저장'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button onClick={handleEditClick} variant="secondary" size="xs">
+                            <Pencil size={14} /> <span>수정</span>
+                          </Button>
+                          <ConfirmDeleteModal
+                            open={deleteModalOpen}
+                            onOpenChange={setDeleteModalOpen}
+                            title="주간 리포트 삭제"
+                            message="정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다."
+                            onConfirm={() => handleDeleteRecord()}
+                            isLoading={isDeleting}
+                            trigger={
+                              <Button onClick={() => setDeleteModalOpen(true)} variant="secondary" size="xs" className="hover:text-destructive">
+                                <Trash2 size={14} /> <span>삭제</span>
+                              </Button>
+                            }
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   {isEditing ? (
-                    <>
-                      <button onClick={() => setIsEditing(false)} className="text-sm font-medium tracking-widest text-surface-500 hover:text-black px-3 py-1.5 transition-colors">취소</button>
-                      <button onClick={() => saveEdit()} disabled={isSavingEdit} className="bg-black text-white text-sm font-medium tracking-widest px-4 py-1.5 rounded-md hover:bg-surface-800 disabled:opacity-50">
-                        {isSavingEdit ? '저장 중...' : '저장'}
-                      </button>
-                    </>
+                    <Textarea
+                      ref={textareaRef}
+                      className="w-full min-h-100 text-[1.05rem] leading-[2.2] tracking-wide text-foreground resize-none p-6 md:p-8"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                    />
                   ) : (
-                    <>
-                      <button onClick={handleEditClick} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
-                        <Pencil size={14} /> <span>수정</span>
-                      </button>
-                      <ConfirmDeleteModal
-                        open={deleteModalOpen}
-                        onOpenChange={setDeleteModalOpen}
-                        title="주간 리포트 삭제"
-                        message="정말 이 주간 리포트를 삭제하시겠습니까? 삭제된 리포트는 복구할 수 없습니다."
-                        onConfirm={() => handleDeleteRecord()}
-                        isLoading={isDeleting}
-                        trigger={
-                          <button onClick={() => setDeleteModalOpen(true)} className="flex items-center gap-1.5 text-sm font-medium tracking-widest text-black hover:bg-surface-50 hover:text-status-danger bg-white border border-surface-300 px-3 py-1.5 rounded-md transition-colors">
-                            <Trash2 size={14} /> <span>삭제</span>
-                          </button>
-                        }
-                      />
-                    </>
+                    <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-border shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
+                      <p className="text-foreground leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
+                        {reportContent || '내용이 없습니다.'}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
-
-              {isEditing ? (
-                <Textarea
-                  ref={textareaRef}
-                  className="w-full min-h-[400px] text-[1.05rem] leading-[2.2] tracking-wide text-surface-800 resize-none p-6 md:p-8"
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                />
-              ) : (
-                <div className="bg-[#FAFAFA] p-6 md:p-8 rounded-2xl border border-surface-200 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] min-h-[200px]">
-                  <p className="text-surface-800 leading-[2.2] text-[1.05rem] whitespace-pre-wrap tracking-wide">
-                    {reportContent || '내용이 없습니다.'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </Modal>
+            </DialogBody>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
