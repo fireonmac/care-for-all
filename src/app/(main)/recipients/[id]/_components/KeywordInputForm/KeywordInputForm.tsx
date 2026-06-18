@@ -9,7 +9,7 @@ import { EventInputItem } from './EventInputItem';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
 import { useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -46,7 +46,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
     name: 'events',
   });
 
-  const events = watch('events');
+  const events = useWatch({ control, name: 'events' }) || [];
   const hasRequiredEvent = events.some((e) => e.event.trim().length > 0);
 
   // 2. API 통신 훅 (생성 및 저장)
