@@ -23,7 +23,7 @@ export function BackButton({ href, label, onClick }: { href?: string, label: str
           {content}
         </Link>
       ) : (
-        <Button variant="link" onClick={onClick || (() => router.back())} className="p-0 h-auto text-muted-foreground hover:text-foreground">
+        <Button variant="link" onClick={onClick || (() => router.back())} className="p-0 h-auto text-muted-foreground hover:text-foreground hover:no-underline">
           {content}
         </Button>
       )}
