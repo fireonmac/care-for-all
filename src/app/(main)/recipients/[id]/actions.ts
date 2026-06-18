@@ -1,5 +1,7 @@
 'use server';
 
+import { after } from 'next/server';
+
 import { db } from '@/db';
 import { records } from '@/db/schema';
 import { eq, and, gte, lt } from 'drizzle-orm';
@@ -9,6 +11,8 @@ import { revalidatePath } from 'next/cache';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { getRecipientRecords } from './queries';
 import { getSession } from '@/lib/auth';
+
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function generateDraft(keywords: string) {
   const session = await getSession();
@@ -142,8 +146,7 @@ export async function getInitialWeeklyReportStatus(recipientId: string, targetDa
 async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string) {
   try {
     const startDate = new Date(targetDate);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 7);
+    const endDate = new Date(startDate.getTime() + ONE_WEEK_MS);
     
     const startDateStr = getKSTDateStr(startDate);
     const endDateStr = getKSTDateStr(endDate);
@@ -227,8 +230,10 @@ export async function generateWeeklyReportBackground(recipientId: string, target
     createdAt: new Date(),
   }).run();
 
-  // Fire and forget 
-  processWeeklyReport(recordId, recipientId, targetDate);
+  // Safe background execution after response
+  after(() => {
+    processWeeklyReport(recordId, recipientId, targetDate);
+  });
 
   return { recordId, status: 'PROCESSING' as const };
 }
