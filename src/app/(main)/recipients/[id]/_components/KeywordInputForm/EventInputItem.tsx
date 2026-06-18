@@ -2,7 +2,7 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { EventInput } from './useKeywordInputForm';
+import { EventInput } from './KeywordInputForm';
 
 const PREDEFINED_EMOTIONS = [
   { id: 'happy', icon: '🥰', label: '편안/기분좋음', text: '편안하고 기분 좋은 상태이심' },

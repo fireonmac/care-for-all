@@ -32,7 +32,7 @@ export function DraftReviewView({
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-foreground tracking-widest mb-6">인지 영역</h3>
           <Textarea
-            className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.cognition ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
+            className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft.cognition ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
             value={draft.cognition}
             placeholder={loading && !draft.cognition ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
             readOnly={loading}
@@ -47,7 +47,7 @@ export function DraftReviewView({
         <div className="flex flex-col relative">
           <h3 className="text-base font-medium text-foreground tracking-widest mb-6">행동 영역</h3>
           <Textarea
-            className={`text-xl pb-12 min-h-[200px] transition-all duration-500 ${loading && !draft.behavior ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
+            className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft.behavior ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
             value={draft.behavior}
             placeholder={
               loading && !draft.behavior && draft.cognition

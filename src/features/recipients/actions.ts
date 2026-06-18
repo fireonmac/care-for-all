@@ -6,13 +6,20 @@ import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 
-export async function addRecipient(name: string) {
+import { insertRecipientSchema } from '@/features/recipients/types';
+
+export async function addRecipient(payload: unknown) {
   const session = await getSession();
   if (!session) {
     return { success: false, error: '로그인이 필요합니다.' };
   }
 
-  if (!name.trim()) return { error: '성함을 입력해주세요.' };
+  const result = insertRecipientSchema.safeParse(payload);
+  if (!result.success) {
+    return { error: result.error.issues[0].message };
+  }
+  
+  const { name } = result.data;
   
   await db.insert(recipients).values({
     id: randomUUID(),

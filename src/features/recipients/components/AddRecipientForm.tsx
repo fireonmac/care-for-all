@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { addRecipient } from '@/features/recipients/actions';
+import { insertRecipientSchema } from '@/features/recipients/types';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,8 +22,12 @@ import {
 
 export function AddRecipientForm() {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
   const queryClient = useQueryClient();
+
+  const form = useForm<z.infer<typeof insertRecipientSchema>>({
+    resolver: zodResolver(insertRecipientSchema),
+    defaultValues: { name: '' },
+  });
 
   const {
     mutate,
@@ -28,8 +36,8 @@ export function AddRecipientForm() {
     isPending,
     error,
   } = useMutation({
-    mutationFn: async (submittedName: string) => {
-      const result = await addRecipient(submittedName);
+    mutationFn: async (payload: unknown) => {
+      const result = await addRecipient(payload);
 
       if (!result.success) {
         throw new Error(result.error ?? '어르신 등록에 실패했습니다.');
@@ -42,25 +50,22 @@ export function AddRecipientForm() {
         queryKey: recipientQueryKeys.all,
       });
       setOpen(false);
-      setName('');
+      form.reset();
     },
   });
 
   useEffect(() => {
     if (!open) {
       reset();
+      form.reset();
     }
-  }, [open, reset]);
+  }, [open, reset, form]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const trimmedName = name.trim();
-    if (!trimmedName || isPending) return;
-
+  const onSubmit = form.handleSubmit((data) => {
+    if (isPending) return;
     reset();
-    mutate(trimmedName);
-  };
+    mutate(data);
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,17 +82,19 @@ export function AddRecipientForm() {
         </DialogHeader>
 
         <DialogBody>
-          <form id="add-recipient-form" onSubmit={handleSubmit} className="flex flex-col gap-8">
-            <div>
+          <form id="add-recipient-form" onSubmit={onSubmit} className="flex flex-col gap-8">
+            <div className="flex flex-col gap-2">
               <Input
                 type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...form.register('name')}
                 placeholder="어르신 성함을 입력하세요"
                 className="text-xl"
-                required
               />
+              {form.formState.errors.name && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
+              )}
             </div>
             {isError && (
               <p className="text-sm font-medium text-destructive" role="alert">
