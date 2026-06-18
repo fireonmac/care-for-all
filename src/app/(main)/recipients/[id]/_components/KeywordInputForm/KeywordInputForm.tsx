@@ -37,7 +37,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const { control, handleSubmit, watch, setValue, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      events: [{ id: crypto.randomUUID(), event: '', emotion: '', isCustomEmotion: false, action: '' }],
+      events: [{ id: 'default-id', event: '', emotion: '', isCustomEmotion: false, action: '' }],
     },
   });
 
