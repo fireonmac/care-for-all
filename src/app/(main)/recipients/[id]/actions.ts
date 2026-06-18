@@ -163,7 +163,7 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
       ).all();
 
     if (weeklyData.length === 0) {
-      db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
+      await db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
       return;
     }
 
@@ -175,7 +175,7 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
       }))
     );
 
-    db.update(records)
+    await db.update(records)
       .set({ 
         status: 'COMPLETED',
         combinedContent: finalContent 
@@ -185,7 +185,7 @@ async function processWeeklyReport(recordId: string, recipientId: string, target
 
   } catch (error) {
     console.error('주간 리포트 백그라운드 작업 실패:', error);
-    db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
+    await db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
   }
 }
 
@@ -209,7 +209,7 @@ export async function generateWeeklyReportBackground(recipientId: string, target
       return { recordId: existingRecord.id, status: existingRecord.status };
     } else {
       // FAILED 인 경우 재시도를 위해 일괄 삭제
-      db.delete(records).where(
+      await db.delete(records).where(
         and(
           eq(records.recipientId, recipientId),
           eq(records.type, 'weekly'),
@@ -221,7 +221,7 @@ export async function generateWeeklyReportBackground(recipientId: string, target
   }
 
   const recordId = randomUUID();
-  db.insert(records).values({
+  await db.insert(records).values({
     id: recordId,
     recipientId,
     date: targetDate,
