@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export function BackButton({ href, label, onClick }: { href?: string, label: string, onClick?: () => void }) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export function BackButton({ href, label, onClick }: { href?: string, label: str
     </>
   );
 
-  const className = "inline-flex items-center gap-2 text-base font-medium tracking-widest text-surface-500 hover:text-black transition-colors";
+  const className = "inline-flex items-center gap-2 text-base font-medium tracking-widest text-muted-foreground hover:text-foreground transition-colors";
 
   return (
     <div className="mb-14">
@@ -22,9 +23,9 @@ export function BackButton({ href, label, onClick }: { href?: string, label: str
           {content}
         </Link>
       ) : (
-        <button onClick={onClick || (() => router.back())} className={className}>
+        <Button variant="link" onClick={onClick || (() => router.back())} className="p-0 h-auto text-muted-foreground hover:text-foreground hover:no-underline">
           {content}
-        </button>
+        </Button>
       )}
     </div>
   );

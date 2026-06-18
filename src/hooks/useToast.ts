@@ -1,24 +1,19 @@
-import { Toast } from '@base-ui/react/toast';
+import { toast } from 'sonner';
 
 const DEFAULT_SUCCESS_DURATION = 3000;
 const DEFAULT_ERROR_DURATION = 4000;
 
 export function useToast() {
-  const toastManager = Toast.useToastManager();
-
   function showSuccess(message: string, durationMs = DEFAULT_SUCCESS_DURATION) {
-    const id = toastManager.add({ title: message, type: 'success' });
-    setTimeout(() => toastManager.close(id), durationMs);
+    toast.success(message, { duration: durationMs });
   }
 
   function showError(message: string, durationMs = DEFAULT_ERROR_DURATION) {
-    const id = toastManager.add({ title: message, type: 'error' });
-    setTimeout(() => toastManager.close(id), durationMs);
+    toast.error(message, { duration: durationMs });
   }
 
   function showInfo(message: string, durationMs = DEFAULT_SUCCESS_DURATION) {
-    const id = toastManager.add({ title: message });
-    setTimeout(() => toastManager.close(id), durationMs);
+    toast(message, { duration: durationMs });
   }
 
   return { showSuccess, showError, showInfo };

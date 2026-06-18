@@ -1,6 +1,15 @@
 'use client';
 
-import { Modal, ModalClose } from '@/components/Modal';
+import { ReactElement } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger, DialogBody
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ConfirmDeleteModalProps {
   open: boolean;
@@ -9,7 +18,7 @@ interface ConfirmDeleteModalProps {
   message: string;
   onConfirm: () => void;
   isLoading?: boolean;
-  trigger: React.ReactNode;
+  trigger: ReactElement;
 }
 
 export function ConfirmDeleteModal({
@@ -22,27 +31,28 @@ export function ConfirmDeleteModal({
   trigger,
 }: ConfirmDeleteModalProps) {
   return (
-    <Modal
-      open={open}
-      onOpenChange={onOpenChange}
-      title={title}
-      trigger={trigger}
-      footer={
-        <>
-          <ModalClose className="text-base font-medium tracking-widest text-black hover:text-surface-600">
-            취소
-          </ModalClose>
-          <button
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <DialogTrigger render={trigger} />}
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+
+        <DialogBody>
+          <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-line">{message}</p>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="destructive"
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-6 py-2.5 bg-status-danger text-white text-base font-medium tracking-widest rounded-lg hover:bg-status-danger/90 disabled:opacity-50"
           >
             {isLoading ? '삭제 중...' : '삭제하기'}
-          </button>
-        </>
-      }
-    >
-      <p className="text-black text-lg font-light leading-relaxed">{message}</p>
-    </Modal>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -5,7 +5,8 @@ import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import Link from 'next/link';
 import { Check, Search, Loader2 } from 'lucide-react';
-import { commonInputClasses } from '@/components/Textarea';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { recipientQueryKeys } from '@/features/recipients/queryKeys';
 import {
   RECIPIENTS_PAGE_SIZE,
@@ -120,48 +121,48 @@ export function RecipientList({
       <div className="relative mb-12">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           {isInitialLoading ? (
-            <Loader2 className="h-5 w-5 text-surface-500 animate-spin" />
+            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
           ) : (
-            <Search className="h-5 w-5 text-surface-500" />
+            <Search className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
-        <input
+        <Input
           type="text"
-          placeholder="어르신 성함 검색..."
+          placeholder="어르신 이름 검색..."
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          className={`sm:w-80 px-4 py-3 pl-12 text-lg ${commonInputClasses}`}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-12 pr-4 py-3 text-lg border-border focus-visible:ring-1"
         />
       </div>
 
       <div className="flex flex-col gap-6">
         {status === 'error' ? (
           <div className="py-24 flex flex-col items-center justify-center gap-5 text-center">
-            <p className="text-xl text-status-danger">{error.message}</p>
-            <button
+            <p className="text-xl text-destructive">{error.message}</p>
+            <Button
               type="button"
               onClick={() => void refetch()}
-              className="border border-black px-5 py-2.5 text-sm font-medium tracking-widest hover:bg-black hover:text-white"
+              variant="outline"
             >
               다시 시도
-            </button>
+            </Button>
           </div>
         ) : visibleRecipients.length === 0 && !isInitialLoading ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
-            <p className="text-2xl font-light mb-4 text-surface-900 tracking-tight">검색된 어르신이 없습니다.</p>
+            <p className="text-2xl font-light mb-4 text-foreground tracking-tight">검색된 어르신이 없습니다.</p>
           </div>
         ) : (
           visibleRecipients.map((r) => (
             <Link 
               key={r.id} 
               href={`/recipients/${r.id}`}
-              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-8 border-b border-surface-200 group gap-6"
+              className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-8 border-b border-border group gap-6"
             >
               <div className="flex flex-col gap-3">
-                <span className="text-3xl font-medium tracking-tight text-black">
-                  {r.name} <span className="text-2xl font-normal ml-1 text-surface-700">어르신</span>
+                <span className="text-3xl font-medium tracking-tight text-foreground">
+                  {r.name} <span className="text-2xl font-normal ml-1 text-foreground/80">어르신</span>
                 </span>
-                <span className="text-surface-500 font-normal text-base tracking-wide">
+                <span className="text-muted-foreground font-normal text-base tracking-wide">
                   최근 작성일: {r.latestRecordDate ? r.latestRecordDate : '-'}
                 </span>
               </div>
@@ -173,20 +174,20 @@ export function RecipientList({
                     <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${(isFuture || d.dayName === '일') ? 'opacity-30' : ''}`}>
                       <span className={`text-[11px] tracking-widest ${
                         d.dateStr === todayStr 
-                          ? 'text-black font-semibold' 
+                          ? 'text-foreground font-semibold' 
                           : d.dayName === '일' 
-                            ? 'text-surface-700 font-medium' 
-                            : 'text-black font-medium'
+                            ? 'text-foreground/80 font-medium' 
+                            : 'text-foreground font-medium'
                       }`}>
                         {d.dayName}
                       </span>
                       <div className="h-4 flex items-center justify-center">
                         {hasRecord ? (
-                          <Check size={14} strokeWidth={4} className="text-status-success" />
+                          <Check size={14} strokeWidth={4} className="text-success" />
                         ) : d.dayName === '일' ? null : !isFuture ? (
-                          <div className="w-1.5 h-1.5 rounded-full bg-status-danger"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-destructive"></div>
                         ) : (
-                          <div className="w-1.5 h-1.5 rounded-full bg-surface-500"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div>
                         )}
                       </div>
                     </div>
@@ -202,11 +203,11 @@ export function RecipientList({
           className="min-h-12 w-full flex items-center justify-center"
         >
           {isInitialLoading || isFetchingNextPage ? (
-            <span className="text-surface-400 text-sm tracking-widest font-light">
+            <span className="text-muted-foreground text-sm tracking-widest font-light">
               불러오는 중...
             </span>
           ) : !hasNextPage && visibleRecipients.length > 0 ? (
-            <span className="text-surface-400 text-sm tracking-widest font-light">
+            <span className="text-muted-foreground text-sm tracking-widest font-light">
               모든 어르신을 불러왔습니다.
             </span>
           ) : null}
