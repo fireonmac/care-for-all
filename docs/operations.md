@@ -267,11 +267,12 @@ API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어�
 인자를 추가하지 않았으며, 이미 전송된 요청의 공급자 과금 취소까지 보장하지 않는다.
 
 `pnpm test`와 호환 별칭 `pnpm test:cloud`는 기존 TypeScript와 Node test runner를 사용한다.
-실제 소스의 어댑터·인증 경계, 공통 DB factory의 메모리/임시 파일 SQLite와 재연결,
-원격 연결 설정 전달(mock)·기존 토큰 호환, 설치된 Better Auth의 생성 훅, 메모리 libSQL의 주간
+실제 소스의 어댑터·인증 경계, 공통 DB 어댑터의 메모리/임시 파일 SQLite와 재연결·CRUD·오류 전파,
+공급자 import 경계, 원격 연결 설정 전달(mock)·기존 토큰 호환, 설치된 Better Auth의 생성 훅, 메모리 libSQL의 주간
 상태 전이와 빈 초안 저장 차단을 합성 데이터로 확인한다. KST 경계는 UTC·Seoul·
 Los Angeles 프로세스에서 비교한다. 외부 서비스를 호출하지 않으며, 실제 브라우저
 Google OAuth·원격 DB·Gemini 품질 검증은 별도다.
+`tests/types/database-contract.ts`의 타입 계약은 별도로 `pnpm exec tsc --noEmit`과 빌드에서 검사한다.
 
 GitHub Actions는 검증만 수행하며 Docker 자동 배포는 제거했다. 기존 서버와 DB는
 유지한다. 실제 이전 시에는 일관된 SQLite 백업, 관계/건수 확인, 쓰기 전환과 복구 절차를

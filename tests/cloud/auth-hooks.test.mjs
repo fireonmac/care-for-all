@@ -4,7 +4,7 @@ import { betterAuth } from 'better-auth';
 import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { wrapTestClient } from './libsql-fixture.mjs';
 import { eq } from 'drizzle-orm';
 import { sourceLoader } from './load-source.mjs';
 
@@ -18,7 +18,7 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
     'CREATE TABLE session (id TEXT PRIMARY KEY, expires_at INTEGER NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, ip_address TEXT, user_agent TEXT, user_id TEXT NOT NULL)',
   ]);
   const schema = sourceLoader()('src/db/schema.ts');
-  const db = drizzle(client, { schema });
+  const { db } = wrapTestClient(client);
   const { auth } = sourceLoader({
     'better-auth': { betterAuth }, 'better-auth/api': { APIError },
     '@better-auth/drizzle-adapter': { drizzleAdapter }, '@/db': { db },
@@ -40,8 +40,17 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
   }
   for (const table of ['user', 'account', 'session']) assert.equal((await client.execute(`SELECT COUNT(*) AS count FROM ${table}`)).rows[0].count, 0);
   const { user } = await internalAdapter.createOAuthUser({ name: 'Synthetic', email: 'caregiver@example.com', emailVerified: true }, { providerId: 'google', accountId: 'synthetic-allowed' });
-  assert.ok(await internalAdapter.createSession(user.id));
+  const session = await internalAdapter.createSession(user.id);
+  assert.ok(session);
+  const found = await internalAdapter.findSession(session.token);
+  assert.equal(found.user.id, user.id);
+  assert.equal(found.session.id, session.id);
+  const expiresAt = new Date('2026-12-01T00:00:00Z');
+  await internalAdapter.updateSession(session.token, { expiresAt });
+  assert.equal((await internalAdapter.findSession(session.token)).session.expiresAt.getTime(), expiresAt.getTime());
   await db.update(schema.user).set({ email: 'removed@example.com' }).where(eq(schema.user.id, user.id));
   await assert.rejects(internalAdapter.createSession(user.id), (error) => error.status === 'FORBIDDEN');
   assert.equal((await client.execute('SELECT COUNT(*) AS count FROM session')).rows[0].count, 1);
+  await internalAdapter.deleteSession(session.token);
+  assert.equal(await internalAdapter.findSession(session.token), null);
 });

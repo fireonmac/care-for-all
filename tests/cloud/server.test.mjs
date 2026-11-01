@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
+import { wrapTestClient } from './libsql-fixture.mjs';
 import { eq } from 'drizzle-orm';
 import { sourceLoader } from './load-source.mjs';
 
@@ -45,7 +45,7 @@ for (const fails of [false, true]) test('weekly after callback returns tracked P
   try {
     await client.execute('CREATE TABLE records (id TEXT PRIMARY KEY, recipient_id TEXT NOT NULL, date TEXT NOT NULL, type TEXT NOT NULL, cognition_content TEXT, behavior_content TEXT, combined_content TEXT, status TEXT NOT NULL DEFAULT \'COMPLETED\', created_at INTEGER NOT NULL)');
     const schema = load('src/db/schema.ts');
-    const db = drizzle(client, { schema });
+    const { db } = wrapTestClient(client);
     await db.insert(schema.records).values({ id: 'synthetic-daily', recipientId: 'synthetic-recipient', date: '2026-10-26', type: 'daily', cognitionContent: '합성 관찰', createdAt: new Date() });
     const callbacks = [];
     const actions = sourceLoader({

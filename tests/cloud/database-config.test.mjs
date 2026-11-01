@@ -5,10 +5,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createClient } from '@libsql/client';
 import { sourceLoader } from './load-source.mjs';
+import { wrapTestClient } from './libsql-fixture.mjs';
 
 const load = sourceLoader();
 const { getDatabaseConfig, isLocalDatabaseUrl } = load('src/env.ts');
-const { createDatabase } = load('src/db/client.ts');
+const { createLibsqlAdapter } = load('src/db/adapters/libsql.ts');
 
 test('local defaults and remote credentials are independent of the hosting provider', () => {
   assert.deepEqual(getDatabaseConfig({}), { url: 'file:./sqlite.db', authToken: undefined });
@@ -55,33 +56,40 @@ test('Drizzle Kit and app use the same connection selection without auth or AI c
   }
 });
 
-test('shared database factory supports local memory and persistent SQLite with the real schema', async (t) => {
+test('libSQL adapter supports local memory and persistent SQLite with the real schema', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => { throw new Error('No network calls in database tests'); });
   const directory = await mkdtemp(path.join(tmpdir(), 'care4all-database-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const { recipients } = load('src/db/schema.ts');
   for (const url of [':memory:', `file:${path.join(directory, 'synthetic.db')}`]) {
-    const db = createDatabase(getDatabaseConfig({ DATABASE_URL: url }));
+    const setup = createClient({ url });
+    await setup.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
+    let adapter;
+    if (url === ':memory:') adapter = wrapTestClient(setup);
+    else {
+      setup.close();
+      adapter = createLibsqlAdapter(getDatabaseConfig({ DATABASE_URL: url }));
+    }
+    const { db } = adapter;
     try {
-      await db.$client.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
       await db.insert(recipients).values({ id: 'synthetic', name: '합성 대상자', createdAt: new Date('2026-11-01T00:00:00Z') });
       assert.equal((await db.query.recipients.findFirst()).name, '합성 대상자');
-    } finally { db.$client.close(); }
+    } finally { adapter.close(); }
     if (url.startsWith('file:')) {
-      const reopened = createDatabase(getDatabaseConfig({ DATABASE_URL: url }));
-      try { assert.equal((await reopened.query.recipients.findFirst()).id, 'synthetic'); }
-      finally { reopened.$client.close(); }
+      const reopened = createLibsqlAdapter(getDatabaseConfig({ DATABASE_URL: url }));
+      try { assert.equal((await reopened.db.query.recipients.findFirst()).id, 'synthetic'); }
+      finally { reopened.close(); }
     }
   }
 });
 
-test('remote factory passes normalized credentials to the same driver without a remote call', () => {
+test('remote adapter passes normalized credentials to the same driver without a remote call', () => {
   const connection = getDatabaseConfig({ DATABASE_URL: 'libsql://database.example', DATABASE_AUTH_TOKEN: 'synthetic' });
   let observed;
-  const { createDatabase: isolated } = sourceLoader({
+  const { createLibsqlAdapter: isolated } = sourceLoader({
     '@libsql/client': { createClient: (config) => { observed = config; return createClient({ url: ':memory:' }); } },
-  })('src/db/client.ts');
-  const db = isolated(connection);
+  })('src/db/adapters/libsql.ts');
+  const adapter = isolated(connection);
   try { assert.deepEqual(observed, connection); }
-  finally { db.$client.close(); }
+  finally { adapter.close(); }
 });
