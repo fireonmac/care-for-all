@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 const eventSchema = z.object({
-  id: z.string(),
+  eventId: z.string(),
   event: z.string(),
   emotion: z.string(),
   isCustomEmotion: z.boolean(),
@@ -38,7 +38,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const { control, handleSubmit, setValue, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      events: [{ id: 'default-id', event: '', emotion: '', isCustomEmotion: false, action: '' }],
+      events: [{ eventId: 'default-id', event: '', emotion: '', isCustomEmotion: false, action: '' }],
     },
   });
 
@@ -87,7 +87,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       onSuccess: () => {
         showSuccess('성공적으로 저장되었습니다.');
         setDraft(null);
-        reset({ events: [{ id: crypto.randomUUID(), event: '', emotion: '', isCustomEmotion: false, action: '' }] });
+        reset({ events: [{ eventId: crypto.randomUUID(), event: '', emotion: '', isCustomEmotion: false, action: '' }] });
         setActiveEventId([]);
         router.refresh();
       },
@@ -122,26 +122,30 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
         <Accordion
-          value={activeEventId.length === 0 && fields.length > 0 ? [fields[0].id] : activeEventId}
+          value={activeEventId.length === 0 && fields.length > 0 ? [fields[0].eventId] : activeEventId}
           onValueChange={(val) => {
             if (val.length > 0) setActiveEventId(val as string[]);
           }}
           className="flex flex-col gap-4"
         >
-          {fields.map((field, index) => (
-            <EventInputItem
-              key={field.id}
-              event={events[index]}
-              index={index}
-              isFuture={isFuture}
-              canRemove={fields.length > 1}
-              onUpdate={(updates) => {
-                setValue(`events.${index}`, { ...events[index], ...updates });
-              }}
-              onRemove={() => remove(index)}
-              autoFocus={activeEventId.includes(events[index]?.id)}
-            />
-          ))}
+          {fields.map((field, index) => {
+            // Field-array structure updates before its watched values on append.
+            const event = events[index] ?? field;
+            return (
+              <EventInputItem
+                key={field.id}
+                event={event}
+                index={index}
+                isFuture={isFuture}
+                canRemove={fields.length > 1}
+                onUpdate={(updates) => {
+                  setValue(`events.${index}`, { ...event, ...updates });
+                }}
+                onRemove={() => remove(index)}
+                autoFocus={activeEventId.includes(event.eventId)}
+              />
+            );
+          })}
         </Accordion>
 
         <div className="flex flex-col mb-4 mt-2">
@@ -149,7 +153,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
             type="button"
             onClick={() => {
               const newId = crypto.randomUUID();
-              append({ id: newId, event: '', emotion: '', isCustomEmotion: false, action: '' });
+              append({ eventId: newId, event: '', emotion: '', isCustomEmotion: false, action: '' });
               setActiveEventId([newId]);
             }}
             disabled={isFuture}
