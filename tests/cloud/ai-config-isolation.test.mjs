@@ -15,6 +15,31 @@ function environment(t, extra = {}) {
   t.after(() => { process.env = previous; });
 }
 
+test('real auth env and recipient API work without AI settings, while access checks remain', async (t) => {
+  environment(t);
+  let session = null;
+  let databaseCalls = 0;
+  const load = sourceLoader({
+    'better-auth': { betterAuth: () => ({ api: { getSession: async () => session } }) },
+    '@better-auth/drizzle-adapter': { drizzleAdapter: () => ({}) },
+    '@/db': { db: {} },
+    'next/headers': { headers: async () => new Headers() },
+    'next/navigation': { redirect: () => { throw new Error('redirect-login'); } },
+    '@/features/recipients/queries': { getRecipientsPage: async () => { databaseCalls++; return { items: [], nextCursor: null }; } },
+  });
+  const api = load('src/app/api/recipients/route.ts');
+  const request = () => new Request('https://synthetic-preview.vercel.app/api/recipients');
+  assert.equal((await api.GET(request())).status, 401);
+  session = { user: { email: 'outsider@example.com', emailVerified: true } };
+  assert.equal((await api.GET(request())).status, 401);
+  assert.equal(databaseCalls, 0);
+  session.user = { email: 'caregiver@example.com', emailVerified: true };
+  const response = await api.GET(request());
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { items: [], nextCursor: null });
+  assert.equal(databaseCalls, 1);
+});
+
 test('all generation entry points reject missing model before any network call', async (t) => {
   environment(t, { AI_PROVIDER: 'openai-compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_API_KEY: 'synthetic-key' });
   let calls = 0;

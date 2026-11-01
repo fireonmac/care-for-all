@@ -1,7 +1,11 @@
 import { getRecipientsPage } from '@/features/recipients/queries';
+import { getSession } from '@/lib/auth';
 import { RECIPIENTS_PAGE_SIZE } from '@/features/recipients/types';
 
 export async function GET(request: Request) {
+  if (!await getSession()) {
+    return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get('q') ?? '';
   const cursor = searchParams.get('cursor');
@@ -12,5 +16,5 @@ export async function GET(request: Request) {
 
   const page = await getRecipientsPage(searchQuery, cursor, limit);
 
-  return Response.json(page);
+  return Response.json(page, { headers: { 'Cache-Control': 'private, no-store' } });
 }
