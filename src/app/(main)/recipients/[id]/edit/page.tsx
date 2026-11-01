@@ -19,7 +19,7 @@ export default async function EditRecordPage({
   const recentRecords = await getRecipientRecords(resolvedParams.id);
   const targetRecord = recentRecords.find((r) => r.date === resolvedSearch.date && r.type === 'daily');
 
-  if (!targetRecord) {
+  if (!targetRecord || !targetRecord.canEdit) {
     redirect(`/recipients/${resolvedParams.id}?date=${resolvedSearch.date}`);
   }
 

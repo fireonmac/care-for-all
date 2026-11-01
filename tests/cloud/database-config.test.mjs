@@ -63,7 +63,7 @@ test('libSQL adapter supports local memory and persistent SQLite with the real s
   const { recipients } = load('src/db/schema.ts');
   for (const url of [':memory:', `file:${path.join(directory, 'synthetic.db')}`]) {
     const setup = createClient({ url });
-    await setup.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
+    await setup.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, workspace_id TEXT, created_by_user_id TEXT, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
     let adapter;
     if (url === ':memory:') adapter = wrapTestClient(setup);
     else {

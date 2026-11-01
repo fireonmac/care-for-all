@@ -7,7 +7,6 @@ function environment(t, extra = {}) {
   process.env = {
     DATABASE_URL: 'libsql://synthetic.turso.io', TURSO_AUTH_TOKEN: 'synthetic-token',
     VERCEL: '1', VERCEL_URL: 'synthetic-preview.vercel.app',
-    ALLOWED_EMAILS: 'caregiver@example.com',
     BETTER_AUTH_SECRET: 'synthetic-session-secret-not-for-production',
     GOOGLE_CLIENT_ID: 'synthetic-client', GOOGLE_CLIENT_SECRET: 'synthetic-secret',
     ...extra,
@@ -30,8 +29,8 @@ test('real auth env and recipient API work without AI settings, while access che
   const api = load('src/app/api/recipients/route.ts');
   const request = () => new Request('https://synthetic-preview.vercel.app/api/recipients');
   assert.equal((await api.GET(request())).status, 401);
-  session = { user: { email: 'outsider@example.com', emailVerified: true } };
-  assert.equal((await api.GET(request())).status, 401);
+  session = { user: { email: 'outsider@example.com', emailVerified: false } };
+  assert.equal((await api.GET(request())).status, 403);
   assert.equal(databaseCalls, 0);
   session.user = { email: 'caregiver@example.com', emailVerified: true };
   const response = await api.GET(request());
@@ -64,10 +63,10 @@ test('daily API rejects anonymous callers first, then reports AI configuration a
   let session = null;
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async () => { calls++; throw new Error('network must not be used'); });
-  const route = sourceLoader({ '@/lib/auth': { getSession: async () => session } })('src/app/api/generate-daily/route.ts');
-  const request = () => new Request('https://synthetic-preview.vercel.app/api/generate-daily', { method: 'POST', body: JSON.stringify({ keywords: '합성 메모' }) });
+  const route = sourceLoader({ '@/lib/auth': { getSession: async () => session }, '@/lib/workspace-access': { requireRecipient: async () => ({}), AccessDeniedError: class extends Error {} }, '@/lib/ai/input': { validateAiInput: () => {}, DAILY_INPUT_LIMIT: 4000 } })('src/app/api/generate-daily/route.ts');
+  const request = () => new Request('https://synthetic-preview.vercel.app/api/generate-daily', { method: 'POST', body: JSON.stringify({ keywords: '합성 메모', recipientId: 'synthetic' }) });
   assert.equal((await route.POST(request())).status, 401);
-  session = { user: { id: 'synthetic' } };
+  session = { user: { id: 'synthetic', emailVerified: true } };
   const response = await route.POST(request());
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /AI 설정/);
@@ -90,5 +89,5 @@ test('lazy environment groups validate independently without auth, DB or AI cros
   assert.equal(env.getAiEnv({ AI_PROVIDER: 'ollama', AI_MODEL: 'synthetic-model' }).AI_MODEL, 'synthetic-model');
   assert.throws(() => env.getAiEnv({ AI_PROVIDER: 'openai-compatible', AI_MODEL: 'model', AI_BASE_URL: 'file:///invalid' }), /AI_BASE_URL/);
   assert.throws(() => env.getAuthEnv({}), /인증 환경변수/);
-  assert.throws(() => env.getAuthEnv({ VERCEL: '1', BETTER_AUTH_URL: 'https://synthetic.example', BETTER_AUTH_SECRET: 'synthetic', GOOGLE_CLIENT_ID: 'synthetic', GOOGLE_CLIENT_SECRET: 'synthetic' }), /ALLOWED_EMAILS/);
+  assert.equal(env.getAuthEnv({ VERCEL: '1', BETTER_AUTH_URL: 'https://synthetic.example', BETTER_AUTH_SECRET: 'synthetic', GOOGLE_CLIENT_ID: 'synthetic', GOOGLE_CLIENT_SECRET: 'synthetic' }).BETTER_AUTH_URL, 'https://synthetic.example');
 });

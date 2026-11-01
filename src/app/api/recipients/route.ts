@@ -3,8 +3,12 @@ import { getSession } from '@/lib/auth';
 import { RECIPIENTS_PAGE_SIZE } from '@/features/recipients/types';
 
 export async function GET(request: Request) {
-  if (!await getSession()) {
+  const session = await getSession();
+  if (!session) {
     return Response.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+  if (!session.user.emailVerified) {
+    return Response.json({ error: '이메일 인증이 필요합니다.' }, { status: 403 });
   }
   const { searchParams } = new URL(request.url);
   const searchQuery = searchParams.get('q') ?? '';

@@ -12,7 +12,7 @@ import type { records } from '@/db/schema';
 
 type DailyRecord = typeof records.$inferSelect;
 
-export function TodayRecordView({ record, recipientId }: { record: DailyRecord, recipientId: string }) {
+export function TodayRecordView({ record, recipientId, canEdit }: { record: DailyRecord, recipientId: string, canEdit: boolean }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const router = useRouter();
   const { showSuccess, showError } = useToast();
@@ -35,7 +35,7 @@ export function TodayRecordView({ record, recipientId }: { record: DailyRecord, 
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-20 gap-6">
         <h2 className="text-3xl font-medium text-foreground tracking-tight">상세 기록</h2>
-        <div className="flex gap-2.5 items-center">
+        {canEdit && <div className="flex gap-2.5 items-center">
           <Button
             onClick={() => router.push(`/recipients/${recipientId}/edit?date=${record.date}`)}
             variant="secondary"
@@ -65,7 +65,7 @@ export function TodayRecordView({ record, recipientId }: { record: DailyRecord, 
               </Button>
             }
           />
-        </div>
+        </div>}
       </div>
 
       <div className="flex flex-col gap-24">

@@ -2,16 +2,10 @@ import { z } from 'zod';
 import { getAuthBaseUrl } from './lib/auth-url';
 
 const authEnvSchema = z.object({
-  ALLOWED_EMAILS: z.string().optional(),
-  requireAllowlist: z.boolean(),
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.url(),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
-}).superRefine((config, context) => {
-  if (config.requireAllowlist && !config.ALLOWED_EMAILS?.split(',').some((email) => email.trim())) {
-    context.addIssue({ code: 'custom', path: ['ALLOWED_EMAILS'], message: '허용 계정 제한에는 ALLOWED_EMAILS가 필요합니다.' });
-  }
 });
 
 const aiEnvSchema = z.object({
@@ -42,8 +36,6 @@ const databaseConfigSchema = z.object({
 // 각 소비자가 필요한 설정만 호출 시 검증한다. 모듈 import는 환경 검증을 실행하지 않는다.
 export function getAuthEnv(environment: NodeJS.ProcessEnv = process.env) {
   const config = {
-    ALLOWED_EMAILS: environment.ALLOWED_EMAILS,
-    requireAllowlist: getBooleanSetting(environment, 'AUTH_REQUIRE_ALLOWLIST', true),
     BETTER_AUTH_URL: getAuthBaseUrl({
       BETTER_AUTH_URL: environment.BETTER_AUTH_URL,
       VERCEL: environment.VERCEL,

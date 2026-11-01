@@ -6,6 +6,8 @@ import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { RecipientSharing } from './_components/RecipientSharing';
+import { getRecipientShares } from '@/features/recipients/sharing';
 
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 
@@ -22,6 +24,7 @@ export default async function RecipientDetailPage({
   const resolvedSearch = await searchParams;
   
   const recipient = await getRecipientOr404(resolvedParams.id);
+  const shares = recipient.canManage ? await getRecipientShares(recipient.id) : [];
   const recentRecords = await getRecipientRecords(resolvedParams.id);
 
   const todayStr = getKSTDateStr(new Date());
@@ -49,6 +52,7 @@ export default async function RecipientDetailPage({
         <div className="self-start sm:self-auto min-h-11 flex items-center">
           <WeeklyReportForm
             key={`${recipient.id}:${startOfWeek}`}
+            canGenerate={recipient.canEdit}
             recipientId={recipient.id} 
             recipientName={recipient.name}
             currentMonth={currentMonth}
@@ -58,6 +62,8 @@ export default async function RecipientDetailPage({
           />
         </div>
       </header>
+
+      {recipient.canManage && <RecipientSharing recipientId={recipient.id} shares={shares} />}
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section id="week-view" className="mb-24 scroll-mt-20">
@@ -101,7 +107,7 @@ export default async function RecipientDetailPage({
       {/* 하단: 컨텐츠 영역 */}
       <section className="flex-1 w-full mx-auto">
         {hasTargetRecord ? (
-          <TodayRecordView record={targetRecord} recipientId={recipient.id} />
+          <TodayRecordView record={targetRecord} recipientId={recipient.id} canEdit={targetRecord.canEdit} />
         ) : (targetDate === endOfWeek) ? (
           <div className="flex flex-col items-center justify-center py-32 px-4 text-center bg-muted rounded-[2rem] border border-border mt-4">
             <span className="text-5xl mb-6">☕️</span>
@@ -111,9 +117,9 @@ export default async function RecipientDetailPage({
               선생님도 편안하고 따뜻한 휴식 보내시길 바랍니다!
             </p>
           </div>
-        ) : (
+        ) : recipient.canEdit ? (
           <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
-        )}
+        ) : <p className="text-muted-foreground">공유받은 자료를 읽을 수 있습니다. 새 기록 작성은 편집 권한이 필요합니다.</p>}
       </section>
     </main>
   );

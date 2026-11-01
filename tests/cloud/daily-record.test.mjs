@@ -30,7 +30,7 @@ test('daily stream and non-stream paths enforce identical final format without c
 test('save/update reject empty drafts before DB writes even when called without the UI', async () => {
   let writes = 0;
   const actions = sourceLoader({
-    '@/lib/auth': { getSession: async () => ({ user: { id: 'synthetic' } }) },
+    '@/lib/workspace-access': { requireActor: async () => ({ id: 'synthetic' }) },
     '@/db': { db: { insert() { writes++; }, update() { writes++; } } },
     'next/cache': { revalidatePath() {} },
   })('src/app/(main)/recipients/[id]/actions.ts');

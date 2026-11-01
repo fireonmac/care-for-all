@@ -51,7 +51,10 @@ export function AuthButton() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator className="my-1 border-border" />
           <DropdownMenuItem 
-            onClick={() => authClient.signOut()}
+            onClick={async () => {
+              const result = await authClient.signOut();
+              if (!result.error) window.location.replace('/login');
+            }}
             className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium cursor-pointer rounded-lg"
           >
             <LogOut className="w-4 h-4" />

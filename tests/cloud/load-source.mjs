@@ -9,6 +9,9 @@ export function sourceLoader(mocks = {}) {
   const root = path.resolve(import.meta.dirname, '../..');
   function load(relativePath) {
     const filename = path.resolve(root, relativePath);
+    if (filename === path.join(root, 'src/db/index.ts')) {
+      throw new Error('Tests must inject a synthetic database; application DB initialization is forbidden');
+    }
     if (cache.has(filename)) return cache.get(filename).exports;
     const loadedModule = { exports: {} };
     cache.set(filename, loadedModule);

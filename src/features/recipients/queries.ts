@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { requireSession } from '@/lib/auth';
+import { requireActor, ensureDefaultWorkspace, recipientAccess, recordAccess } from '@/lib/workspace-access';
 import { recipients, records } from '@/db/schema';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 import { desc, eq, and, gte, lte, like, max } from 'drizzle-orm';
@@ -15,13 +15,14 @@ export async function getRecipientsPage(
   cursor: string | null = null,
   limit = RECIPIENTS_PAGE_SIZE,
 ): Promise<RecipientsPage> {
-  await requireSession();
+  const actor = await requireActor();
+  await ensureDefaultWorkspace(actor.id);
   const todayStr = getKSTDateStr(new Date());
   const { startOfWeek, endOfWeek } = getWeekData(todayStr);
 
   // 이름 검색 조건
   const normalized = searchQuery.trim();
-  const whereClause = normalized ? like(recipients.name, `%${normalized}%`) : undefined;
+  const whereClause = and(recipientAccess(actor.id), normalized ? like(recipients.name, `%${normalized}%`) : undefined);
 
   const allRecipients = await db
     .select()
@@ -35,6 +36,7 @@ export async function getRecipientsPage(
     .from(records)
     .where(
       and(
+        recordAccess(actor.id),
         eq(records.type, 'daily'),
         gte(records.date, startOfWeek),
         lte(records.date, endOfWeek),
@@ -45,13 +47,13 @@ export async function getRecipientsPage(
   const todayRecordsRaw = await db
     .select({ recipientId: records.recipientId })
     .from(records)
-    .where(and(eq(records.type, 'daily'), eq(records.date, todayStr)));
+    .where(and(recordAccess(actor.id), eq(records.type, 'daily'), eq(records.date, todayStr)));
 
   // 각 대상자의 가장 최신 일일 기록 날짜를 DB에서 직접 집계
   const latestRecordsRaw = await db
     .select({ recipientId: records.recipientId, date: max(records.date) })
     .from(records)
-    .where(eq(records.type, 'daily'))
+    .where(and(recordAccess(actor.id), eq(records.type, 'daily')))
     .groupBy(records.recipientId);
 
   // 메모리 집계

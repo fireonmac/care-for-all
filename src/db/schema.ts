@@ -1,9 +1,11 @@
 import { relations, sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, primaryKey, check } from 'drizzle-orm/sqlite-core';
 
 export const recipients = sqliteTable('recipients', {
   id: text('id').primaryKey(), // uuid 등
   name: text('name').notNull(),
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+  createdByUserId: text('created_by_user_id').references(() => user.id),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
@@ -13,6 +15,7 @@ export const records = sqliteTable('records', {
   recipientId: text('recipient_id')
     .notNull()
     .references(() => recipients.id),
+  createdByUserId: text('created_by_user_id').references(() => user.id),
   date: text('date').notNull(), // 'YYYY-MM-DD' 형식
   type: text('type', { enum: ['daily', 'weekly'] }).notNull(),
   cognitionContent: text('cognition_content'),
@@ -126,3 +129,23 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+// 같은 공간 모델을 1인 및 기관 공동 사용에 적용한다. 구성원 추가만으로 자료가 공개되지 않는다.
+export const workspaces = sqliteTable('workspaces', {
+  id: text('id').primaryKey(),
+  provisionedForUserId: text('provisioned_for_user_id').notNull().unique().references(() => user.id),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const workspaceMembers = sqliteTable('workspace_members', {
+  workspaceId: text('workspace_id').notNull().references(() => workspaces.id),
+  userId: text('user_id').notNull().references(() => user.id),
+}, (table) => [primaryKey({ columns: [table.workspaceId, table.userId] })]);
+
+export const recipientShares = sqliteTable('recipient_shares', {
+  recipientId: text('recipient_id').notNull().references(() => recipients.id),
+  userId: text('user_id').notNull().references(() => user.id),
+  permission: text('permission', { enum: ['read', 'edit'] }).notNull(),
+}, (table) => [primaryKey({ columns: [table.recipientId, table.userId] }),
+  check('recipient_shares_permission', sql`${table.permission} in ('read', 'edit')`),
+]);

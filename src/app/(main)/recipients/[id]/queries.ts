@@ -1,23 +1,18 @@
 import { db } from '@/db';
-import { requireSession } from '@/lib/auth';
-import { records, recipients } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { records } from '@/db/schema';
+import { and, eq, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import { AccessDeniedError, requireActor, requireRecipient, recordAccess, recordFields } from '@/lib/workspace-access';
 
 export async function getRecipientOr404(id: string) {
-  await requireSession();
-  const result = await db.select().from(recipients).where(eq(recipients.id, id));
-  if (result.length === 0) {
-    notFound();
-  }
-  return result[0];
+  const actor = await requireActor();
+  try { return await requireRecipient(actor.id, id); }
+  catch (error) { if (error instanceof AccessDeniedError) notFound(); throw error; }
 }
 
 export async function getRecipientRecords(recipientId: string) {
-  await requireSession();
-  return await db
-    .select()
-    .from(records)
-    .where(eq(records.recipientId, recipientId))
-    .orderBy(desc(records.date));
+  const actor = await requireActor();
+  await requireRecipient(actor.id, recipientId);
+  return db.select(recordFields(actor.id)).from(records)
+    .where(and(eq(records.recipientId, recipientId), recordAccess(actor.id))).orderBy(desc(records.date));
 }

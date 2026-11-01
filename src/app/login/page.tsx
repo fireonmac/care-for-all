@@ -1,7 +1,13 @@
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/auth';
+import { getLoginErrorMessage } from './errors';
 import Image from "next/image";
 import { LoginButton } from "./_components/LoginButton";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string | string[] }> }) {
+  const session = await getSession();
+  if (session) redirect('/');
+  const errorMessage = getLoginErrorMessage((await searchParams).error);
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm flex flex-col items-center text-center -mt-16">
@@ -19,6 +25,7 @@ export default function LoginPage() {
           어르신 요양보호기록 작성을<br />AI와 함께 더욱 쉽고 빠르게 진행하세요.
         </p>
         
+        {errorMessage && <p role="alert" className="mb-4 text-destructive">{errorMessage}</p>}
         <LoginButton />
 
         <p className="mt-8 text-sm text-muted-foreground leading-relaxed font-light">
