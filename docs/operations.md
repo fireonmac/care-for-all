@@ -5,7 +5,7 @@
 - 명령과 패키지: `package.json`
 - 환경변수 예시: `.env.example`
 - 컨테이너 구성: `docker-compose.yml`, `Dockerfile`
-- CI/CD: `.github/workflows/ci-deploy.yml`
+- CI: `.github/workflows/ci-deploy.yml`
 - 배포와 백업: `scripts/deploy.sh`, `scripts/backup-sqlite.sh`
 
 ## 로컬 개발
@@ -75,14 +75,13 @@ pnpm build
 TypeScript 파일에 `eslint --fix`를 실행하며, 수정할 수 없는 린트 오류가 남으면
 커밋을 중단한다.
 
-`main` 브랜치 push 시 GitHub 호스팅 runner도 합성 회귀 테스트, 타입 검사와 production build를
-통과해야 배포를 시작한다.
+`main` 대상 PR, `main` push 및 `CI` 워크플로 수동 실행은 GitHub 호스팅 runner에서
+합성 회귀 테스트, 타입 검사와 production build만 수행한다. Docker 자동 배포 작업은 없다.
 
 ## 운영 구조
 
-- Self-hosted GitHub Actions runner가 배포한다.
-- runner label은 `care-for-all-prod`다.
-- Repository variable `DEPLOY_PATH`는 운영 디렉터리의 절대 경로다.
+- 기존 Docker 운영은 명시적인 수동 배포만 지원한다. GitHub Actions는 운영 호스트에 접근하지 않는다.
+- `scripts/deploy.sh`의 두 번째 인자는 운영 디렉터리의 절대 경로다.
 - 운영 디렉터리의 `.env`, `app_data`, `backups`는 소스 동기화에서 제외된다.
 - 앱이 바인딩되는 호스트 포트와 주소는 `docker-compose.yml`의 `ports` 설정이 기준이다.
 - 외부 접속은 Named Cloudflare Tunnel, Tailscale 또는 인증된 리버스 프록시가
@@ -97,7 +96,6 @@ Quick Tunnel은 고정 주소와 가용성을 보장하지 않으므로 배포 �
 
 ```text
 /path/to/services/care-for-all
-/path/to/actions-runner
 ```
 
 ```bash
@@ -111,26 +109,10 @@ Ollama를 사용한다면 `.env`의 `AI_MODEL`을 운영 호스트에 설치된 
 변경한다. 외부 API를 사용한다면 `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`를
 해당 공급자 값으로 설정한다.
 
-Self-hosted runner는 저장소의 `Settings > Actions > Runners`에서 운영 호스트의
-OS와 아키텍처에 맞게 등록하고 `care-for-all-prod` label을 추가한다.
-runner 환경(OS, 아키텍처)을 변경하면 `.github/workflows/ci-deploy.yml`의
-`runs-on` 레이블도 함께 수정해야 한다.
-서비스 설치 후 runner 계정에서 Docker가 동작하는지 확인한다.
-
-```bash
-./svc.sh install
-./svc.sh start
-./svc.sh status
-docker compose version
-docker ps
-```
-
-신뢰할 수 없는 public 저장소나 외부 PR 워크플로에 production runner를
-제공하지 않는다.
-
 ## 배포
 
-`main` push 또는 `CI and Deploy` 워크플로의 수동 실행으로 배포한다.
+GitHub merge와 CI 실행은 기존 컨테이너나 DB를 변경하지 않는다. Docker 배포가 필요한
+경우에만 아래 수동 명령을 별도로 실행한다.
 
 배포 스크립트는 다음 순서로 동작한다.
 
@@ -151,7 +133,7 @@ curl --fail http://127.0.0.1:$(docker compose port app 3000 | cut -d: -f2)/api/t
 cat .deploy-version
 ```
 
-장애 대응용 수동 배포:
+수동 Docker 배포 (DB 스키마 적용과 컨테이너 교체를 포함하므로 운영 변경 시에만 실행):
 
 ```bash
 ./scripts/deploy.sh \
@@ -254,9 +236,8 @@ API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어�
 Los Angeles 프로세스에서 비교한다. 외부 서비스를 호출하지 않으며, 실제 브라우저
 Google OAuth·원격 DB·Gemini 품질 검증은 별도다.
 
-현재 GitHub Actions의 main 배포는 Docker를 대상으로 유지된다. 클라우드 검증을
-이유로 main에 바로 push하거나 기존 서버를 중지하지 않는다. 실제 이전 시에는
-일관된 SQLite 백업, 관계/건수 확인, 쓰기 전환, Docker 자동 배포 정리와 복구 절차를
+GitHub Actions는 검증만 수행하며 Docker 자동 배포는 제거했다. 기존 서버와 DB는
+유지한다. 실제 이전 시에는 일관된 SQLite 백업, 관계/건수 확인, 쓰기 전환과 복구 절차를
 별도로 수행한다. Gemini 무료 API에는 실제 민감·개인 기록을 넣지 않는다.
 
 참고: [Gemini 호환 API](https://ai.google.dev/gemini-api/docs/openai),
