@@ -74,7 +74,7 @@
 
 ## 보류
 
-- D1 전환은 아직 구현·검증하지 않았다. 현재 실행 구현은 로컬 SQLite/원격 libSQL용이며, 공통 비동기 SQLite 계약 뒤에 격리돼 있다. D1의 메서드 타입 할당 검증은 실행 검증이 아니다. 필요해지면 기존 SQLite 스키마·업무 쿼리를 유지할 수 있는지 검증하면서 `src/db`의 드라이버/연결 조립과 환경·마이그레이션 설정을 바꾼다. 범용 repository를 미리 추가하지 않는다.
+- D1 전환은 아직 구현·검증하지 않았다. 현재 연결 경계는 로컬 SQLite/원격 libSQL용이며, 원본 Drizzle API와 드라이버별 실행 결과 타입을 유지한다. D1은 무수정 대체 대상으로 보장하지 않는다. 필요해지면 기존 SQLite 스키마·업무 쿼리를 유지할 수 있는지 검증하면서 `src/db`의 드라이버/연결 조립과 환경·마이그레이션 설정을 바꾼다. 범용 repository를 미리 추가하지 않는다.
   - Workers에서는 [Drizzle D1 드라이버와 바인딩](https://orm.drizzle.team/docs/connect-cloudflare-d1)이 필요하다. Vercel/Node를 유지한다면 [인증된 Worker API](https://developers.cloudflare.com/d1/tutorials/build-an-api-to-access-d1/) 등 별도 전송 경계가 필요하다. Drizzle Kit의 `d1-http` 설정은 앱 런타임 드라이버를 대신하지 않는다.
   - D1의 batch 트랜잭션·결과 형식, Better Auth 가입/세션/허용 목록, 실제 SQL·날짜 기본값·마이그레이션을 합성 데이터로 검증한다. Workers로 앱도 이동하면 Next.js 실행 어댑터와 `after()` 생명주기도 확인한다. 현재 libSQL 테스트는 D1 호환성 증명이 아니다.
   - 현재 Better Auth Drizzle 어댑터의 영향 행 수 계산은 D1의 `meta.changes`를 읽지 않는다. D1 구현 시 `updateMany`/`deleteMany`의 반환 건수도 별도로 검증하고 필요한 호환 처리를 어댑터 경계에서 해결한다.

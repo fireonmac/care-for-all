@@ -1,21 +1,13 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import type { getDatabaseConfig } from '../../env';
-import type { DatabaseAdapter } from '../contract';
 import * as schema from '../schema';
 
-// Turso와 로컬 SQLite는 같은 libSQL 드라이버 구현을 사용한다.
-export function createLibsqlAdapter(config: ReturnType<typeof getDatabaseConfig>): DatabaseAdapter {
+// 연결 생명주기만 관리하고 Drizzle 객체와 추론 타입은 그대로 제공한다.
+export function createLibsqlAdapter(config: ReturnType<typeof getDatabaseConfig>) {
   const client = createClient(config);
-  const database = drizzle(client, { schema });
   return {
-    db: {
-      select: database.select.bind(database),
-      insert: database.insert.bind(database),
-      update: database.update.bind(database),
-      delete: database.delete.bind(database),
-      query: database.query,
-    },
+    db: drizzle(client, { schema }),
     close: () => client.close(),
   };
 }

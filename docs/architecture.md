@@ -55,7 +55,6 @@ flowchart LR
 | `src/components` | 여러 라우트에서 재사용하는 UI |
 | `src/features` | 도메인별 쿼리, 타입, 클라이언트 쿼리 키 |
 | `src/db/index.ts` | 검증된 설정과 DB 어댑터의 조립 |
-| `src/db/contract.ts` | Drizzle 공통 비동기 SQLite 타입에서 도출한 앱 DB 계약 |
 | `src/db/adapters/libsql.ts` | 로컬 SQLite/Turso용 libSQL 연결·실행 구현 |
 | `src/db/schema.ts` | SQLite 데이터 모델과 추론 타입 |
 | `src/app/api/generate-*` | 일일·주간 생성 요청과 HTTP 응답 처리 |
@@ -133,25 +132,23 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 - 단일 센터의 허용 계정은 같은 기록을 공유한다. 조직별 데이터 격리는 아직 없으며, 실제 정보 사용 전 운영·데이터 취급 기준을 확인해야 한다.
 - 주간 `after()`는 영속 큐가 아니다. 강제 종료로 남은 PROCESSING 복구와 동시 중복 요청 방지는 미구현이다.
 
-## DB 어댑터 계약
+## DB 연결 경계
 
-앱은 `@/db`의 `db`만 사용한다. `Database` 타입은 Drizzle의
-`BaseSQLiteDatabase<'async', unknown, typeof schema>`에서 `select`, `insert`,
-`update`, `delete`, `query`만 선택해 도출한다. 쿼리 builder·행·입력 타입은
-기존 SQLite 스키마에서 추론하며 별도 ORM API나 도메인 타입을 복제하지 않는다.
+앱은 `@/db`의 `db`를 사용한다. libSQL 어댑터는 클라이언트 생성, 스키마 주입과
+연결 종료만 관리하고 `drizzle(client, { schema })`의 원본 객체를 그대로 반환한다.
+별도 공통 DB 타입이나 메서드 중계는 두지 않으며 반환 타입은 TypeScript가 추론한다.
 
-libSQL 어댑터는 실제 driver를 감싸 이 메서드와 관계 쿼리만 제공한다. `$client`,
-raw 실행, `batch`, 대화형 `transaction`은 앱 계약에 없다. 연결 종료는 어댑터
-조립/테스트가 소유한다. `run()`의 공급자별 결과 메타데이터는 `unknown`이며
-앱은 이를 해석하지 않는다. 조회·`returning()`의 행 타입은 유지한다.
+조회·입력·관계의 스키마 추론뿐 아니라 CTE, `selectDistinct`, `batch`,
+`transaction`, raw 실행과 `$client` 등 설치된 libSQL용 Drizzle API를 유지한다.
+쓰기 실행의 `ResultSet`과 `rowsAffected` 타입도 그대로 제공한다. 이는 libSQL의
+실제 기능과 타입을 노출하는 연결 경계이며 공급자별 차이를 없애는 범용 계약은 아니다.
 
-Better Auth에는 같은 계약과 스키마를 명시적으로 주입하고 `transaction: false`를
-유지한다(기존 adapter 기본값과 같다). 인증 라이브러리의 driver별 쓰기 결과 처리는
-별도 통합 검증 대상이며, 새 어댑터는 가입·세션·허용 목록 테스트도 통과해야 한다.
+Better Auth에도 같은 Drizzle 객체와 스키마를 명시적으로 주입한다. 인증 라이브러리의
+`transaction: false`는 기존 adapter 기본값을 유지한 설정이며 앱의 `db.transaction`
+사용을 제한하지 않는다. 가입·세션·허용 목록은 합성 통합 테스트로 검증한다.
 
-D1의 공통 메서드 타입이 계약에 할당 가능한지만 컴파일로 확인한다. 실행 어댑터,
-바인딩 취득, 마이그레이션과 트랜잭션 보장은 구현하지 않았다. 현재 계약은 비동기
-SQLite 기능의 교체 경계이며 모든 SQL DB를 무수정으로 교체하는 보장은 아니다.
+D1 전환 시에는 드라이버·바인딩·마이그레이션뿐 아니라 사용 중인 트랜잭션과 실행
+결과 차이도 확인해야 한다. 아직 D1 실행 호환성은 검증하지 않았으며,
 전환 검증 항목은 [로드맵](./roadmap.md#보류)에 둔다.
 
 ## AI 공급자 확장
