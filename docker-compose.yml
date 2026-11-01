@@ -22,8 +22,6 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:13000}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      AI_DAILY_USER_LIMIT: ${AI_DAILY_USER_LIMIT:-5}
-      AI_DAILY_GLOBAL_LIMIT: ${AI_DAILY_GLOBAL_LIMIT:-10}
     healthcheck:
       test:
         [

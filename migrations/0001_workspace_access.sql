@@ -7,5 +7,4 @@ ALTER TABLE recipients ADD COLUMN workspace_id TEXT REFERENCES workspaces(id);
 ALTER TABLE recipients ADD COLUMN created_by_user_id TEXT REFERENCES user(id);
 ALTER TABLE records ADD COLUMN created_by_user_id TEXT REFERENCES user(id);
 CREATE TABLE recipient_shares (recipient_id TEXT NOT NULL REFERENCES recipients(id), user_id TEXT NOT NULL REFERENCES user(id), permission TEXT NOT NULL, PRIMARY KEY (recipient_id,user_id), CONSTRAINT recipient_shares_permission CHECK (permission IN ('read','edit')));
-CREATE TABLE ai_usage (bucket TEXT NOT NULL, day TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (bucket,day));
 COMMIT;

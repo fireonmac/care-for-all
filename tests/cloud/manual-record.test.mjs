@@ -32,11 +32,11 @@ test('manual entry opens editable fields and saves without any AI generation', (
   assert.deepEqual(saved, { ...props, cognition: '직접 쓴 합성 관찰', behavior: '' });
 });
 
-test('429 generation response preserves useful quota guidance and clears partial draft', async t => {
-  t.mock.method(globalThis, 'fetch', async () => Response.json({ error: '오늘의 AI 생성 한도에 도달했습니다.' }, { status: 429 }));
+test('generation failure preserves the service error guidance and clears partial draft', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ error: 'AI 서비스 연결에 실패했습니다.' }, { status: 502 }));
   const state = [];
   const hook = sourceLoader({ react: { useState: initial => { const index = state.push(initial) - 1; return [initial, value => { state[index] = value; }]; } },
     '@tanstack/react-query': {}, '../../actions': {} })('src/app/(main)/recipients/[id]/_components/KeywordInputForm/useKeywordQueries.ts').useGenerateDailyDraft('synthetic');
-  await assert.rejects(hook.generateDraft('합성 입력'), /오늘의 AI 생성 한도/);
+  await assert.rejects(hook.generateDraft('합성 입력'), /AI 서비스 연결/);
   assert.deepEqual(state, [false, null]);
 });

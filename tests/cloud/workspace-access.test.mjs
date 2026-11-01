@@ -115,35 +115,21 @@ test('revocation before background execution prevents AI input; revocation durin
   }
 });
 
-test('new users can generate within limits; user/global quota is atomic, bounded and cannot be bypassed by alternate endpoints', async t => {
-  const f = await workspaceFixture(t); f.limits.AI_DAILY_USER_LIMIT = 2; f.limits.AI_DAILY_GLOBAL_LIMIT = 3;
-  const id = await f.createRecipient('Synthetic AI'); const route = f.load('src/app/api/generate-daily/route.ts');
-  assert.equal((await route.POST(request(id))).status, 200);
-  await f.actions.generateDraft('합성 관찰', id);
-  assert.equal((await route.POST(request(id))).status, 429);
-  assert.equal((await route.POST(request(id, '가'.repeat(4001)))).status, 400);
-  await assert.rejects(f.actions.generateDraft('합성 관찰', id), /한도/);
-  f.login('bob'); const bob = await f.createRecipient('Synthetic Bob AI');
-  await f.actions.generateDraft('합성 관찰', bob);
-  f.login('charlie'); const charlie = await f.createRecipient('Synthetic Charlie AI');
-  await assert.rejects(f.actions.generateDraft('합성 관찰', charlie), /한도/);
-  const usage = await f.db.select().from(f.schema.aiUsage);
-  assert.equal(usage.find(r => r.bucket === 'global').count, 3);
-  assert.equal(f.aiCalls(), 3);
-  assert.equal(usage.some(r => r.bucket === 'user:charlie'), false);
-});
-
-
-test('20 concurrent reservations respect the user limit without SQLite lock errors or partial counters', async t => {
+test('authorized users can repeatedly generate beyond the former per-user and app-wide counts', async t => {
   const f = await workspaceFixture(t);
-  f.limits.AI_DAILY_USER_LIMIT = 3; f.limits.AI_DAILY_GLOBAL_LIMIT = 5;
-  const { reserveAiUsage, AiLimitError } = f.load('src/lib/ai/usage.ts');
-  const results = await Promise.allSettled(Array.from({ length: 20 }, () => reserveAiUsage('alice')));
-  assert.equal(results.filter(r => r.status === 'fulfilled').length, 3);
-  for (const result of results.filter(r => r.status === 'rejected')) assert.ok(result.reason instanceof AiLimitError);
-  const rows = await f.db.select().from(f.schema.aiUsage);
-  assert.equal(rows.find(r => r.bucket === 'global').count, 3);
-  assert.equal(rows.find(r => r.bucket === 'user:alice').count, 3);
+  const alice = await f.createRecipient('Synthetic Alice AI');
+  const route = f.load('src/app/api/generate-daily/route.ts');
+  for (let i = 0; i < 6; i++) assert.equal((await route.POST(request(alice))).status, 200);
+  f.login('bob'); const bob = await f.createRecipient('Synthetic Bob AI');
+  for (let i = 0; i < 6; i++) await f.actions.generateDraft('합성 관찰', bob);
+  await f.actions.saveDailyRecord(bob, '합성 일일 관찰', '', '2026-10-26');
+  await f.actions.generateWeeklyDraft(bob);
+  await f.actions.generateWeeklyReportBackground(bob, '2026-10-26');
+  await f.callbacks[0]();
+  assert.equal(f.aiCalls(), 14);
+  // Input validation still rejects oversized input without invoking the provider.
+  assert.equal((await route.POST(request(bob, '가'.repeat(4001)))).status, 400);
+  assert.equal(f.aiCalls(), 14);
 });
 
 test('returning to a default workspace does not restore revoked membership or allow new records', async t => {
@@ -155,34 +141,36 @@ test('returning to a default workspace does not restore revoked membership or al
 });
 
 
-test('separate application instances share the same database quota', async t => {
-  const f = await workspaceFixture(t); f.limits.AI_DAILY_USER_LIMIT = 10; f.limits.AI_DAILY_GLOBAL_LIMIT = 4;
-  const first = f.load('src/lib/ai/usage.ts');
+test('cross-instance lock failures do not leave duplicate workspaces or memberships', async t => {
+  const f = await workspaceFixture(t);
   const secondClient = createClient({ url: f.url }); t.after(() => secondClient.close());
   const secondDb = wrapTestClient(secondClient).db;
-  const second = sourceLoader({ '@/db': { db: secondDb }, '@/env': { getAiUsageEnv: () => f.limits } })('src/lib/ai/usage.ts');
-  const results = await Promise.allSettled(Array.from({ length: 12 }, (_, i) => (i % 2 ? first : second).reserveAiUsage(i % 2 ? 'alice' : 'bob')));
-  assert.equal(results.filter(r => r.status === 'fulfilled').length, 4);
-  for (const result of results.filter(r => r.status === 'rejected')) assert.match(result.reason.message, /한도/);
-  const rows = await f.db.select().from(f.schema.aiUsage);
-  assert.equal(rows.find(r => r.bucket === 'global').count, 4);
-  assert.equal(rows.filter(r => r.bucket.startsWith('user:')).reduce((sum, r) => sum + r.count, 0), 4);
+  const second = sourceLoader({ '@/db': { db: secondDb }, '@/lib/auth': {} })('src/lib/workspace-access.ts');
+  const results = await Promise.allSettled(Array.from({ length: 12 }, (_, i) => (i % 2 ? f.access : second).ensureDefaultWorkspace('alice')));
+  const completed = results.filter(result => result.status === 'fulfilled');
+  const failed = results.filter(result => result.status === 'rejected');
+  assert.ok(completed.length > 0);
+  assert.equal(new Set(completed.map(result => result.value.id)).size, 1);
+  // Existing local libSQL limitation: a failed BEGIN can leave the reused connection busy.
+  // Check data integrity without claiming every cross-instance request succeeds.
+  for (const result of failed) assert.match(result.reason.code ?? result.reason.cause?.code ?? '', /^SQLITE_BUSY/);
+  t.diagnostic(`${completed.length} completed, ${failed.length} SQLite busy failures; one workspace and membership preserved`);
+  assert.equal((await f.db.select().from(f.schema.workspaces)).length, 1);
+  assert.equal((await f.db.select().from(f.schema.workspaceMembers)).length, 1);
 });
 
-
-test('AI reservation can overlap record edits, deletion and weekly background completion', async t => {
-  const f = await workspaceFixture(t); f.limits.AI_DAILY_USER_LIMIT = 10; f.limits.AI_DAILY_GLOBAL_LIMIT = 10;
+test('record edits, deletion, creation and weekly background completion can overlap', async t => {
+  const f = await workspaceFixture(t);
   const id = await f.createRecipient('Synthetic Mixed');
   await f.actions.saveDailyRecord(id, '합성 원문', '', '2026-10-26');
   await f.actions.saveDailyRecord(id, '삭제할 합성 기록', '', '2026-10-27');
   const rows = await f.db.select().from(f.schema.records).where(eq(f.schema.records.recipientId, id));
   const report = await f.actions.generateWeeklyReportBackground(id, '2026-10-26');
-  const { reserveAiUsage } = f.load('src/lib/ai/usage.ts');
   await Promise.all([
-    reserveAiUsage('alice'), f.actions.updateDailyRecord(rows[0].id, '수정한 합성 원문', ''),
+    f.actions.saveDailyRecord(id, '동시 생성한 합성 기록', '', '2026-10-28'), f.actions.updateDailyRecord(rows[0].id, '수정한 합성 원문', ''),
     f.actions.deleteRecord(rows[1].id), f.callbacks[0](),
   ]);
   assert.equal((await f.actions.getWeeklyRecord(report.recordId)).status, 'COMPLETED');
-  await Promise.all([reserveAiUsage('alice'), f.actions.updateWeeklyRecord(report.recordId, '수정한 주간 기록')]);
+  await Promise.all([f.actions.saveDailyRecord(id, '추가 합성 기록', '', '2026-10-29'), f.actions.updateWeeklyRecord(report.recordId, '수정한 주간 기록')]);
   assert.equal((await f.actions.getWeeklyRecord(report.recordId)).combinedContent, '수정한 주간 기록');
 });

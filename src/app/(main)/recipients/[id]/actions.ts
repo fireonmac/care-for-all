@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache';
 import { getKSTDateStr, addCalendarDays } from '@/lib/dateUtils';
 import { dailyRecordDraftSchema } from '@/lib/daily-record';
 import { AccessDeniedError, requireActor, requireRecipient, recipientAccess, recordAccess, recordFields } from '@/lib/workspace-access';
-import { reserveAiUsage, validateAiInput, DAILY_INPUT_LIMIT, WEEKLY_INPUT_LIMIT } from '@/lib/ai/usage';
+import { validateAiInput, DAILY_INPUT_LIMIT, WEEKLY_INPUT_LIMIT } from '@/lib/ai/input';
 
 function validDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value) {
@@ -37,7 +37,6 @@ export async function generateDraft(keywords: string, recipientId: string) {
   const actor = await requireActor();
   await requireRecipient(actor.id, recipientId, 'edit');
   validateAiInput(keywords, DAILY_INPUT_LIMIT);
-  await reserveAiUsage(actor.id);
   return generateDailyRecord(keywords);
 }
 
@@ -58,7 +57,6 @@ export async function generateWeeklyDraft(recipientId: string) {
   const input = daily.map(r => ({ date: r.date, cognition: r.cognitionContent, behavior: r.behaviorContent }));
   if (!input.length) throw new Error('일일 기록이 필요합니다.');
   validateAiInput(JSON.stringify(input), WEEKLY_INPUT_LIMIT);
-  await reserveAiUsage(actor.id);
   return generateWeeklyRecord(input);
 }
 
@@ -143,7 +141,6 @@ export async function generateWeeklyReportBackground(recipientId: string, target
   const existing = await db.select().from(records).where(and(eq(records.recipientId, recipientId),
     eq(records.type, 'weekly'), eq(records.date, targetDate), recordAccess(actor.id))).get();
   if (existing && existing.status !== 'FAILED') return { recordId: existing.id, status: existing.status };
-  await reserveAiUsage(actor.id);
   const recordId = randomUUID();
   await insertRecord(actor.id, { id: recordId, recipientId, date: targetDate, type: 'weekly', status: 'PROCESSING', createdAt: new Date() });
   if (existing) await writeTransaction(async tx => tx.delete(records).where(and(eq(records.id, existing.id), eq(records.status, 'FAILED'), recordAccess(actor.id, 'edit'))));

@@ -63,7 +63,7 @@ test('daily API rejects anonymous callers first, then reports AI configuration a
   let session = null;
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async () => { calls++; throw new Error('network must not be used'); });
-  const route = sourceLoader({ '@/lib/auth': { getSession: async () => session }, '@/lib/workspace-access': { requireRecipient: async () => ({}), AccessDeniedError: class extends Error {} }, '@/lib/ai/usage': { reserveAiUsage: async () => {}, validateAiInput: () => {}, AiLimitError: class extends Error {}, DAILY_INPUT_LIMIT: 4000 } })('src/app/api/generate-daily/route.ts');
+  const route = sourceLoader({ '@/lib/auth': { getSession: async () => session }, '@/lib/workspace-access': { requireRecipient: async () => ({}), AccessDeniedError: class extends Error {} }, '@/lib/ai/input': { validateAiInput: () => {}, DAILY_INPUT_LIMIT: 4000 } })('src/app/api/generate-daily/route.ts');
   const request = () => new Request('https://synthetic-preview.vercel.app/api/generate-daily', { method: 'POST', body: JSON.stringify({ keywords: '합성 메모', recipientId: 'synthetic' }) });
   assert.equal((await route.POST(request())).status, 401);
   session = { user: { id: 'synthetic', emailVerified: true } };
@@ -90,5 +90,4 @@ test('lazy environment groups validate independently without auth, DB or AI cros
   assert.throws(() => env.getAiEnv({ AI_PROVIDER: 'openai-compatible', AI_MODEL: 'model', AI_BASE_URL: 'file:///invalid' }), /AI_BASE_URL/);
   assert.throws(() => env.getAuthEnv({}), /인증 환경변수/);
   assert.equal(env.getAuthEnv({ VERCEL: '1', BETTER_AUTH_URL: 'https://synthetic.example', BETTER_AUTH_SECRET: 'synthetic', GOOGLE_CLIENT_ID: 'synthetic', GOOGLE_CLIENT_SECRET: 'synthetic' }).BETTER_AUTH_URL, 'https://synthetic.example');
-  assert.equal(env.getAiUsageEnv({}).AI_DAILY_USER_LIMIT, 5);
 });

@@ -3,7 +3,7 @@ import { streamDailyRecord } from '@/lib/ai';
 import { getSession } from '@/lib/auth';
 import { AiConfigurationError } from '@/lib/ai/config';
 import { AccessDeniedError, requireRecipient } from '@/lib/workspace-access';
-import { AiLimitError, reserveAiUsage, validateAiInput, DAILY_INPUT_LIMIT } from '@/lib/ai/usage';
+import { validateAiInput, DAILY_INPUT_LIMIT } from '@/lib/ai/input';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -22,12 +22,10 @@ export async function POST(req: NextRequest) {
   catch { return Response.json({ error: `관찰 내용은 1자 이상 ${DAILY_INPUT_LIMIT}자 이내로 입력해주세요.` }, { status: 400 }); }
   try {
     await requireRecipient(session.user.id, body.recipientId, 'edit');
-    await reserveAiUsage(session.user.id);
     const contentStream = await streamDailyRecord(body.keywords);
     return new Response(contentStream, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store, no-transform' } });
   } catch (error) {
     if (error instanceof AccessDeniedError) return Response.json({ error: error.message }, { status: 404 });
-    if (error instanceof AiLimitError) return Response.json({ error: error.message }, { status: 429 });
     if (error instanceof AiConfigurationError) return Response.json({ error: 'AI 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.' }, { status: 503 });
     return Response.json({ error: 'AI 서비스 연결에 실패했습니다.' }, { status: 502 });
   }

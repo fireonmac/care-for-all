@@ -56,15 +56,6 @@ export function getAuthEnv(environment: NodeJS.ProcessEnv = process.env) {
   return result.data;
 }
 
-const aiUsageEnvSchema = z.object({
-  AI_DAILY_USER_LIMIT: z.coerce.number().int().min(0).max(1000).default(5),
-  AI_DAILY_GLOBAL_LIMIT: z.coerce.number().int().min(0).max(10000).default(10),
-});
-
-export function getAiUsageEnv(environment: NodeJS.ProcessEnv = process.env) {
-  return aiUsageEnvSchema.parse(environment);
-}
-
 export class AiConfigurationError extends Error {
   constructor(message: string) {
     super(message);

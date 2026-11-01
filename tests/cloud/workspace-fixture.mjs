@@ -24,14 +24,12 @@ export async function workspaceFixture(t, options = {}) {
   let current = users.alice;
   let aiCalls = 0;
   const callbacks = [];
-  const limits = { AI_DAILY_USER_LIMIT: 5, AI_DAILY_GLOBAL_LIMIT: 10 };
   const load = sourceLoader({
     '@/db': { db },
     '@/lib/auth': {
       requireSession: async () => { if (!current) throw new Error('login-required'); return { user: current }; },
       getSession: async () => current ? { user: current } : null,
     },
-    '@/env': { getAiUsageEnv: () => limits },
     'next/navigation': { notFound: () => { throw new Error('not-found'); } },
     'next/cache': { revalidatePath() {} },
     'next/server': { after: callback => callbacks.push(callback) },
@@ -51,6 +49,6 @@ export async function workspaceFixture(t, options = {}) {
     const { items } = await listing(name);
     return items[0].id;
   }
-  return { url, client, db, schema, load, actions, share, access, users, limits, callbacks, listing, createRecipient,
+  return { url, client, db, schema, load, actions, share, access, users, callbacks, listing, createRecipient,
     login: id => { current = id ? users[id] : null; }, aiCalls: () => aiCalls };
 }

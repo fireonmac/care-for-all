@@ -149,10 +149,3 @@ export const recipientShares = sqliteTable('recipient_shares', {
 }, (table) => [primaryKey({ columns: [table.recipientId, table.userId] }),
   check('recipient_shares_permission', sql`${table.permission} in ('read', 'edit')`),
 ]);
-
-// 부수 효과를 시작하기 전에 사용자별/앱 전체의 일일 요청 수를 원자적으로 예약한다.
-export const aiUsage = sqliteTable('ai_usage', {
-  bucket: text('bucket').notNull(),
-  day: text('day').notNull(),
-  count: integer('count').notNull(),
-}, (table) => [primaryKey({ columns: [table.bucket, table.day] })]);
