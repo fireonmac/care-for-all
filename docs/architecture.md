@@ -16,9 +16,9 @@ flowchart LR
 ```
 
 - Next.js 애플리케이션이 화면, Server Action, Route Handler를 함께 제공한다.
-- Drizzle ORM이 단일 SQLite 파일을 읽고 쓴다.
+- Drizzle ORM의 libSQL client가 로컬 SQLite 파일 또는 원격 Turso libSQL DB를 읽고 쓴다.
 - AI 생성은 공급자 중립 인터페이스를 통해 선택된 모델 API를 호출한다.
-- 운영에서는 Next.js를 standalone Docker 이미지의 단일 컨테이너로 실행한다.
+- 기존 standalone Docker 운영을 유지하며 원격 DB를 사용하는 Vercel 배포 설정도 지원한다. 실제 클라우드 배포와 외부 API 검증은 별도 단계다.
 
 정확한 패키지와 버전은 [`package.json`](../package.json), 데이터 필드는
 [`src/db/schema.ts`](../src/db/schema.ts)가 기준이다.
@@ -49,7 +49,7 @@ flowchart LR
 | 경로 | 책임 |
 | --- | --- |
 | `src/proxy.ts` | Next.js 16 컨벤션의 미들웨어 (인증 라우팅 보호) |
-| `src/env.ts` | Zod 기반 전역 환경변수 파싱 및 유효성 검증 |
+| `src/env.ts` | 인증·AI·DB별 지연 Zod 검증. 앱과 Drizzle Kit가 동일 DB 검증을 공유 |
 | `src/app` | 라우트, 페이지 조합, Route Handler, 해당 화면 전용 Action/UI |
 | `src/components` | 여러 라우트에서 재사용하는 UI |
 | `src/features` | 도메인별 쿼리, 타입, 클라이언트 쿼리 키 |
@@ -96,10 +96,10 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 
 ## 런타임과 저장소
 
-- 로컬 DB 위치는 `.env`의 `DATABASE_URL`이 정한다.
+- DB 위치는 `DATABASE_URL`이 정한다. 원격 DB에는 `TURSO_AUTH_TOKEN`이 필요하며 Vercel에서는 로컬 파일 주소를 거부한다.
 - 운영 DB는 호스트 `app_data`를 컨테이너 `/app/data`에 마운트한다.
 - 기본 운영 설정은 호스트의 Ollama를 `host.docker.internal`로 호출한다.
-- `AI_PROVIDER`와 관련 환경변수를 바꾸면 OpenAI 호환 API를 사용할 수 있다.
+- `AI_PROVIDER`와 관련 환경변수를 바꾸면 OpenAI 호환 API를 사용할 수 있다. 인증·AI·DB 환경은 각 소비자가 독립적으로 검증한다. AI 미설정이 로그인/DB를 막지 않고, Drizzle Kit는 인증/AI 설정을 요구하지 않는다.
 - Next.js standalone 출력 설정은 `next.config.ts`가 기준이다.
 - Compose 포트, 볼륨, 환경변수는 `docker-compose.yml`이 기준이다.
 

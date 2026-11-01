@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { streamDailyRecord } from '@/lib/ai';
 import { getSession } from '@/lib/auth';
+import { AiConfigurationError } from '@/lib/ai/config';
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -24,6 +25,9 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof AiConfigurationError) {
+      return Response.json({ error: 'AI 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.' }, { status: 503 });
+    }
     console.error('Daily record generation failed:', error);
     return Response.json({ error: 'AI 서비스 연결에 실패했습니다.' }, { status: 502 });
   }

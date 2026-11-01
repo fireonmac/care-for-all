@@ -1,43 +1,20 @@
-export type AiProviderName = 'ollama' | 'openai-compatible';
+import { getAiEnv } from '@/env';
+export { AiConfigurationError } from '@/env';
 
-export type AiConfig = {
-  provider: AiProviderName;
-  model: string;
-  baseUrl: string;
-  apiKey?: string;
+export type AiProviderName = ReturnType<typeof getAiEnv>['AI_PROVIDER'];
+export type AiConfig = ReturnType<typeof getAiConfig>;
+
+const PROVIDER_BASE_URLS: Record<AiProviderName, string> = {
+  ollama: 'http://127.0.0.1:11434',
+  'openai-compatible': 'https://api.openai.com/v1',
 };
 
-const PROVIDER_DEFAULTS: Record<AiProviderName, { baseUrl: string; model: string }> = {
-  ollama: {
-    baseUrl: 'http://127.0.0.1:11434',
-    model: 'gemma4:26b',
-  },
-  'openai-compatible': {
-    baseUrl: 'https://api.openai.com/v1',
-    model: 'gpt-4.1-mini',
-  },
-};
-
-function getProviderName(): AiProviderName {
-  const value = process.env.AI_PROVIDER ?? 'ollama';
-
-  if (value === 'ollama' || value === 'openai-compatible') {
-    return value;
-  }
-
-  throw new Error(
-    `지원하지 않는 AI_PROVIDER입니다: ${value}. ollama 또는 openai-compatible을 사용하세요.`,
-  );
-}
-
-export function getAiConfig(): AiConfig {
-  const provider = getProviderName();
-  const defaults = PROVIDER_DEFAULTS[provider];
-
+export function getAiConfig() {
+  const env = getAiEnv();
   return {
-    provider,
-    model: process.env.AI_MODEL ?? defaults.model,
-    baseUrl: process.env.AI_BASE_URL ?? defaults.baseUrl,
-    apiKey: process.env.AI_API_KEY,
+    provider: env.AI_PROVIDER,
+    model: env.AI_MODEL,
+    baseUrl: env.AI_BASE_URL ?? PROVIDER_BASE_URLS[env.AI_PROVIDER],
+    apiKey: env.AI_API_KEY,
   };
 }
