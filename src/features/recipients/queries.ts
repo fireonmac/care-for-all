@@ -1,4 +1,5 @@
 import { db } from '@/db';
+import { requireSession } from '@/lib/auth';
 import { recipients, records } from '@/db/schema';
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 import { desc, eq, and, gte, lte, like, max } from 'drizzle-orm';
@@ -14,6 +15,7 @@ export async function getRecipientsPage(
   cursor: string | null = null,
   limit = RECIPIENTS_PAGE_SIZE,
 ): Promise<RecipientsPage> {
+  await requireSession();
   const todayStr = getKSTDateStr(new Date());
   const { startOfWeek, endOfWeek } = getWeekData(todayStr);
 

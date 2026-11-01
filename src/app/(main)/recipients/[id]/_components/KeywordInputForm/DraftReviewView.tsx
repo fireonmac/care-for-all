@@ -3,12 +3,13 @@
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { dailyRecordDraftSchema, type DailyRecordDraft } from '@/lib/daily-record';
 
 interface DraftReviewViewProps {
-  draft: { cognition: string; behavior: string };
+  draft: DailyRecordDraft;
   loading: boolean;
   saving: boolean;
-  onDraftChange: (draft: { cognition: string; behavior: string }) => void;
+  onDraftChange: (draft: DailyRecordDraft) => void;
   onDiscard: () => void;
   onSave: () => void;
 }
@@ -76,7 +77,7 @@ export function DraftReviewView({
         </Button>
         <Button
           onClick={onSave}
-          disabled={saving || loading}
+          disabled={saving || loading || !dailyRecordDraftSchema.safeParse(draft).success}
         >
           {saving ? '저장 중...' : '최종 저장'}
         </Button>

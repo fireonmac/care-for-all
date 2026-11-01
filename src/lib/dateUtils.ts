@@ -1,51 +1,50 @@
-import {
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  format,
-  getWeekOfMonth,
-  getMonth,
-  startOfDay,
-} from 'date-fns';
-import { ko } from 'date-fns/locale';
+// 기관별 시간대 설정을 도입할 때 이 기준을 기관 설정으로 대체한다.
+export const RECORD_TIME_ZONE = 'Asia/Seoul';
 
-export function getWeekData(targetDateStr: string) {
-  const targetDate = startOfDay(new Date(targetDateStr));
-
-  // 한국식 달력: 한 주의 시작을 월요일(1)로 설정
-  const start = startOfWeek(targetDate, { weekStartsOn: 1 });
-  const end = endOfWeek(targetDate, { weekStartsOn: 1 });
-
-  // 해당 주차가 어느 달에 속하는지는 보통 목요일(과반수)을 기준으로 정합니다.
-  const thursday = new Date(start);
-  thursday.setDate(thursday.getDate() + 3);
-
-  const currentMonth = getMonth(thursday) + 1;
-  const currentWeekOfMonth = getWeekOfMonth(thursday, { weekStartsOn: 1 });
-
-  const today = startOfDay(new Date());
-  const days = eachDayOfInterval({ start, end });
-  const weekDates = days.map((d) => {
-    const dateStr = getKSTDateStr(d);
-    const isFuture = d > today;
-    
-    return {
-      dateStr,
-      dayName: format(d, 'E', { locale: ko }),
-      isFuture,
-    };
-  });
-
-  return {
-    startOfWeek: getKSTDateStr(start),
-    endOfWeek: getKSTDateStr(end),
-    currentMonth,
-    currentWeekOfMonth,
-    weekDates,
-  };
-}
+const kstDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: RECORD_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+});
+const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
 
 export function getKSTDateStr(date: Date = new Date()) {
-  return format(date, 'yyyy-MM-dd');
+  const parts = kstDateFormatter.formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)!.value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
 }
 
+// 날짜 문자열은 KST 달력의 날짜다. UTC 필드로 계산해 호스트 시간대/DST에 의존하지 않는다.
+function calendarDate(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    throw new RangeError('올바른 YYYY-MM-DD 날짜가 필요합니다.');
+  }
+  return date;
+}
+
+export function addCalendarDays(value: string, days: number) {
+  const date = calendarDate(value);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export function getWeekData(targetDateStr: string) {
+  const targetDate = calendarDate(targetDateStr);
+  const mondayOffset = (targetDate.getUTCDay() + 6) % 7;
+  const start = addCalendarDays(targetDateStr, -mondayOffset);
+  const end = addCalendarDays(start, 6);
+  const thursday = calendarDate(addCalendarDays(start, 3));
+  const monthStart = calendarDate(`${thursday.toISOString().slice(0, 7)}-01`);
+  const monthOffset = (monthStart.getUTCDay() + 6) % 7;
+  const today = getKSTDateStr();
+
+  return {
+    startOfWeek: start,
+    endOfWeek: end,
+    currentMonth: thursday.getUTCMonth() + 1,
+    currentWeekOfMonth: Math.ceil((thursday.getUTCDate() + monthOffset) / 7),
+    weekDates: DAY_NAMES.map((dayName, index) => {
+      const dateStr = addCalendarDays(start, index);
+      return { dateStr, dayName, isFuture: dateStr > today };
+    }),
+  };
+}

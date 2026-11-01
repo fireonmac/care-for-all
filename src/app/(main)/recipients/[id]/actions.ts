@@ -8,11 +8,10 @@ import { eq, and, gte, lt } from 'drizzle-orm';
 import { generateDailyRecord, generateWeeklyRecord } from '@/lib/ai';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
-import { getKSTDateStr } from '@/lib/dateUtils';
+import { getKSTDateStr, addCalendarDays } from '@/lib/dateUtils';
 import { getRecipientRecords } from './queries';
 import { getSession } from '@/lib/auth';
-
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+import { dailyRecordDraftSchema } from '@/lib/daily-record';
 
 export async function generateDraft(keywords: string) {
   const session = await getSession();
@@ -23,6 +22,7 @@ export async function generateDraft(keywords: string) {
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
   const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
+  const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
   const dateStr = targetDate || getKSTDateStr(new Date());
   
   await db.insert(records).values({
@@ -30,8 +30,8 @@ export async function saveDailyRecord(recipientId: string, cognition: string, be
     recipientId,
     date: dateStr,
     type: 'daily',
-    cognitionContent: cognition,
-    behaviorContent: behavior,
+    cognitionContent: draft.cognition,
+    behaviorContent: draft.behavior,
     createdAt: new Date(),
   });
   
@@ -75,9 +75,10 @@ export async function saveWeeklyReport(recipientId: string, content: string) {
 export async function updateDailyRecord(recordId: string, cognition: string, behavior: string) {
   const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
+  const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
   await db.update(records).set({
-    cognitionContent: cognition,
-    behaviorContent: behavior
+    cognitionContent: draft.cognition,
+    behaviorContent: draft.behavior
   }).where(eq(records.id, recordId));
   
   const record = await db.select().from(records).where(eq(records.id, recordId));
@@ -145,11 +146,8 @@ export async function getInitialWeeklyReportStatus(recipientId: string, targetDa
 // 비동기 백그라운드 작업 (내부용)
 async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string) {
   try {
-    const startDate = new Date(targetDate);
-    const endDate = new Date(startDate.getTime() + ONE_WEEK_MS);
-    
-    const startDateStr = getKSTDateStr(startDate);
-    const endDateStr = getKSTDateStr(endDate);
+    const startDateStr = targetDate;
+    const endDateStr = addCalendarDays(targetDate, 7);
 
     const weeklyData = await db.select()
       .from(records)
@@ -231,9 +229,7 @@ export async function generateWeeklyReportBackground(recipientId: string, target
   }).run();
 
   // Safe background execution after response
-  after(() => {
-    processWeeklyReport(recordId, recipientId, targetDate);
-  });
+  after(() => processWeeklyReport(recordId, recipientId, targetDate));
 
   return { recordId, status: 'PROCESSING' as const };
 }

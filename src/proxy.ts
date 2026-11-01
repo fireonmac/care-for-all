@@ -1,21 +1,12 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
-  // Check for the existence of the better-auth session cookie.
-  // Note: For secure production use, better-auth session cookie names might vary by secure/__Host prefix.
-  // This is a lightweight check to redirect away from the login page.
-  const hasSession = 
-    request.cookies.has("better-auth.session_token") || 
-    request.cookies.has("__Secure-better-auth.session_token");
-
-  if (hasSession && request.nextUrl.pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
+  // 빠른 화면 이동만 담당한다. 실제 세션/권한 검사는 모든 데이터 조회에서 수행한다.
+  const hasSession = request.cookies.has('better-auth.session_token') ||
+    request.cookies.has('__Secure-better-auth.session_token');
+  if (!hasSession) return NextResponse.redirect(new URL('/login', request.url));
   return NextResponse.next();
 }
 
-export const config = {
-  matcher: ["/login"],
-};
+export const config = { matcher: ['/', '/recipients/:path*'] };

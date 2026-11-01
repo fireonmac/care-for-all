@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { saveDailyRecord } from '../../actions';
+import { parseDailyRecord, type DailyRecordDraft } from '@/lib/daily-record';
 
 // 1. API: Daily Record 저장 Mutation (React Query)
 export const useSaveDailyRecordMutation = () => {
@@ -31,7 +32,7 @@ export const useSaveDailyRecordMutation = () => {
 // 2. API: AI 스트리밍 생성 로직 (React Query 대신 별도 훅)
 export const useGenerateDailyDraft = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [draft, setDraft] = useState<{ cognition: string; behavior: string } | null>(null);
+  const [draft, setDraft] = useState<DailyRecordDraft | null>(null);
 
   const generateDraft = async (keywords: string) => {
     setIsGenerating(true);
@@ -71,6 +72,9 @@ export const useGenerateDailyDraft = () => {
 
         setDraft({ cognition: currentCognition, behavior: currentBehavior });
       }
+      fullText += decoder.decode();
+      setDraft(parseDailyRecord(fullText));
+      reader.releaseLock();
     } catch (e) {
       setDraft(null);
       throw e; // 컴포넌트에서 에러를 캐치해서 Toast 띄울 수 있도록 던짐

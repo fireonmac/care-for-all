@@ -33,12 +33,17 @@ export const useWeeklyRecordPollingQuery = (recordId: string | null | undefined)
 };
 
 export const useGenerateWeeklyReportMutation = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ recipientId, targetDate }: { recipientId: string, targetDate: string }) => {
       const data = await generateWeeklyReportBackground(recipientId, targetDate);
       if (!data.recordId) throw new Error('No recordId returned');
       return data as { recordId: string };
-    }
+    },
+    onSuccess: (_, variables) => queryClient.invalidateQueries({
+      queryKey: ['weeklyReport', 'initial', variables.recipientId, variables.targetDate],
+      exact: true,
+    }),
   });
 };
 

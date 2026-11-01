@@ -1,13 +1,16 @@
-name: CI and Deploy
+name: CI
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: care-for-all-production
+  group: care-for-all-ci-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -37,37 +40,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Synthetic regression tests
+        run: pnpm test
+
       - name: Type check
         run: pnpm exec tsc --noEmit
 
       - name: Production build
         run: pnpm run build
-
-  deploy:
-    name: Deploy to Mac Studio
-    needs: verify
-    runs-on:
-      - self-hosted
-      - macOS
-      - ARM64
-      - care-for-all-prod
-    timeout-minutes: 30
-    environment: production
-
-    steps:
-      - name: Check out verified source
-        uses: actions/checkout@v4
-
-      - name: Validate deployment path
-        env:
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
-        run: |
-          if [ -z "$DEPLOY_PATH" ]; then
-            echo "Repository variable DEPLOY_PATH is required." >&2
-            exit 1
-          fi
-
-      - name: Deploy
-        env:
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
-        run: ./scripts/deploy.sh "$GITHUB_WORKSPACE" "$DEPLOY_PATH" "$GITHUB_SHA"
