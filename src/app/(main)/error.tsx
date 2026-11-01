@@ -26,10 +26,10 @@ export default function ErrorPage({
           불러오기 실패
         </p>
         <h1 className="mb-4 text-3xl font-medium tracking-tight text-foreground">
-          어르신 목록을 불러오지 못했습니다.
+          화면을 표시하지 못했습니다.
         </h1>
         <p className="mb-8 text-muted-foreground">
-          잠시 후 다시 시도해주세요.
+          다시 시도하거나 이전 화면으로 돌아가주세요.
         </p>
         <Button
           type="button"

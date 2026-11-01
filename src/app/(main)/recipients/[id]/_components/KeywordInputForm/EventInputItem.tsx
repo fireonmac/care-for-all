@@ -2,7 +2,7 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { EventInput } from './KeywordInputForm';
+import type { EventInput } from './KeywordInputForm';
 
 const PREDEFINED_EMOTIONS = [
   { id: 'happy', icon: '🥰', label: '편안/기분좋음', text: '편안하고 기분 좋은 상태이심' },
@@ -43,7 +43,7 @@ export function EventInputItem({
 
   return (
     <AccordionItem 
-      value={event.id} 
+      value={event.eventId}
       className="group relative rounded-3xl border-2 border-border bg-muted flex flex-col mb-4 overflow-hidden transition-all duration-300 data-[open]:border-primary data-[open]:shadow-xl data-[open]:bg-background data-[open]:scale-[1.01]"
     >
       <AccordionTrigger className="w-full text-left p-6 md:p-8 flex flex-col transition-all focus:outline-none hover:bg-muted/50 group-data-[open]:hover:bg-transparent [&>svg]:!hidden hover:no-underline items-stretch">
@@ -93,7 +93,7 @@ export function EventInputItem({
             일어난 사건 <span className="text-sm text-muted-foreground font-normal ml-2">(필수)</span>
           </label>
           <Input
-            id={`event-input-${event.id}`}
+            id={`event-input-${event.eventId}`}
             type="text"
             value={event.event}
             onChange={(ev) => onUpdate({ event: ev.target.value })}
