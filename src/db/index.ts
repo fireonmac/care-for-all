@@ -1,7 +1,4 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
 import { getDatabaseConfig } from '../env';
-import * as schema from './schema';
+import { createDatabase } from './client';
 
-const client = createClient(getDatabaseConfig());
-export const db = drizzle(client, { schema });
+export const db = createDatabase(getDatabaseConfig());

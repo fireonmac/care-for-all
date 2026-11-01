@@ -28,6 +28,27 @@ pnpm dev
 ollama list
 ```
 
+## DB 연결 설정
+
+배포 업체와 관계없이 같은 Node 애플리케이션과 Drizzle/libSQL 드라이버를 사용한다.
+환경변수는 `src/env.ts`에서만 읽고 검증하며, DB·인증·AI는 서로의 설정을 요구하지 않는다.
+
+| 설정 | 의미와 기본값 |
+| --- | --- |
+| `DATABASE_URL` | 로컬 `file:`/`:memory:` 또는 원격 libSQL 연결. 미설정 시 `file:./sqlite.db` |
+| `DATABASE_AUTH_TOKEN` | 원격 연결의 인증 토큰. 기존 `TURSO_AUTH_TOKEN`은 호환 입력이며 공통 이름이 우선 |
+| `DATABASE_REQUIRE_REMOTE` | 영속 디스크가 없는 호스트에서 `true`. 기본 `false`; Vercel은 기존 파일 DB 차단을 자동 유지하며 `false`로 해제할 수 없음 |
+
+예를 들어 영속 볼륨이 있는 Docker는 `DATABASE_URL=file:/app/data/sqlite.db`를,
+서버리스 호스트는 원격 URL·토큰과 `DATABASE_REQUIRE_REMOTE=true`를 사용한다.
+후자는 `libsql://` 또는 `https://` 연결만 허용한다. 원격 토큰 필수 검증은 이 앱의
+접근 정책이다. 토큰 없는 자체 호스팅 libSQL은 현재 지원 대상으로 추가하지 않는다.
+boolean 값은 `true`/`false` 또는 `1`/`0`이며 잘못된 값은 실패한다.
+
+앱·Drizzle Kit가 같은 URL/토큰과 로컬 판별을 공유한다. Kit의 `turso` dialect 이름은
+원격 libSQL용 도구 설정이며 업무 코드의 공급자 선택이 아니다. DB 구조 변경은 연결
+교체와 별도이며 실제 대상 DB를 확인한 뒤 수행한다.
+
 ## AI 공급자 설정
 
 애플리케이션은 다음 공통 환경변수로 모델 API를 선택한다.
@@ -190,7 +211,8 @@ docker compose up -d app
 2. 합성 데이터용 Turso **libSQL** DB와 필요한 자격 증명을 준비한다. 기존
    `@libsql/client`를 유지한다. 앱 실행과 schema 적용에 같은 URL/토큰을 사용하되,
    운영 DB와 Preview DB는 분리한다. URL과 토큰은 서버 전용 환경변수로 저장한다.
-3. `DATABASE_URL=libsql://<database-host>`와 `TURSO_AUTH_TOKEN`을 설정한다.
+3. `DATABASE_URL=libsql://<database-host>`와 `DATABASE_AUTH_TOKEN`을 설정한다.
+   기존 `TURSO_AUTH_TOKEN`도 계속 지원하므로 기존 secret 교체는 필수가 아니다.
    Drizzle Kit는 원격일 때 `turso`, 파일일 때 `sqlite` dialect를 선택한다.
    `pnpm db:push`는 대상 DB를 바꾸므로 명시적으로 확인한 빈 테스트 DB에만 실행한다.
    Vercel 빌드 명령에 DB push를 넣지 않는다.
@@ -231,7 +253,8 @@ API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어�
 인자를 추가하지 않았으며, 이미 전송된 요청의 공급자 과금 취소까지 보장하지 않는다.
 
 `pnpm test`와 호환 별칭 `pnpm test:cloud`는 기존 TypeScript와 Node test runner를 사용한다.
-실제 소스의 어댑터·인증 경계, 설치된 Better Auth의 생성 훅, 메모리 libSQL의 주간
+실제 소스의 어댑터·인증 경계, 공통 DB factory의 메모리/임시 파일 SQLite와 재연결,
+원격 연결 설정 전달(mock)·기존 토큰 호환, 설치된 Better Auth의 생성 훅, 메모리 libSQL의 주간
 상태 전이와 빈 초안 저장 차단을 합성 데이터로 확인한다. KST 경계는 UTC·Seoul·
 Los Angeles 프로세스에서 비교한다. 외부 서비스를 호출하지 않으며, 실제 브라우저
 Google OAuth·원격 DB·Gemini 품질 검증은 별도다.
