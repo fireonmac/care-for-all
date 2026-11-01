@@ -71,7 +71,7 @@ test('real session wrapper rejects an unlisted user and requires a verified list
     'better-auth': { betterAuth: () => ({ api: { getSession: async () => session } }) },
     '@better-auth/drizzle-adapter': { drizzleAdapter: () => ({}) },
     '@/db': { db: {} },
-    '@/env': { getAuthEnv: () => ({ VERCEL: '1', ALLOWED_EMAILS: 'caregiver@example.com' }) },
+    '@/env': { getAuthEnv: () => ({ requireAllowlist: true, ALLOWED_EMAILS: 'caregiver@example.com' }) },
     'next/headers': { headers: async () => new Headers() },
     'next/navigation': { redirect: () => { throw new Error('redirect-login'); } },
   })('src/lib/auth.ts');
@@ -83,12 +83,12 @@ test('real session wrapper rejects an unlisted user and requires a verified list
   assert.equal(await auth.requireSession(), session);
 });
 
-test('Vercel cannot expose records when allowlist is missing, even if env validation is skipped', async () => {
+test('required allowlist cannot expose records when allowlist is missing, even if env validation is skipped', async () => {
   const auth = sourceLoader({
     'better-auth': { betterAuth: () => ({ api: { getSession: () => { throw new Error('must fail closed before session access'); } } }) },
     '@better-auth/drizzle-adapter': { drizzleAdapter: () => ({}) },
     '@/db': { db: {} },
-    '@/env': { getAuthEnv: () => ({ VERCEL: '1', ALLOWED_EMAILS: ' , ' }) },
+    '@/env': { getAuthEnv: () => ({ requireAllowlist: true, ALLOWED_EMAILS: ' , ' }) },
     'next/headers': { headers: async () => new Headers() },
     'next/navigation': { redirect: () => { throw new Error('redirect-login'); } },
   })('src/lib/auth.ts');

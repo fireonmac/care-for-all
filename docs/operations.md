@@ -49,6 +49,20 @@ boolean 값은 `true`/`false` 또는 `1`/`0`이며 잘못된 값은 실패한다
 원격 libSQL용 도구 설정이며 업무 코드의 공급자 선택이 아니다. DB 구조 변경은 연결
 교체와 별도이며 실제 대상 DB를 확인한 뒤 수행한다.
 
+## 접근 정책 설정
+
+| 설정 | 의미와 기본값 |
+| --- | --- |
+| `ALLOWED_EMAILS` | 쉼표로 구분한 허용 Google 계정. 검증된 이메일과 정확히 비교 |
+| `AUTH_REQUIRE_ALLOWLIST` | 모든 호스트에서 기본 `true`. 목록이 없으면 인증 차단. 비공개 로컬/Docker에서만 `false`를 명시해 기존 Google 로그인 전용 접근을 선택할 수 있음 |
+| `BETTER_AUTH_URL` | 실제 접속 origin. Vercel 시스템 URL fallback은 기존 호환 동작이며, 다른 호스트는 이 값을 명시 |
+
+boolean 값은 `true`/`false` 또는 `1`/`0`이며 잘못된 값은 실패한다.
+`AUTH_REQUIRE_ALLOWLIST=false`여도 `ALLOWED_EMAILS`를 설정하면 목록 검사를 수행한다.
+기존 Docker에 허용 목록이 없었다면 공개 운영 전 목록을 추가해야 한다. 비공개 환경의
+이전 동작이 필요한 경우에만 위 명시 설정을 사용한다. Compose도 이 값을 전달한다.
+이 예외는 호스트를 판별해 제한하는 기능이 아니라 운영자가 선택하는 접근 정책이다.
+
 ## AI 공급자 설정
 
 애플리케이션은 다음 공통 환경변수로 모델 API를 선택한다.
@@ -216,8 +230,8 @@ docker compose up -d app
    Drizzle Kit는 원격일 때 `turso`, 파일일 때 `sqlite` dialect를 선택한다.
    `pnpm db:push`는 대상 DB를 바꾸므로 명시적으로 확인한 빈 테스트 DB에만 실행한다.
    Vercel 빌드 명령에 DB push를 넣지 않는다.
-4. `ALLOWED_EMAILS`에 허용 Google 계정을 쉼표로 구분해 지정한다. Vercel에서는
-   미설정 상태로 기록을 열 수 없다. Google OAuth의 검증된 이메일과 정확히 비교한다.
+4. [공통 접근 정책](#접근-정책-설정)에 따라 `ALLOWED_EMAILS`를 지정한다.
+   기본 설정에서는 배포 업체와 무관하게 미설정 상태로 기록을 열 수 없다. Google OAuth의 검증된 이메일과 정확히 비교한다.
    가입과 새 세션 생성 단계에서도 적용하며, 기존 세션의 데이터 접근도 다시 확인한다.
    기존 Docker에서도 공개 접속에 사용한다면 이 값을 설정한다.
 5. Better Auth secret, Google OAuth ID/secret과 실제 배포 도메인의 callback을

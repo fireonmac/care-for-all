@@ -23,7 +23,7 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
     'better-auth': { betterAuth }, 'better-auth/api': { APIError },
     '@better-auth/drizzle-adapter': { drizzleAdapter }, '@/db': { db },
     '@/env': { getAuthEnv: () => ({
-      VERCEL: '1', ALLOWED_EMAILS: 'caregiver@example.com',
+      requireAllowlist: true, ALLOWED_EMAILS: 'caregiver@example.com',
       BETTER_AUTH_URL: 'https://synthetic.example',
       BETTER_AUTH_SECRET: 'synthetic-session-secret-1234567890-not-for-production',
       GOOGLE_CLIENT_ID: 'synthetic-id', GOOGLE_CLIENT_SECRET: 'synthetic-secret',

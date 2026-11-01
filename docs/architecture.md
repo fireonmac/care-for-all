@@ -103,7 +103,7 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 
 - DB 위치·자격 증명·저장소 제약은 `src/env.ts`에서 검증하고 `src/db/index.ts`에서 조립한다. 앱과 테스트는 `createDatabase`로 같은 Drizzle/libSQL 연결을 구성한다. 로컬/원격 URL 판별도 한 함수를 공유하며 Drizzle Kit의 dialect 변환은 `drizzle.config.ts`에만 둔다. 환경변수와 호스트별 값은 [운영 가이드](./operations.md#db-연결-설정)를 따른다.
 - Turso는 지원하는 libSQL 호스팅 구성이다. 기능 모듈은 공급자 이름·토큰·배포 호스트를 읽지 않고 `@/db`를 사용한다. 기존 `TURSO_AUTH_TOKEN`과 Vercel 시스템 변수는 설정 경계의 호환 입력으로만 유지한다. 원격 연결에 토큰을 요구하는 것은 앱의 인증 정책이며 모든 libSQL 서버가 토큰을 강제한다는 의미는 아니다.
-- 허용 계정은 Better Auth의 사용자·세션 생성 시 검사하고, 기존 세션도 매번 데이터 접근 시 재검사한다. Vercel에서는 `ALLOWED_EMAILS`로 검증된 Google 계정만 기록에 접근할 수 있다. 로컬/Docker는 기존 동작 보존을 위해 선택 설정이며 공개 운영 시에는 설정해야 한다.
+- 허용 계정은 Better Auth의 사용자·세션 생성 시 검사하고, 기존 세션도 매번 데이터 접근 시 재검사한다. 인증 코드는 플랫폼 플래그가 아닌 검증된 `requireAllowlist` 정책을 사용한다. 모든 호스트의 기본값은 허용 계정 제한이며 비공개 로컬/Docker의 예외는 운영 설정에서 명시한다.
 - 운영 DB는 호스트 `app_data`를 컨테이너 `/app/data`에 마운트한다.
 - 기본 운영 설정은 호스트의 Ollama를 `host.docker.internal`로 호출한다.
 - `AI_PROVIDER`와 관련 환경변수를 바꾸면 OpenAI 호환 API를 사용할 수 있다. 인증·AI·DB 환경은 각 소비자가 독립적으로 검증한다. AI 미설정이 로그인/DB를 막지 않고, Drizzle Kit는 인증/AI 설정을 요구하지 않는다.
