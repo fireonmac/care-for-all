@@ -6,8 +6,6 @@ import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
-import { RecipientSharing } from './_components/RecipientSharing';
-import { getRecipientShares } from '@/features/recipients/sharing';
 
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 
@@ -24,7 +22,6 @@ export default async function RecipientDetailPage({
   const resolvedSearch = await searchParams;
   
   const recipient = await getRecipientOr404(resolvedParams.id);
-  const shares = recipient.canManage ? await getRecipientShares(recipient.id) : [];
   const recentRecords = await getRecipientRecords(resolvedParams.id);
 
   const todayStr = getKSTDateStr(new Date());
@@ -62,8 +59,6 @@ export default async function RecipientDetailPage({
           />
         </div>
       </header>
-
-      {recipient.canManage && <RecipientSharing recipientId={recipient.id} shares={shares} />}
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section id="week-view" className="mb-24 scroll-mt-20">

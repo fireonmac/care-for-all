@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import { and, eq } from 'drizzle-orm';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -42,13 +43,22 @@ export async function workspaceFixture(t, options = {}) {
   const actions = load('src/app/(main)/recipients/[id]/actions.ts');
   const add = load('src/features/recipients/actions.ts').addRecipient;
   const listing = load('src/features/recipients/queries.ts').getRecipientsPage;
-  const share = load('src/features/recipients/sharing.ts');
   const access = load('src/lib/workspace-access.ts');
   async function createRecipient(name) {
     await add({ name, createdByUserId: 'spoofed', workspaceId: 'spoofed' });
     const { items } = await listing(name);
     return items[0].id;
   }
-  return { url, client, db, schema, load, actions, share, access, users, callbacks, listing, createRecipient,
+  // Existing grants are seeded only in the isolated fixture; there is no recipient-sharing UI/action.
+  async function grantRecipientAccess(recipientId, userId, permission) {
+    const recipient = await db.select().from(schema.recipients).where(eq(schema.recipients.id, recipientId)).get();
+    await db.insert(schema.workspaceMembers).values({ workspaceId: recipient.workspaceId, userId }).onConflictDoNothing();
+    await db.insert(schema.recipientShares).values({ recipientId, userId, permission })
+      .onConflictDoUpdate({ target: [schema.recipientShares.recipientId, schema.recipientShares.userId], set: { permission } });
+  }
+  async function revokeRecipientAccess(recipientId, userId) {
+    await db.delete(schema.recipientShares).where(and(eq(schema.recipientShares.recipientId, recipientId), eq(schema.recipientShares.userId, userId)));
+  }
+  return { url, client, db, schema, load, actions, grantRecipientAccess, revokeRecipientAccess, access, users, callbacks, listing, createRecipient,
     login: id => { current = id ? users[id] : null; }, aiCalls: () => aiCalls };
 }
