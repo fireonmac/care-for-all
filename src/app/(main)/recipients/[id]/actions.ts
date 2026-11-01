@@ -229,9 +229,7 @@ export async function generateWeeklyReportBackground(recipientId: string, target
   }).run();
 
   // Safe background execution after response
-  after(() => {
-    processWeeklyReport(recordId, recipientId, targetDate);
-  });
+  after(() => processWeeklyReport(recordId, recipientId, targetDate));
 
   return { recordId, status: 'PROCESSING' as const };
 }

@@ -196,3 +196,66 @@ docker compose up -d app
 - 백업 복구를 주기적으로 시험한다.
 - 프롬프트와 생성 결과가 일반 로그에 남지 않는지 확인한다.
 - Docker와 호스트 OS의 보안 업데이트를 적용한다.
+
+
+## Vercel + Turso + Gemini 준비
+
+기존 Docker/로컬 SQLite 설정과 AI 공급자 인터페이스는 유지한다. 아래는 배포
+준비 절차이며 실제 계정 생성·키 설정·DB 이전·배포가 완료되었다는 뜻은 아니다.
+
+1. Vercel Hobby의 개인 비상업적 이용 조건에 맞는지 확인한다. 센터의 실제 업무용
+   사용을 무료로 단정하지 않는다. 유료 플랜 변경은 별도 결정이다.
+2. 합성 데이터용 Turso **libSQL** DB와 필요한 자격 증명을 준비한다. 기존
+   `@libsql/client`를 유지한다. 앱 실행과 schema 적용에 같은 URL/토큰을 사용하되,
+   운영 DB와 Preview DB는 분리한다. URL과 토큰은 서버 전용 환경변수로 저장한다.
+3. `DATABASE_URL=libsql://<database-host>`와 `TURSO_AUTH_TOKEN`을 설정한다.
+   Drizzle Kit는 원격일 때 `turso`, 파일일 때 `sqlite` dialect를 선택한다.
+   `pnpm db:push`는 대상 DB를 바꾸므로 명시적으로 확인한 빈 테스트 DB에만 실행한다.
+   Vercel 빌드 명령에 DB push를 넣지 않는다.
+4. `ALLOWED_EMAILS`에 허용 Google 계정을 쉼표로 구분해 지정한다. Vercel에서는
+   미설정 상태로 기록을 열 수 없다. Google OAuth의 검증된 이메일과 정확히 비교한다.
+   가입과 새 세션 생성 단계에서도 적용하며, 기존 세션의 데이터 접근도 다시 확인한다.
+   기존 Docker에서도 공개 접속에 사용한다면 이 값을 설정한다.
+5. Better Auth secret, Google OAuth ID/secret과 실제 배포 도메인의 callback을
+   준비한다. `BETTER_AUTH_URL`을 명시하면 우선 사용한다. Vercel에서만 이 값이 없을 때
+   시스템 `VERCEL_URL`의 검증된 `*.vercel.app` 호스트에 HTTPS를 붙여 사용한다.
+   Google redirect URI에는 해당 origin의 `/api/auth/callback/google`을 정확히 등록한다.
+   Preview URL은 deployment protection을 유지하며, 보호 설정을 우회하지 않는다.
+   운영과 Preview 설정을 구분하며, 비밀값은 Git이나 채팅에 붙여넣지 않는다.
+6. Gemini에는 기존 `AI_PROVIDER=openai-compatible`을 사용한다. `AI_BASE_URL`은
+   `https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL`은 프로젝트에서
+   사용할 수 있는 모델 ID, `AI_API_KEY`는 Gemini 키로 설정한다. 새 SDK는 필요 없다.
+7. 합성 입력으로 일일 스트림·일일 일반 응답·주간 생성과 오류/잘림/시간 초과를
+   확인한다. 공개 함수·반환 타입·기존 Ollama 설정과 30초/500토큰·60초/700토큰은
+   유지한다. 현재 `max_tokens`/temperature와 모델의 추론 기본값은 실제 선택 모델에서
+   다시 검증해야 한다. 호환 API 문서 확인과 mock 테스트를 실제 API 검증으로 보지 않는다.
+   AI_PROVIDER와 AI_MODEL은 생성 요청 시 검증하며, 누락 시 임의 공급자나 모델로
+   대체하지 않는다. 로그인과 DB 조회는 AI 설정이 없어도 동작한다. 일일 생성 API는
+   인증 후 AI 설정 누락을 503 구성 오류로 응답한다.
+8. 무료 조건·계정 연결·테스트가 충족된 경우에만 Preview를 배포한다. Node 런타임을
+   사용하며 일일 Route Handler는 maxDuration 60초, 주간 Server Action의 페이지는
+   120초다. 실제 플랫폼 설정과 배포 빌드가 이를 반영하는지 확인한다.
+
+API 오류는 Error 또는 스트림 오류로 전달한다. 공급자가 잘림·차단·도구 호출 등
+완성되지 않은 종료 이유를 반환하면 성공 결과로 저장하지 않는다. OpenAI 호환 스트림은
+정상 `stop`과 비어 있지 않은 본문을 확인하며, 중간 EOF나 `stop` 없는 `[DONE]`은 실패다.
+일일 생성은 서버와 클라이언트에서 최종 형식을 검증하고, 검토 후 저장/수정에도
+같은 초안 스키마를 적용한다. 형식 검증이 사실성 검증을 대신하지는 않는다. 오류 본문은
+민감 내용이 포함될 수 있어 로그로 전달하지 않고 HTTP 상태만 보존한다.
+생성 중 reader 취소는 기존 stream pipe를 통해 상류로 전달한다. 새 AbortSignal
+인자를 추가하지 않았으며, 이미 전송된 요청의 공급자 과금 취소까지 보장하지 않는다.
+
+`pnpm test`와 호환 별칭 `pnpm test:cloud`는 기존 TypeScript와 Node test runner를 사용한다.
+실제 소스의 어댑터·인증 경계, 설치된 Better Auth의 생성 훅, 메모리 libSQL의 주간
+상태 전이와 빈 초안 저장 차단을 합성 데이터로 확인한다. KST 경계는 UTC·Seoul·
+Los Angeles 프로세스에서 비교한다. 외부 서비스를 호출하지 않으며, 실제 브라우저
+Google OAuth·원격 DB·Gemini 품질 검증은 별도다.
+
+현재 GitHub Actions의 main 배포는 Docker를 대상으로 유지된다. 클라우드 검증을
+이유로 main에 바로 push하거나 기존 서버를 중지하지 않는다. 실제 이전 시에는
+일관된 SQLite 백업, 관계/건수 확인, 쓰기 전환, Docker 자동 배포 정리와 복구 절차를
+별도로 수행한다. Gemini 무료 API에는 실제 민감·개인 기록을 넣지 않는다.
+
+참고: [Gemini 호환 API](https://ai.google.dev/gemini-api/docs/openai),
+[Turso SDK](https://docs.turso.tech/sdk/ts/reference),
+[Vercel Hobby 조건](https://vercel.com/docs/limits/fair-use-guidelines).

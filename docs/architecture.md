@@ -86,8 +86,7 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 ### 주간 기록
 
 1. 선택한 주의 일일 기록을 조회한다.
-2. `/api/generate-weekly`가 해당 월요일부터 7일간의 일일 기록을 선택된 AI
-   공급자에 전달하고 작업 상태를 `PROCESSING`으로 저장한다.
+2. `generateWeeklyReportBackground` Server Action이 `PROCESSING`을 저장하고, 해당 월요일부터 7일간의 일일 기록을 AI에 전달하는 Promise를 `after()`에 반환한다.
 3. 클라이언트가 레코드 상태를 polling하고, 생성이 끝나면 `COMPLETED` 결과를
    표시한다.
 
@@ -127,6 +126,7 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 - 웹 컨테이너를 수평 확장하지 않는다.
 - 배포 중 짧은 연결 중단이 생길 수 있다.
 - 단일 센터의 허용 계정은 같은 기록을 공유한다. 조직별 데이터 격리는 아직 없으며, 실제 정보 사용 전 운영·데이터 취급 기준을 확인해야 한다.
+- 주간 `after()`는 영속 큐가 아니다. 강제 종료로 남은 PROCESSING 복구와 동시 중복 요청 방지는 미구현이다.
 
 ## AI 공급자 확장
 

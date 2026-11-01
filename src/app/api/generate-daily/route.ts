@@ -3,6 +3,9 @@ import { streamDailyRecord } from '@/lib/ai';
 import { getSession } from '@/lib/auth';
 import { AiConfigurationError } from '@/lib/ai/config';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) {

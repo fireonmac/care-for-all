@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
+import { eq } from 'drizzle-orm';
 import { sourceLoader } from './load-source.mjs';
 
 const load = sourceLoader();
@@ -46,6 +49,31 @@ test('all recipient read functions enforce session before querying data', async 
   await assert.rejects(detail.getRecipientOr404('synthetic'), /auth-required/);
   await assert.rejects(detail.getRecipientRecords('synthetic'), /auth-required/);
 });
+
+for (const fails of [false, true]) test('weekly after callback returns tracked Promise and stores ' + (fails ? 'FAILED' : 'COMPLETED'), async () => {
+  const client = createClient({ url: ':memory:' });
+  try {
+    await client.execute('CREATE TABLE records (id TEXT PRIMARY KEY, recipient_id TEXT NOT NULL, date TEXT NOT NULL, type TEXT NOT NULL, cognition_content TEXT, behavior_content TEXT, combined_content TEXT, status TEXT NOT NULL DEFAULT \'COMPLETED\', created_at INTEGER NOT NULL)');
+    const schema = load('src/db/schema.ts');
+    const db = drizzle(client, { schema });
+    await db.insert(schema.records).values({ id: 'synthetic-daily', recipientId: 'synthetic-recipient', date: '2026-10-26', type: 'daily', cognitionContent: '합성 관찰', createdAt: new Date() });
+    const callbacks = [];
+    const actions = sourceLoader({
+      '@/db': { db },
+      'next/server': { after: (callback) => callbacks.push(callback) },
+      'next/cache': { revalidatePath() {} },
+      '@/lib/auth': { getSession: async () => ({ user: { id: 'synthetic' } }), requireSession: async () => ({}) },
+      '@/lib/ai': { generateWeeklyRecord: async () => { if (fails) throw new Error('synthetic-failure'); return '합성 주간 결과'; } },
+    })('src/app/(main)/recipients/[id]/actions.ts');
+    const created = await actions.generateWeeklyReportBackground('synthetic-recipient', '2026-10-26');
+    assert.equal(created.status, 'PROCESSING'); assert.equal(callbacks.length, 1);
+    const promise = callbacks[0](); assert.ok(promise instanceof Promise); await promise;
+    const saved = await db.select().from(schema.records).where(eq(schema.records.id, created.recordId)).get();
+    assert.equal(saved.status, fails ? 'FAILED' : 'COMPLETED');
+    assert.equal(saved.combinedContent, fails ? null : '합성 주간 결과');
+  } finally { client.close(); }
+});
+
 
 test('real session wrapper rejects an unlisted user and requires a verified listed email', async () => {
   let session = { user: { email: 'outsider@example.com', emailVerified: true } };
