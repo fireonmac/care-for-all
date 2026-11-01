@@ -4,7 +4,9 @@ import type {
 } from '@/lib/ai/types';
 
 type OpenAiCompatibleResponse = {
+  error?: unknown;
   choices?: Array<{
+    finish_reason?: string | null;
     message?: {
       content?: string;
     };
@@ -12,7 +14,9 @@ type OpenAiCompatibleResponse = {
 };
 
 type OpenAiCompatibleChunk = {
+  error?: unknown;
   choices?: Array<{
+    finish_reason?: string | null;
     delta?: {
       content?: string;
     };
@@ -29,6 +33,7 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
   async generateText(request: TextGenerationRequest): Promise<string> {
     const response = await this.request(request, false);
     const data = (await response.json()) as OpenAiCompatibleResponse;
+    assertCompletedResponse(data);
     const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
@@ -48,6 +53,7 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
     }
 
     let buffer = '';
+    const completion = { stopped: false, hasContent: false };
 
     return response.body
       .pipeThrough(new TextDecoderStream())
@@ -59,11 +65,14 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
             buffer = lines.pop() ?? '';
 
             for (const line of lines) {
-              enqueueOpenAiContent(line, controller);
+              enqueueOpenAiContent(line, controller, completion);
             }
           },
           flush(controller) {
-            enqueueOpenAiContent(buffer, controller);
+            enqueueOpenAiContent(buffer, controller, completion);
+            if (!completion.stopped || !completion.hasContent) {
+              throw new Error('AI 스트림이 완성되지 않았습니다. 다시 생성해주세요.');
+            }
           },
         }),
       )
@@ -97,8 +106,8 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
     );
 
     if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`AI 공급자 요청 실패 (${response.status}): ${detail}`);
+      await response.body?.cancel();
+      throw new Error(`AI 공급자 요청 실패 (${response.status})`);
     }
 
     return response;
@@ -108,17 +117,34 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
 function enqueueOpenAiContent(
   line: string,
   controller: TransformStreamDefaultController<string>,
+  completion: { stopped: boolean; hasContent: boolean },
 ) {
   const normalizedLine = line.trim();
   if (!normalizedLine.startsWith('data:')) return;
 
   const payload = normalizedLine.slice(5).trim();
-  if (!payload || payload === '[DONE]') return;
+  if (!payload) return;
+  if (payload === '[DONE]') {
+    if (!completion.stopped) throw new Error('AI 스트림이 정상 종료되지 않았습니다.');
+    return;
+  }
 
   const data = JSON.parse(payload) as OpenAiCompatibleChunk;
-  const content = data.choices?.[0]?.delta?.content;
+  assertCompletedResponse(data);
+  const choice = data.choices?.[0];
+  const content = choice?.delta?.content;
+  if (choice?.finish_reason === 'stop') completion.stopped = true;
 
   if (content) {
+    completion.hasContent ||= Boolean(content.trim());
     controller.enqueue(content);
+  }
+}
+
+function assertCompletedResponse(data: OpenAiCompatibleResponse | OpenAiCompatibleChunk) {
+  if (data.error) throw new Error('AI 공급자가 오류 응답을 반환했습니다.');
+  const reason = data.choices?.[0]?.finish_reason;
+  if (reason && reason !== 'stop') {
+    throw new Error('AI 응답이 완성되지 않았습니다. 입력과 생성 한도를 확인해주세요.');
   }
 }

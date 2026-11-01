@@ -57,6 +57,7 @@ flowchart LR
 | `src/db` | DB 연결과 Drizzle 스키마 |
 | `src/app/api/generate-*` | 일일·주간 생성 요청과 HTTP 응답 처리 |
 | `src/lib/ai.ts` | 기록 생성 use case와 공급자 호출 조합 |
+| `src/lib/daily-record.ts` | Drizzle에서 도출한 초안 타입·검증과 AI 최종 응답 파서 |
 | `src/lib/ai/provider.ts` | 환경설정에 따른 공급자 선택 |
 | `src/lib/ai/providers` | 외부 모델 API별 어댑터 |
 | `src/lib/ai/prompts.ts` | 공급자와 독립적인 기록 프롬프트 |
@@ -79,7 +80,8 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 2. 사용자가 날짜와 관찰 메모를 입력한다.
 3. `/api/generate-daily`가 선택된 AI 공급자의 응답을 동일한 텍스트 스트림으로
    변환한다.
-4. 사용자가 확인한 결과를 `records` 테이블의 `daily` 레코드로 저장한다.
+4. 스트림 정상 종료 후 일반 생성과 같은 파서로 최종 형식을 검증한다. 빈 결과와 형식 오류는 초안에서 제거한다. 사용자가 수정한 결과도 저장 시 같은 스키마로 검증한다.
+5. 관찰 근거가 없는 영역은 비워 둘 수 있으며, 최소 한 영역에 기록이 있어야 한다. 각 영역은 UI와 동일하게 최대 1,000자다.
 
 ### 주간 기록
 

@@ -4,10 +4,8 @@ import {
   createWeeklyRecordMessages,
 } from '@/lib/ai/prompts';
 
-export type DailyRecordDraft = {
-  cognition: string;
-  behavior: string;
-};
+import { parseDailyRecord, type DailyRecordDraft } from '@/lib/daily-record';
+export type { DailyRecordDraft } from '@/lib/daily-record';
 
 const DAILY_TIMEOUT_MS = 30_000;
 const WEEKLY_TIMEOUT_MS = 60_000;
@@ -15,12 +13,21 @@ const WEEKLY_TIMEOUT_MS = 60_000;
 export async function streamDailyRecord(
   keywords: string,
 ): Promise<ReadableStream<Uint8Array>> {
-  return createTextGenerationProvider().streamText({
+  const stream = await createTextGenerationProvider().streamText({
     messages: createDailyRecordMessages(keywords),
     temperature: 0.3,
     maxTokens: 500,
     timeoutMs: DAILY_TIMEOUT_MS,
   });
+  let text = '';
+  const decoder = new TextDecoder();
+  return stream.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      text += decoder.decode(chunk, { stream: true });
+      controller.enqueue(chunk);
+    },
+    flush() { parseDailyRecord(text + decoder.decode()); },
+  }));
 }
 
 export async function generateDailyRecord(
@@ -56,28 +63,4 @@ export async function generateWeeklyRecord(
     maxTokens: 700,
     timeoutMs: WEEKLY_TIMEOUT_MS,
   });
-}
-
-
-
-function parseDailyRecord(text: string): DailyRecordDraft {
-  const cognitionMarker = '[인지]';
-  const behaviorMarker = '[행동]';
-  const cognitionStart = text.indexOf(cognitionMarker);
-  const behaviorStart = text.indexOf(behaviorMarker);
-
-  if (
-    cognitionStart === -1 ||
-    behaviorStart === -1 ||
-    behaviorStart < cognitionStart
-  ) {
-    throw new Error('일일 기록 응답 형식을 확인할 수 없습니다.');
-  }
-
-  return {
-    cognition: text
-      .slice(cognitionStart + cognitionMarker.length, behaviorStart)
-      .trim(),
-    behavior: text.slice(behaviorStart + behaviorMarker.length).trim(),
-  };
 }

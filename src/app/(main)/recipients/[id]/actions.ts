@@ -11,6 +11,7 @@ import { revalidatePath } from 'next/cache';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { getRecipientRecords } from './queries';
 import { getSession } from '@/lib/auth';
+import { dailyRecordDraftSchema } from '@/lib/daily-record';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -23,6 +24,7 @@ export async function generateDraft(keywords: string) {
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
   const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
+  const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
   const dateStr = targetDate || getKSTDateStr(new Date());
   
   await db.insert(records).values({
@@ -30,8 +32,8 @@ export async function saveDailyRecord(recipientId: string, cognition: string, be
     recipientId,
     date: dateStr,
     type: 'daily',
-    cognitionContent: cognition,
-    behaviorContent: behavior,
+    cognitionContent: draft.cognition,
+    behaviorContent: draft.behavior,
     createdAt: new Date(),
   });
   
@@ -75,9 +77,10 @@ export async function saveWeeklyReport(recipientId: string, content: string) {
 export async function updateDailyRecord(recordId: string, cognition: string, behavior: string) {
   const session = await getSession();
   if (!session) throw new Error('로그인이 필요합니다.');
+  const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
   await db.update(records).set({
-    cognitionContent: cognition,
-    behaviorContent: behavior
+    cognitionContent: draft.cognition,
+    behaviorContent: draft.behavior
   }).where(eq(records.id, recordId));
   
   const record = await db.select().from(records).where(eq(records.id, recordId));
