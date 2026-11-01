@@ -5,8 +5,11 @@ import { sourceLoader } from './load-source.mjs';
 const Placeholder = () => null;
 const WeeklyReport = () => null;
 const Page = sourceLoader({
+  '@/db': { db: new Proxy({}, { get() { throw new Error('Unexpected database access in UI test'); } }) },
+  '@/features/recipients/sharing': { getRecipientShares: async () => [] },
+  './_components/RecipientSharing': { RecipientSharing: Placeholder },
   './queries': {
-    getRecipientOr404: async (id) => ({ id, name: '합성 대상자' }),
+    getRecipientOr404: async (id) => ({ id, name: '합성 대상자', canEdit: true, canManage: false }),
     getRecipientRecords: async () => [
       { id: 'daily-a', date: '2026-10-26', type: 'daily' },
       { id: 'daily-b', date: '2026-10-27', type: 'daily' },

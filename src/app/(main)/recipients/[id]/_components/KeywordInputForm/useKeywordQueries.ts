@@ -30,7 +30,7 @@ export const useSaveDailyRecordMutation = () => {
 };
 
 // 2. API: AI 스트리밍 생성 로직 (React Query 대신 별도 훅)
-export const useGenerateDailyDraft = () => {
+export const useGenerateDailyDraft = (recipientId: string) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [draft, setDraft] = useState<DailyRecordDraft | null>(null);
 
@@ -42,10 +42,15 @@ export const useGenerateDailyDraft = () => {
       const res = await fetch('/api/generate-daily', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keywords }),
+        body: JSON.stringify({ keywords, recipientId }),
       });
 
-      if (!res.ok) throw new Error(`Generation failed: ${res.status}`);
+      if (!res.ok) {
+        const failure: unknown = await res.json().catch(() => null);
+        const message = failure && typeof failure === 'object' && 'error' in failure && typeof failure.error === 'string'
+          ? failure.error : '초안 생성 중 오류가 발생했습니다.';
+        throw new Error(message);
+      }
       if (!res.body) throw new Error('No body');
 
       const reader = res.body.getReader();

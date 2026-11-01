@@ -20,7 +20,7 @@ interface WeeklyReportModalProps {
   isSavingEdit: boolean;
   onDelete: () => void;
   isDeleting: boolean;
-  onClose: () => void;
+  canEdit: boolean;
 }
 
 export function WeeklyReportModal({
@@ -32,7 +32,7 @@ export function WeeklyReportModal({
   isSavingEdit,
   onDelete,
   isDeleting,
-  onClose,
+  canEdit,
 }: WeeklyReportModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -56,7 +56,7 @@ export function WeeklyReportModal({
     try {
       await onSaveEdit(editContent);
       setIsEditing(false);
-    } catch (e) {
+    } catch {
       // Error handled by the hook
     }
   };
@@ -79,7 +79,7 @@ export function WeeklyReportModal({
                 <h3 className="text-base font-medium text-foreground tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
                 {!isEditing && <CopyButton text={reportContent || ''} title="리포트 복사" />}
               </div>
-              <div className="flex items-center gap-2">
+              {canEdit && <div className="flex items-center gap-2">
                 {isEditing ? (
                   <>
                     <Button onClick={() => setIsEditing(false)} variant="ghost" size="xs">취소</Button>
@@ -107,10 +107,10 @@ export function WeeklyReportModal({
                     />
                   </>
                 )}
-              </div>
+              </div>}
             </div>
 
-            {isEditing ? (
+            {isEditing && canEdit ? (
               <Textarea
                 ref={textareaRef}
                 className="w-full min-h-100 text-[1.05rem] leading-[2.2] tracking-wide text-foreground resize-none p-6 md:p-8"

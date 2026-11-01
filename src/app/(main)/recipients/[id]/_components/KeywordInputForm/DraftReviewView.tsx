@@ -25,7 +25,7 @@ export function DraftReviewView({
   return (
     <div>
       <div className="mb-8 flex items-center gap-4">
-        <h2 className="text-3xl font-medium text-foreground tracking-tight">생성된 기록 검토</h2>
+        <h2 className="text-3xl font-medium text-foreground tracking-tight">기록 검토</h2>
         {loading && <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />}
       </div>
 

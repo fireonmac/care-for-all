@@ -20,6 +20,7 @@ interface WeeklyReportFormProps {
   currentWeekOfMonth: number;
   dailyRecordCount: number;
   weekStartDate: string;
+  canGenerate: boolean;
 }
 
 export function WeeklyReportForm({
@@ -29,6 +30,7 @@ export function WeeklyReportForm({
   currentWeekOfMonth,
   dailyRecordCount,
   weekStartDate,
+  canGenerate,
 }: WeeklyReportFormProps) {
   const [open, setOpen] = useState(false);
   const [generatedRecordId, setGeneratedRecordId] = useState<string | null>(null);
@@ -102,7 +104,8 @@ export function WeeklyReportForm({
     }
   };
 
-  if (dailyRecordCount < 2) return null;
+  if (dailyRecordCount < 2 && !activeRecordId) return null;
+  if (!canGenerate && (reportStatus === 'IDLE' || reportStatus === 'FAILED')) return null;
 
   return (
     <>
@@ -122,7 +125,7 @@ export function WeeklyReportForm({
           variant="secondary"
           size="sm"
           className={reportStatus === 'FAILED' ? 'border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive' : ''}
-          disabled={isGenerating}
+          disabled={isGenerating || !canGenerate}
         >
           {reportStatus === 'FAILED' && <AlertTriangle className="w-4 h-4 mr-2" />}
           {reportStatus === 'FAILED' ? '주간 리포트 재발간' : '주간 리포트 발간'}
@@ -156,7 +159,7 @@ export function WeeklyReportForm({
             isSavingEdit={updateMut.isPending}
             onDelete={handleDelete}
             isDeleting={deleteMut.isPending}
-            onClose={() => setOpen(false)}
+            canEdit={recordQuery.data?.canEdit ?? initialQuery.data?.canEdit ?? false}
           />
         </Dialog>
       )}

@@ -35,7 +35,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const [activeEventId, setActiveEventId] = useState<string[]>([]);
 
   // 1. react-hook-form 설정
-  const { control, handleSubmit, watch, setValue, reset } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       events: [{ id: 'default-id', event: '', emotion: '', isCustomEmotion: false, action: '' }],
@@ -51,7 +51,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const hasRequiredEvent = events.some((e) => e.event.trim().length > 0);
 
   // 2. API 통신 훅 (생성 및 저장)
-  const { generateDraft, draft, setDraft, isGenerating } = useGenerateDailyDraft();
+  const { generateDraft, draft, setDraft, isGenerating } = useGenerateDailyDraft(recipientId);
   const saveMut = useSaveDailyRecordMutation();
 
   const todayStr = getKSTDateStr(new Date());
@@ -71,8 +71,8 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
 
     try {
       await generateDraft(keywords);
-    } catch {
-      showError('초안 생성 중 오류가 발생했습니다.');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : '초안 생성 중 오류가 발생했습니다.');
     }
   };
 
@@ -160,7 +160,9 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
           </Button>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button type="button" variant="secondary" disabled={isGenerating || isFuture}
+            onClick={() => setDraft({ cognition: '', behavior: '' })}>직접 기록 작성</Button>
           <Button
             type="submit"
             disabled={isGenerating || !hasRequiredEvent || isFuture}

@@ -1,235 +1,152 @@
 'use server';
 
 import { after } from 'next/server';
-
 import { db } from '@/db';
-import { records } from '@/db/schema';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import { writeTransaction } from '@/db/transaction';
+import { records, recipients } from '@/db/schema';
+import { eq, and, gte, lt, desc, inArray } from 'drizzle-orm';
 import { generateDailyRecord, generateWeeklyRecord } from '@/lib/ai';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { getKSTDateStr, addCalendarDays } from '@/lib/dateUtils';
-import { getRecipientRecords } from './queries';
-import { getSession } from '@/lib/auth';
 import { dailyRecordDraftSchema } from '@/lib/daily-record';
+import { AccessDeniedError, requireActor, requireRecipient, recipientAccess, recordAccess, recordFields } from '@/lib/workspace-access';
+import { reserveAiUsage, validateAiInput, DAILY_INPUT_LIMIT, WEEKLY_INPUT_LIMIT } from '@/lib/ai/usage';
 
-export async function generateDraft(keywords: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  return await generateDailyRecord(keywords);
+function validDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) !== value) {
+    throw new Error('올바른 날짜를 입력해주세요.');
+  }
+  return value;
+}
+function validWeeklyContent(content: string) {
+  if (typeof content !== 'string' || !content.trim() || content.length > 5000) throw new Error('주간 기록은 1자 이상 5000자 이내로 입력해주세요.');
+  return content.trim();
+}
+async function insertRecord(actorId: string, values: typeof records.$inferInsert) {
+  // 권한 조회와 쓰기를 같은 트랜잭션에 둬 공유 철회와의 경합을 막는다.
+  await writeTransaction(async (tx) => {
+    const allowed = await tx.select({ id: recipients.id }).from(recipients)
+      .where(and(eq(recipients.id, values.recipientId), recipientAccess(actorId, 'edit'))).get();
+    if (!allowed) throw new AccessDeniedError();
+    await tx.insert(records).values({ ...values, createdByUserId: actorId });
+  });
+}
+
+export async function generateDraft(keywords: string, recipientId: string) {
+  const actor = await requireActor();
+  await requireRecipient(actor.id, recipientId, 'edit');
+  validateAiInput(keywords, DAILY_INPUT_LIMIT);
+  await reserveAiUsage(actor.id);
+  return generateDailyRecord(keywords);
 }
 
 export async function saveDailyRecord(recipientId: string, cognition: string, behavior: string, targetDate?: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
+  const actor = await requireActor();
   const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
-  const dateStr = targetDate || getKSTDateStr(new Date());
-  
-  await db.insert(records).values({
-    id: randomUUID(),
-    recipientId,
-    date: dateStr,
-    type: 'daily',
-    cognitionContent: draft.cognition,
-    behaviorContent: draft.behavior,
-    createdAt: new Date(),
-  });
-  
+  await insertRecord(actor.id, { id: randomUUID(), recipientId, date: validDate(targetDate || getKSTDateStr(new Date())),
+    type: 'daily', cognitionContent: draft.cognition, behaviorContent: draft.behavior, createdAt: new Date() });
   revalidatePath(`/recipients/${recipientId}`);
   return { success: true };
 }
 
 export async function generateWeeklyDraft(recipientId: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  const allRecords = await getRecipientRecords(recipientId);
-  const dailyRecords = allRecords.filter(r => r.type === 'daily').slice(0, 7);
-
-  const formattedForAI = dailyRecords.map(r => ({
-    date: r.date,
-    cognition: r.cognitionContent,
-    behavior: r.behaviorContent
-  }));
-
-  return await generateWeeklyRecord(formattedForAI);
+  const actor = await requireActor();
+  await requireRecipient(actor.id, recipientId, 'edit');
+  const daily = await db.select().from(records).where(and(eq(records.recipientId, recipientId),
+    eq(records.type, 'daily'), recordAccess(actor.id))).orderBy(desc(records.date)).limit(7);
+  const input = daily.map(r => ({ date: r.date, cognition: r.cognitionContent, behavior: r.behaviorContent }));
+  if (!input.length) throw new Error('일일 기록이 필요합니다.');
+  validateAiInput(JSON.stringify(input), WEEKLY_INPUT_LIMIT);
+  await reserveAiUsage(actor.id);
+  return generateWeeklyRecord(input);
 }
 
 export async function saveWeeklyReport(recipientId: string, content: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  const todayStr = getKSTDateStr(new Date());
-  
-  await db.insert(records).values({
-    id: randomUUID(),
-    recipientId,
-    date: todayStr,
-    type: 'weekly',
-    combinedContent: content,
-    createdAt: new Date(),
-  });
-  
+  const actor = await requireActor();
+  await insertRecord(actor.id, { id: randomUUID(), recipientId, date: getKSTDateStr(new Date()), type: 'weekly',
+    combinedContent: validWeeklyContent(content), createdAt: new Date() });
   revalidatePath(`/recipients/${recipientId}`);
   return { success: true };
 }
 
 export async function updateDailyRecord(recordId: string, cognition: string, behavior: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
+  const actor = await requireActor();
   const draft = dailyRecordDraftSchema.parse({ cognition, behavior });
-  await db.update(records).set({
-    cognitionContent: draft.cognition,
-    behaviorContent: draft.behavior
-  }).where(eq(records.id, recordId));
-  
-  const record = await db.select().from(records).where(eq(records.id, recordId));
-  if(record.length > 0) revalidatePath(`/recipients/${record[0].recipientId}`);
+  const changed = await writeTransaction(async tx => tx.update(records).set({ cognitionContent: draft.cognition, behaviorContent: draft.behavior })
+    .where(and(eq(records.id, recordId), eq(records.type, 'daily'), recordAccess(actor.id, 'edit')))
+    .returning({ recipientId: records.recipientId }));
+  if (!changed.length) throw new AccessDeniedError();
+  revalidatePath(`/recipients/${changed[0].recipientId}`);
 }
 
 export async function updateWeeklyRecord(recordId: string, content: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  await db.update(records).set({
-    combinedContent: content
-  }).where(eq(records.id, recordId));
-  
-  const recordList = await db.select().from(records).where(eq(records.id, recordId));
-  if(recordList.length > 0) revalidatePath(`/recipients/${recordList[0].recipientId}`);
+  const actor = await requireActor();
+  const changed = await writeTransaction(async tx => tx.update(records).set({ combinedContent: validWeeklyContent(content) })
+    .where(and(eq(records.id, recordId), eq(records.type, 'weekly'), recordAccess(actor.id, 'edit')))
+    .returning({ recipientId: records.recipientId }));
+  if (!changed.length) throw new AccessDeniedError();
+  revalidatePath(`/recipients/${changed[0].recipientId}`);
 }
 
 export async function deleteRecord(recordId: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  const recordList = await db.select().from(records).where(eq(records.id, recordId));
-  if(recordList.length > 0) {
-    await db.delete(records).where(eq(records.id, recordId));
-    revalidatePath(`/recipients/${recordList[0].recipientId}`);
-  }
+  const actor = await requireActor();
+  const removed = await writeTransaction(async tx => tx.delete(records).where(and(eq(records.id, recordId), recordAccess(actor.id, 'edit')))
+    .returning({ recipientId: records.recipientId }));
+  if (!removed.length) throw new AccessDeniedError();
+  revalidatePath(`/recipients/${removed[0].recipientId}`);
 }
 
-// ===============================
-// Weekly Report Server Actions 
-// ===============================
-
 export async function getWeeklyRecord(recordId: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-
-  const record = await db.select().from(records).where(eq(records.id, recordId)).get();
-  if (!record) throw new Error('Record not found');
-
-  return {
-    id: record.id,
-    status: record.status,
-    combinedContent: record.combinedContent,
-  };
+  const actor = await requireActor();
+  const record = await db.select(recordFields(actor.id)).from(records)
+    .where(and(eq(records.id, recordId), eq(records.type, 'weekly'), recordAccess(actor.id))).get();
+  if (!record) throw new AccessDeniedError();
+  return { id: record.id, status: record.status, combinedContent: record.combinedContent, canEdit: record.canEdit };
 }
 
 export async function getInitialWeeklyReportStatus(recipientId: string, targetDate: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-
-  const existingRecord = await db.select().from(records)
-    .where(
-      and(
-        eq(records.recipientId, recipientId),
-        eq(records.type, 'weekly'),
-        eq(records.date, targetDate)
-      )
-    ).get();
-
-  if (existingRecord) {
-    return { recordId: existingRecord.id, status: existingRecord.status };
-  }
-  return { recordId: undefined, status: undefined }; // 'IDLE' state inferred when both are undefined
+  const actor = await requireActor();
+  await requireRecipient(actor.id, recipientId);
+  const existing = await db.select(recordFields(actor.id)).from(records).where(and(eq(records.recipientId, recipientId),
+    eq(records.type, 'weekly'), eq(records.date, validDate(targetDate)), recordAccess(actor.id))).get();
+  return { recordId: existing?.id, status: existing?.status, canEdit: existing?.canEdit ?? false };
 }
 
-// 비동기 백그라운드 작업 (내부용)
-async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string) {
+async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string, actorId: string) {
   try {
-    const startDateStr = targetDate;
-    const endDateStr = addCalendarDays(targetDate, 7);
-
-    const weeklyData = await db.select()
-      .from(records)
-      .where(
-        and(
-          eq(records.recipientId, recipientId),
-          eq(records.type, 'daily'),
-          gte(records.date, startDateStr),
-          lt(records.date, endDateStr)
-        )
-      ).all();
-
-    if (weeklyData.length === 0) {
-      await db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
-      return;
-    }
-
-    const finalContent = await generateWeeklyRecord(
-      weeklyData.map((record) => ({
-        date: record.date,
-        cognition: record.cognitionContent,
-        behavior: record.behaviorContent,
-      }))
-    );
-
-    await db.update(records)
-      .set({ 
-        status: 'COMPLETED',
-        combinedContent: finalContent 
-      })
-      .where(eq(records.id, recordId))
-      .run();
-
-  } catch (error) {
-    console.error('주간 리포트 백그라운드 작업 실패:', error);
-    await db.update(records).set({ status: 'FAILED' }).where(eq(records.id, recordId)).run();
+    await requireRecipient(actorId, recipientId, 'edit');
+    const daily = await db.select().from(records).where(and(eq(records.recipientId, recipientId), eq(records.type, 'daily'),
+      gte(records.date, targetDate), lt(records.date, addCalendarDays(targetDate, 7)), recordAccess(actorId)));
+    if (!daily.length) throw new Error('일일 기록이 필요합니다.');
+    const input = daily.map(r => ({ date: r.date, cognition: r.cognitionContent, behavior: r.behaviorContent }));
+    validateAiInput(JSON.stringify(input), WEEKLY_INPUT_LIMIT);
+    // 대기 중 철회된 공유 권한은 입력 조회와 최종 저장 모두에서 다시 검사한다.
+    await requireRecipient(actorId, recipientId, 'edit');
+    const finalContent = await generateWeeklyRecord(input);
+    const saved = await writeTransaction(async tx => tx.update(records).set({ status: 'COMPLETED', combinedContent: finalContent })
+      .where(and(eq(records.id, recordId), eq(records.status, 'PROCESSING'),
+        inArray(records.recipientId, db.select({ id: recipients.id }).from(recipients).where(recipientAccess(actorId, 'edit')))))
+      .returning({ id: records.id }));
+    if (!saved.length) throw new AccessDeniedError();
+  } catch {
+    // 작업자가 방금 만든 레코드 상태만 닫는다. 원문/모델 응답/개인정보는 로그에 남기지 않는다.
+    await writeTransaction(async tx => tx.update(records).set({ status: 'FAILED' }).where(and(eq(records.id, recordId),
+      eq(records.createdByUserId, actorId), eq(records.status, 'PROCESSING'))));
   }
 }
 
 export async function generateWeeklyReportBackground(recipientId: string, targetDate: string) {
-  const session = await getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-
-  const existingRecord = await db.select().from(records)
-    .where(
-      and(
-        eq(records.recipientId, recipientId),
-        eq(records.type, 'weekly'),
-        eq(records.date, targetDate)
-      )
-    ).get();
-
-  if (existingRecord) {
-    if (existingRecord.status === 'PROCESSING') {
-      return { recordId: existingRecord.id, status: existingRecord.status };
-    } else if (existingRecord.status === 'COMPLETED') {
-      return { recordId: existingRecord.id, status: existingRecord.status };
-    } else {
-      // FAILED 인 경우 재시도를 위해 일괄 삭제
-      await db.delete(records).where(
-        and(
-          eq(records.recipientId, recipientId),
-          eq(records.type, 'weekly'),
-          eq(records.date, targetDate),
-          eq(records.status, 'FAILED')
-        )
-      ).run();
-    }
-  }
-
+  const actor = await requireActor();
+  validDate(targetDate);
+  await requireRecipient(actor.id, recipientId, 'edit');
+  const existing = await db.select().from(records).where(and(eq(records.recipientId, recipientId),
+    eq(records.type, 'weekly'), eq(records.date, targetDate), recordAccess(actor.id))).get();
+  if (existing && existing.status !== 'FAILED') return { recordId: existing.id, status: existing.status };
+  await reserveAiUsage(actor.id);
   const recordId = randomUUID();
-  await db.insert(records).values({
-    id: recordId,
-    recipientId,
-    date: targetDate,
-    type: 'weekly',
-    status: 'PROCESSING',
-    createdAt: new Date(),
-  }).run();
-
-  // Safe background execution after response
-  after(() => processWeeklyReport(recordId, recipientId, targetDate));
-
+  await insertRecord(actor.id, { id: recordId, recipientId, date: targetDate, type: 'weekly', status: 'PROCESSING', createdAt: new Date() });
+  if (existing) await writeTransaction(async tx => tx.delete(records).where(and(eq(records.id, existing.id), eq(records.status, 'FAILED'), recordAccess(actor.id, 'edit'))));
+  after(() => processWeeklyReport(recordId, recipientId, targetDate, actor.id));
   return { recordId, status: 'PROCESSING' as const };
 }

@@ -11,3 +11,10 @@ export function createLibsqlAdapter(config: ReturnType<typeof getDatabaseConfig>
     close: () => client.close(),
   };
 }
+
+// SQLite의 쓰기 잠금은 일시적일 수 있다. 공급자 오류 분류는 이 경계 안에 둔다.
+export function isRetryableWriteError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  if ('code' in error && (error.code === 'SQLITE_BUSY' || error.code === 'SQLITE_BUSY_SNAPSHOT')) return true;
+  return error.cause !== error && error.cause !== undefined && isRetryableWriteError(error.cause);
+}

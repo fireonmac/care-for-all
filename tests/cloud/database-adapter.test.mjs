@@ -17,7 +17,7 @@ test('libSQL adapter keeps schema-shaped CRUD, projection, aggregation and relat
   const client = createClient({ url: ':memory:' });
   const adapter = wrapTestClient(client);
   t.after(() => adapter.close());
-  await client.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
+  await client.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, workspace_id TEXT, created_by_user_id TEXT, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
   const { db } = adapter;
   const createdAt = new Date('2026-11-01T00:00:00Z');
   const inserted = await db.insert(recipients).values({ id: 'synthetic', name: '합성 대상자', createdAt }).returning();
@@ -44,7 +44,7 @@ test('Drizzle CTE, distinct, batch and execution metadata remain available', asy
   const adapter = wrapTestClient(client);
   t.after(() => adapter.close());
   const { db } = adapter;
-  await db.run(sql`CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)`);
+  await db.run(sql`CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, workspace_id TEXT, created_by_user_id TEXT, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)`);
   const createdAt = new Date('2026-11-01T00:00:00Z');
   const [inserted, distinct] = await db.batch([
     db.insert(recipients).values([
@@ -72,7 +72,7 @@ test('temporary file SQLite commits and rolls back Drizzle transactions across r
   const adapter = createLibsqlAdapter(config);
   try {
     const { db } = adapter;
-    await db.run(sql`CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)`);
+    await db.run(sql`CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, workspace_id TEXT, created_by_user_id TEXT, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)`);
     const createdAt = new Date('2026-11-01T00:00:00Z');
     const count = await db.transaction(async (tx) =>
       (await tx.insert(recipients).values({ id: 'committed', name: '보존할 합성 대상자', createdAt }).run()).rowsAffected);
@@ -95,7 +95,7 @@ test('failed writes reject without changing existing rows', async (t) => {
   const client = createClient({ url: ':memory:' });
   const adapter = wrapTestClient(client);
   t.after(() => adapter.close());
-  await client.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
+  await client.execute('CREATE TABLE recipients (id TEXT PRIMARY KEY, name TEXT NOT NULL, workspace_id TEXT, created_by_user_id TEXT, is_active INTEGER DEFAULT 1, created_at INTEGER NOT NULL)');
   const row = { id: 'synthetic', name: '합성 대상자', createdAt: new Date() };
   await adapter.db.insert(recipients).values(row);
   await assert.rejects(adapter.db.insert(recipients).values(row).run());

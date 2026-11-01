@@ -5,10 +5,9 @@ import { APIError } from 'better-auth/api';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { createClient } from '@libsql/client';
 import { wrapTestClient } from './libsql-fixture.mjs';
-import { eq } from 'drizzle-orm';
 import { sourceLoader } from './load-source.mjs';
 
-test('installed Better Auth hooks block outside/unverified OAuth users and deny new sessions after removal', async (t) => {
+test('installed Better Auth accepts Google identities without an allowlist; session CRUD is unchanged', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => { throw new Error('No external calls in synthetic auth tests'); });
   const client = createClient({ url: ':memory:' });
   t.after(() => client.close());
@@ -17,13 +16,11 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
     'CREATE TABLE account (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, provider_id TEXT NOT NULL, user_id TEXT NOT NULL, access_token TEXT, refresh_token TEXT, id_token TEXT, access_token_expires_at INTEGER, refresh_token_expires_at INTEGER, scope TEXT, password TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)',
     'CREATE TABLE session (id TEXT PRIMARY KEY, expires_at INTEGER NOT NULL, token TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, ip_address TEXT, user_agent TEXT, user_id TEXT NOT NULL)',
   ]);
-  const schema = sourceLoader()('src/db/schema.ts');
   const { db } = wrapTestClient(client);
   const { auth } = sourceLoader({
     'better-auth': { betterAuth }, 'better-auth/api': { APIError },
     '@better-auth/drizzle-adapter': { drizzleAdapter }, '@/db': { db },
     '@/env': { getAuthEnv: () => ({
-      requireAllowlist: true, ALLOWED_EMAILS: 'caregiver@example.com',
       BETTER_AUTH_URL: 'https://synthetic.example',
       BETTER_AUTH_SECRET: 'synthetic-session-secret-1234567890-not-for-production',
       GOOGLE_CLIENT_ID: 'synthetic-id', GOOGLE_CLIENT_SECRET: 'synthetic-secret',
@@ -32,13 +29,15 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
     'next/navigation': { redirect() {} },
   })('src/lib/auth.ts');
   const { internalAdapter } = await auth.$context;
-  for (const user of [
+  for (const identity of [
     { email: 'outside@example.com', emailVerified: true },
-    { email: 'caregiver@example.com', emailVerified: false },
+    { email: 'unverified@example.com', emailVerified: false },
   ]) {
-    await assert.rejects(internalAdapter.createOAuthUser({ name: 'Synthetic', ...user }, { providerId: 'google', accountId: 'synthetic-id' }), (error) => error.status === 'FORBIDDEN');
+    const created = await internalAdapter.createOAuthUser({ name: 'Synthetic', ...identity }, { providerId: 'google', accountId: identity.email });
+    const session = await internalAdapter.createSession(created.user.id);
+    assert.ok(session);
+    await internalAdapter.deleteSession(session.token);
   }
-  for (const table of ['user', 'account', 'session']) assert.equal((await client.execute(`SELECT COUNT(*) AS count FROM ${table}`)).rows[0].count, 0);
   const { user } = await internalAdapter.createOAuthUser({ name: 'Synthetic', email: 'caregiver@example.com', emailVerified: true }, { providerId: 'google', accountId: 'synthetic-allowed' });
   const session = await internalAdapter.createSession(user.id);
   assert.ok(session);
@@ -48,9 +47,6 @@ test('installed Better Auth hooks block outside/unverified OAuth users and deny 
   const expiresAt = new Date('2026-12-01T00:00:00Z');
   await internalAdapter.updateSession(session.token, { expiresAt });
   assert.equal((await internalAdapter.findSession(session.token)).session.expiresAt.getTime(), expiresAt.getTime());
-  await db.update(schema.user).set({ email: 'removed@example.com' }).where(eq(schema.user.id, user.id));
-  await assert.rejects(internalAdapter.createSession(user.id), (error) => error.status === 'FORBIDDEN');
-  assert.equal((await client.execute('SELECT COUNT(*) AS count FROM session')).rows[0].count, 1);
   await internalAdapter.deleteSession(session.token);
   assert.equal(await internalAdapter.findSession(session.token), null);
 });
