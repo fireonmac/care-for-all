@@ -1,8 +1,8 @@
 import { defineConfig } from 'drizzle-kit';
-import { getDatabaseConfig } from './src/env';
+import { getDatabaseConfig, isLocalDatabaseUrl } from './src/env';
 
 const database = getDatabaseConfig();
-const local = database.url.startsWith('file:') || database.url === ':memory:';
+const local = isLocalDatabaseUrl(database.url);
 
 export default defineConfig({
   schema: './src/db/schema.ts',

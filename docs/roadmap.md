@@ -74,6 +74,10 @@
 
 ## 보류
 
+- D1 전환은 아직 구현·검증하지 않았다. 현재 연결 경계는 로컬 SQLite/원격 libSQL용이다. 필요해지면 기존 SQLite 스키마·업무 쿼리를 유지할 수 있는지 검증하면서 `src/db`의 드라이버/연결 조립과 환경·마이그레이션 설정을 바꾼다. 범용 repository를 미리 추가하지 않는다.
+  - Workers에서는 [Drizzle D1 드라이버와 바인딩](https://orm.drizzle.team/docs/connect-cloudflare-d1)이 필요하다. Vercel/Node를 유지한다면 [인증된 Worker API](https://developers.cloudflare.com/d1/tutorials/build-an-api-to-access-d1/) 등 별도 전송 경계가 필요하다. Drizzle Kit의 `d1-http` 설정은 앱 런타임 드라이버를 대신하지 않는다.
+  - D1의 batch 트랜잭션·결과 형식, Better Auth 가입/세션/허용 목록, 실제 SQL·날짜 기본값·마이그레이션을 합성 데이터로 검증한다. Workers로 앱도 이동하면 Next.js 실행 어댑터와 `after()` 생명주기도 확인한다. 현재 libSQL 테스트는 D1 호환성 증명이 아니다.
+
 - 음성 받아쓰기
 - PostgreSQL 전환과 다기관 지원
 - 공식 API가 확인된 경우의 케어포 연동

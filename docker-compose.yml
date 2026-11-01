@@ -23,6 +23,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
+      AUTH_REQUIRE_ALLOWLIST: ${AUTH_REQUIRE_ALLOWLIST:-true}
     healthcheck:
       test:
         [

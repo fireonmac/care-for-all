@@ -3,14 +3,14 @@ import { getAuthBaseUrl } from './lib/auth-url';
 
 const authEnvSchema = z.object({
   ALLOWED_EMAILS: z.string().optional(),
-  VERCEL: z.string().optional(),
+  requireAllowlist: z.boolean(),
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.url(),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
 }).superRefine((config, context) => {
-  if (config.VERCEL === '1' && !config.ALLOWED_EMAILS?.split(',').some((email) => email.trim())) {
-    context.addIssue({ code: 'custom', path: ['ALLOWED_EMAILS'], message: 'Vercel에는 ALLOWED_EMAILS가 필요합니다.' });
+  if (config.requireAllowlist && !config.ALLOWED_EMAILS?.split(',').some((email) => email.trim())) {
+    context.addIssue({ code: 'custom', path: ['ALLOWED_EMAILS'], message: '허용 계정 제한에는 ALLOWED_EMAILS가 필요합니다.' });
   }
 });
 
@@ -22,18 +22,37 @@ const aiEnvSchema = z.object({
 });
 
 const databaseConfigSchema = z.object({
-  url: z.string().min(1),
+  url: z.string().min(1).refine((url) => {
+    if (isLocalDatabaseUrl(url)) return true;
+    try {
+      const parsed = new URL(url);
+      return ['libsql:', 'https:', 'http:', 'wss:', 'ws:'].includes(parsed.protocol) && Boolean(parsed.hostname);
+    } catch {
+      return false;
+    }
+  }, '지원하는 SQLite 파일 또는 libSQL 연결 URL이 필요합니다.'),
   authToken: z.string().trim().optional(),
 }).superRefine((config, context) => {
-  const local = config.url.startsWith('file:') || config.url === ':memory:';
+  const local = isLocalDatabaseUrl(config.url);
   if (!local && !config.authToken) {
-    context.addIssue({ code: 'custom', path: ['authToken'], message: '원격 DB에는 TURSO_AUTH_TOKEN이 필요합니다.' });
+    context.addIssue({ code: 'custom', path: ['authToken'], message: '원격 DB에는 DATABASE_AUTH_TOKEN이 필요합니다.' });
   }
 });
 
 // 각 소비자가 필요한 설정만 호출 시 검증한다. 모듈 import는 환경 검증을 실행하지 않는다.
 export function getAuthEnv(environment: NodeJS.ProcessEnv = process.env) {
-  const config = { ...environment, BETTER_AUTH_URL: getAuthBaseUrl({ BETTER_AUTH_URL: environment.BETTER_AUTH_URL, VERCEL: environment.VERCEL, VERCEL_URL: environment.VERCEL_URL }) };
+  const config = {
+    ALLOWED_EMAILS: environment.ALLOWED_EMAILS,
+    requireAllowlist: getBooleanSetting(environment, 'AUTH_REQUIRE_ALLOWLIST', true),
+    BETTER_AUTH_URL: getAuthBaseUrl({
+      BETTER_AUTH_URL: environment.BETTER_AUTH_URL,
+      VERCEL: environment.VERCEL,
+      VERCEL_URL: environment.VERCEL_URL,
+    }),
+    BETTER_AUTH_SECRET: environment.BETTER_AUTH_SECRET,
+    GOOGLE_CLIENT_ID: environment.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: environment.GOOGLE_CLIENT_SECRET,
+  };
   if (environment.SKIP_ENV_VALIDATION === '1' || environment.npm_lifecycle_event === 'build') {
     return config as unknown as z.infer<typeof authEnvSchema>;
   }
@@ -61,13 +80,30 @@ export function getAiEnv(environment: NodeJS.ProcessEnv = process.env) {
   return result.data;
 }
 
+// 플랫폼 입력은 설정 경계에서만 해석한다. 잘못된 boolean을 false로 간주하지 않는다.
+function getBooleanSetting(environment: NodeJS.ProcessEnv, key: string, fallback: boolean) {
+  const value = environment[key];
+  if (value === undefined || value === '') return fallback;
+  if (value === 'true' || value === '1') return true;
+  if (value === 'false' || value === '0') return false;
+  throw new Error(`${key}에는 true 또는 false를 설정해주세요.`);
+}
+
+// 앱 검증과 Drizzle Kit가 같은 저장소 분류를 사용한다.
+export function isLocalDatabaseUrl(url: string) {
+  return url.startsWith('file:') || url === ':memory:';
+}
+
 // 앱과 Drizzle Kit가 같은 검증을 사용하며 인증/AI 설정은 요구하지 않는다.
 export function getDatabaseConfig(environment: NodeJS.ProcessEnv = process.env) {
-  if (environment.VERCEL === '1' && !/^(libsql|https):\/\//.test(environment.DATABASE_URL ?? '')) {
-    throw new Error('Vercel에는 원격 DATABASE_URL이 필요합니다. 로컬 SQLite 파일을 사용할 수 없습니다.');
+  const url = environment.DATABASE_URL || 'file:./sqlite.db';
+  const requireRemote = getBooleanSetting(environment, 'DATABASE_REQUIRE_REMOTE', false)
+    || environment.VERCEL === '1';
+  if (requireRemote && !/^(libsql|https):\/\//.test(url)) {
+    throw new Error('현재 실행 환경에는 원격 DATABASE_URL이 필요합니다. libsql:// 또는 https:// 주소를 설정해주세요.');
   }
   return databaseConfigSchema.parse({
-    url: environment.DATABASE_URL || 'file:./sqlite.db',
-    authToken: environment.TURSO_AUTH_TOKEN || undefined,
+    url,
+    authToken: environment.DATABASE_AUTH_TOKEN?.trim() || environment.TURSO_AUTH_TOKEN?.trim() || undefined,
   });
 }
