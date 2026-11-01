@@ -95,7 +95,9 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 
 사용자 날짜는 `YYYY-MM-DD` 문자열이며 화면의 “오늘”은 KST
 (`Asia/Seoul`)를 기준으로 한다. 주간 범위는 월요일부터 일요일까지다.
-관련 계산의 원본은 `src/lib/dateUtils.ts`다.
+시간대의 단일 기준은 `src/lib/dateUtils.ts`의 `RECORD_TIME_ZONE`이다. 현재 값은
+`Asia/Seoul`이며 향후 기관 설정으로 교체한다. 현재 기관별 설정/UI는 없다.
+기존 `getKSTDateStr`·`getWeekData` 인터페이스를 유지한다. 시각은 명시적으로 `Asia/Seoul` 날짜로 변환하고, 날짜 문자열의 주차·이동은 UTC 달력 필드로 계산해 서버/브라우저 시간대와 DST의 영향을 받지 않는다.
 
 ## 런타임과 저장소
 

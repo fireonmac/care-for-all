@@ -8,12 +8,10 @@ import { eq, and, gte, lt } from 'drizzle-orm';
 import { generateDailyRecord, generateWeeklyRecord } from '@/lib/ai';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
-import { getKSTDateStr } from '@/lib/dateUtils';
+import { getKSTDateStr, addCalendarDays } from '@/lib/dateUtils';
 import { getRecipientRecords } from './queries';
 import { getSession } from '@/lib/auth';
 import { dailyRecordDraftSchema } from '@/lib/daily-record';
-
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function generateDraft(keywords: string) {
   const session = await getSession();
@@ -148,11 +146,8 @@ export async function getInitialWeeklyReportStatus(recipientId: string, targetDa
 // 비동기 백그라운드 작업 (내부용)
 async function processWeeklyReport(recordId: string, recipientId: string, targetDate: string) {
   try {
-    const startDate = new Date(targetDate);
-    const endDate = new Date(startDate.getTime() + ONE_WEEK_MS);
-    
-    const startDateStr = getKSTDateStr(startDate);
-    const endDateStr = getKSTDateStr(endDate);
+    const startDateStr = targetDate;
+    const endDateStr = addCalendarDays(targetDate, 7);
 
     const weeklyData = await db.select()
       .from(records)

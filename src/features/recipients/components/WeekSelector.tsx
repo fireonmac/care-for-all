@@ -2,20 +2,18 @@
 
 import { useQueryState } from 'nuqs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { addDays, format } from 'date-fns';
+import { addCalendarDays } from '@/lib/dateUtils';
 import { Button } from '@/components/ui/button';
 
 export function WeekSelector({ currentMonth, currentWeekOfMonth, targetDate }: { currentMonth: number, currentWeekOfMonth: number, targetDate: string }) {
   const [, setDateParam] = useQueryState('date', { shallow: false });
 
   const handlePrev = () => {
-    const newDate = addDays(new Date(targetDate), -7);
-    setDateParam(format(newDate, 'yyyy-MM-dd'));
+    setDateParam(addCalendarDays(targetDate, -7));
   };
 
   const handleNext = () => {
-    const newDate = addDays(new Date(targetDate), 7);
-    setDateParam(format(newDate, 'yyyy-MM-dd'));
+    setDateParam(addCalendarDays(targetDate, 7));
   };
 
   return (
