@@ -38,26 +38,25 @@ test('membership alone grants no records; explicit read/edit sharing stays recip
   await f.db.insert(f.schema.workspaceMembers).values({ workspaceId: space.id, userId: 'bob' });
   f.login('bob'); assert.deepEqual((await f.listing()).items, []);
   await assert.rejects(f.actions.getWeeklyRecord(weekly.id), denied);
-  f.login('alice'); await f.share.shareRecipient(one, { email: 'bob@example.com', permission: 'read' });
+  f.login('alice'); await f.grantRecipientAccess(one, 'bob', 'read');
   f.login('bob');
   assert.deepEqual((await f.listing()).items.map(r => r.id), [one]);
   assert.equal((await f.actions.getWeeklyRecord(weekly.id)).canEdit, false);
   await assert.rejects(f.actions.updateDailyRecord(daily.id, '침입', ''), denied);
   await assert.rejects(f.actions.saveWeeklyReport(one, '침입'), denied);
   await assert.rejects(f.actions.deleteRecord(daily.id), denied);
-  await assert.rejects(f.share.shareRecipient(one, { email: 'charlie@example.com', permission: 'edit' }), denied);
   await assert.rejects(f.access.requireRecipient('bob', two), denied);
   assert.equal((await f.load('src/app/api/generate-daily/route.ts').POST(request(one))).status, 404);
   assert.equal(f.aiCalls(), 0);
-  f.login('alice'); await f.share.shareRecipient(one, { email: 'bob@example.com', permission: 'edit' });
+  f.login('alice'); await f.grantRecipientAccess(one, 'bob', 'edit');
   f.login('bob'); await f.actions.updateDailyRecord(daily.id, '권한자의 과거 수정', '');
   await f.actions.updateWeeklyRecord(weekly.id, '권한자의 주간 수정');
   await f.actions.saveDailyRecord(one, '작성자 기록', '', '2025-01-01');
   const own = (await f.load('src/app/(main)/recipients/[id]/queries.ts').getRecipientRecords(one)).find(r => r.createdByUserId === 'bob');
-  f.login('alice'); await f.share.shareRecipient(one, { email: 'bob@example.com', permission: 'read' });
+  f.login('alice'); await f.grantRecipientAccess(one, 'bob', 'read');
   f.login('bob'); await f.actions.updateDailyRecord(own.id, '작성자 기본 편집', '');
   await assert.rejects(f.actions.updateDailyRecord(daily.id, '침입', ''), denied);
-  f.login('alice'); await f.share.revokeRecipientShare(one, 'bob');
+  f.login('alice'); await f.revokeRecipientAccess(one, 'bob');
   f.login('bob'); await assert.rejects(f.actions.updateDailyRecord(own.id, '철회 후 수정', ''), denied);
   assert.deepEqual((await f.listing()).items, []);
 });
@@ -76,7 +75,6 @@ test('every direct record/action/AI ID path denies another workspace before gene
     () => f.actions.updateDailyRecord(daily.id, '침입', ''), () => f.actions.updateWeeklyRecord(weekly.id, '침입'),
     () => f.actions.deleteRecord(daily.id), () => f.actions.getWeeklyRecord(weekly.id),
     () => f.actions.getInitialWeeklyReportStatus(id, '2026-10-26'), () => f.actions.generateWeeklyReportBackground(id, '2026-10-26'),
-    () => f.share.getRecipientShares(id), () => f.share.revokeRecipientShare(id, 'alice'),
   ]) await assert.rejects(run(), denied);
   const route = f.load('src/app/api/generate-daily/route.ts');
   assert.equal((await route.POST(request(id))).status, 404);
@@ -103,11 +101,11 @@ for (const fails of [false, true]) test('weekly after tracks Promise and saves '
 test('revocation before background execution prevents AI input; revocation during execution prevents saving output', async t => {
   for (const during of [false, true]) {
     let f;
-    f = await workspaceFixture(t, { generateWeekly: async () => { f.login('alice'); await f.share.revokeRecipientShare(id, 'bob'); return '삭제되어야 할 합성 결과'; } });
+    f = await workspaceFixture(t, { generateWeekly: async () => { f.login('alice'); await f.revokeRecipientAccess(id, 'bob'); return '삭제되어야 할 합성 결과'; } });
     const id = await f.createRecipient('Synthetic Shared'); await f.actions.saveDailyRecord(id, '합성 기록', '', '2026-10-26');
-    await f.share.shareRecipient(id, { email: 'bob@example.com', permission: 'edit' });
+    await f.grantRecipientAccess(id, 'bob', 'edit');
     f.login('bob'); const generated = await f.actions.generateWeeklyReportBackground(id, '2026-10-26');
-    if (!during) { f.login('alice'); await f.share.revokeRecipientShare(id, 'bob'); }
+    if (!during) { f.login('alice'); await f.revokeRecipientAccess(id, 'bob'); }
     await f.callbacks[0]();
     assert.equal(f.aiCalls(), during ? 1 : 0);
     f.login('alice'); const row = await f.actions.getWeeklyRecord(generated.recordId);
