@@ -5,18 +5,18 @@ import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { db } from '@/db';
-import { user as users } from '@/db/schema';
+import * as schema from '@/db/schema';
 import { getAuthEnv } from '@/env';
 import { isAllowedUser } from '@/lib/access';
 
 const env = getAuthEnv();
-const isPermitted = (user: Pick<typeof users.$inferSelect, 'email' | 'emailVerified'>) =>
+const isPermitted = (user: Pick<typeof schema.user.$inferSelect, 'email' | 'emailVerified'>) =>
   isAllowedUser(user, env.ALLOWED_EMAILS, env.requireAllowlist);
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  database: drizzleAdapter(db, { provider: 'sqlite' }),
+  database: drizzleAdapter(db, { provider: 'sqlite', schema, transaction: false }),
   socialProviders: {
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
@@ -34,7 +34,7 @@ export const auth = betterAuth({
     session: {
       create: {
         before: async (session) => {
-          const user = await db.query.user.findFirst({ where: eq(users.id, session.userId) });
+          const user = await db.query.user.findFirst({ where: eq(schema.user.id, session.userId) });
           if (!user || !isPermitted(user)) throw new APIError('FORBIDDEN', { message: '허용된 계정으로 로그인해주세요.' });
         },
       },

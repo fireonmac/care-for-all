@@ -54,7 +54,9 @@ flowchart LR
 | `src/app` | 라우트, 페이지 조합, Route Handler, 해당 화면 전용 Action/UI |
 | `src/components` | 여러 라우트에서 재사용하는 UI |
 | `src/features` | 도메인별 쿼리, 타입, 클라이언트 쿼리 키 |
-| `src/db/index.ts`, `src/db/client.ts` | 검증된 설정의 조립과 공통 libSQL 연결 factory |
+| `src/db/index.ts` | 검증된 설정과 DB 어댑터의 조립 |
+| `src/db/contract.ts` | Drizzle 공통 비동기 SQLite 타입에서 도출한 앱 DB 계약 |
+| `src/db/adapters/libsql.ts` | 로컬 SQLite/Turso용 libSQL 연결·실행 구현 |
 | `src/db/schema.ts` | SQLite 데이터 모델과 추론 타입 |
 | `src/app/api/generate-*` | 일일·주간 생성 요청과 HTTP 응답 처리 |
 | `src/lib/ai.ts` | 기록 생성 use case와 공급자 호출 조합 |
@@ -101,7 +103,7 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 
 ## 런타임과 저장소
 
-- DB 위치·자격 증명·저장소 제약은 `src/env.ts`에서 검증하고 `src/db/index.ts`에서 조립한다. 앱과 테스트는 `createDatabase`로 같은 Drizzle/libSQL 연결을 구성한다. 로컬/원격 URL 판별도 한 함수를 공유하며 Drizzle Kit의 dialect 변환은 `drizzle.config.ts`에만 둔다. 환경변수와 호스트별 값은 [운영 가이드](./operations.md#db-연결-설정)를 따른다.
+- DB 위치·자격 증명·저장소 제약은 `src/env.ts`에서 검증하고 `src/db/index.ts`에서 조립한다. 앱과 테스트는 같은 libSQL 어댑터를 사용한다. 로컬/원격 URL 판별도 한 함수를 공유하며 Drizzle Kit의 dialect 변환은 `drizzle.config.ts`에만 둔다. 환경변수와 호스트별 값은 [운영 가이드](./operations.md#db-연결-설정)를 따른다.
 - Turso는 지원하는 libSQL 호스팅 구성이다. 기능 모듈은 공급자 이름·토큰·배포 호스트를 읽지 않고 `@/db`를 사용한다. 기존 `TURSO_AUTH_TOKEN`과 Vercel 시스템 변수는 설정 경계의 호환 입력으로만 유지한다. 원격 연결에 토큰을 요구하는 것은 앱의 인증 정책이며 모든 libSQL 서버가 토큰을 강제한다는 의미는 아니다.
 - 허용 계정은 Better Auth의 사용자·세션 생성 시 검사하고, 기존 세션도 매번 데이터 접근 시 재검사한다. 인증 코드는 플랫폼 플래그가 아닌 검증된 `requireAllowlist` 정책을 사용한다. 모든 호스트의 기본값은 허용 계정 제한이며 비공개 로컬/Docker의 예외는 운영 설정에서 명시한다.
 - 운영 DB는 호스트 `app_data`를 컨테이너 `/app/data`에 마운트한다.
@@ -130,6 +132,27 @@ App Router의 파일 규칙을 바꿀 때는 설치된 Next.js 문서
 - 배포 중 짧은 연결 중단이 생길 수 있다.
 - 단일 센터의 허용 계정은 같은 기록을 공유한다. 조직별 데이터 격리는 아직 없으며, 실제 정보 사용 전 운영·데이터 취급 기준을 확인해야 한다.
 - 주간 `after()`는 영속 큐가 아니다. 강제 종료로 남은 PROCESSING 복구와 동시 중복 요청 방지는 미구현이다.
+
+## DB 어댑터 계약
+
+앱은 `@/db`의 `db`만 사용한다. `Database` 타입은 Drizzle의
+`BaseSQLiteDatabase<'async', unknown, typeof schema>`에서 `select`, `insert`,
+`update`, `delete`, `query`만 선택해 도출한다. 쿼리 builder·행·입력 타입은
+기존 SQLite 스키마에서 추론하며 별도 ORM API나 도메인 타입을 복제하지 않는다.
+
+libSQL 어댑터는 실제 driver를 감싸 이 메서드와 관계 쿼리만 제공한다. `$client`,
+raw 실행, `batch`, 대화형 `transaction`은 앱 계약에 없다. 연결 종료는 어댑터
+조립/테스트가 소유한다. `run()`의 공급자별 결과 메타데이터는 `unknown`이며
+앱은 이를 해석하지 않는다. 조회·`returning()`의 행 타입은 유지한다.
+
+Better Auth에는 같은 계약과 스키마를 명시적으로 주입하고 `transaction: false`를
+유지한다(기존 adapter 기본값과 같다). 인증 라이브러리의 driver별 쓰기 결과 처리는
+별도 통합 검증 대상이며, 새 어댑터는 가입·세션·허용 목록 테스트도 통과해야 한다.
+
+D1의 공통 메서드 타입이 계약에 할당 가능한지만 컴파일로 확인한다. 실행 어댑터,
+바인딩 취득, 마이그레이션과 트랜잭션 보장은 구현하지 않았다. 현재 계약은 비동기
+SQLite 기능의 교체 경계이며 모든 SQL DB를 무수정으로 교체하는 보장은 아니다.
+전환 검증 항목은 [로드맵](./roadmap.md#보류)에 둔다.
 
 ## AI 공급자 확장
 

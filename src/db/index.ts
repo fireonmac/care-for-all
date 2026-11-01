@@ -1,4 +1,5 @@
 import { getDatabaseConfig } from '../env';
-import { createDatabase } from './client';
+import { createLibsqlAdapter } from './adapters/libsql';
 
-export const db = createDatabase(getDatabaseConfig());
+const adapter = createLibsqlAdapter(getDatabaseConfig());
+export const db = adapter.db;
