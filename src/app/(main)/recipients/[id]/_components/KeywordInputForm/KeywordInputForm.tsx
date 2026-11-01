@@ -117,7 +117,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       </div>
       <p className="text-muted-foreground mb-12 text-xl font-medium leading-relaxed">
         일어난 사건과 어르신의 감정, 그리고 선생님의 조치를 나누어 적어주세요. <br />
-        시스템이 이를 분석하여 훨씬 더 풍부하고 전문적인 일지로 바꾸어줍니다.
+        적어주신 내용을 바탕으로 인지와 행동 기록을 짧고 자연스럽게 정리해드려요.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
