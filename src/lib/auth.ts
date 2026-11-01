@@ -40,6 +40,7 @@ export const auth = betterAuth({
       },
     },
   },
+  onAPIError: { errorURL: `${env.BETTER_AUTH_URL}/login` },
 });
 
 export async function getSession() {
