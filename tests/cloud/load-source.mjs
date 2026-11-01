@@ -18,14 +18,14 @@ export function sourceLoader(mocks = {}) {
       const local = id.startsWith('@/') ? path.join(root, 'src', id.slice(2))
         : id.startsWith('.') ? path.resolve(path.dirname(filename), id) : null;
       if (local) {
-        const file = [local, local + '.ts', path.join(local, 'index.ts')].find((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isFile());
-        if (file?.endsWith('.ts')) return load(file);
+        const file = [local, local + '.ts', local + '.tsx', path.join(local, 'index.ts')].find((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isFile());
+        if (file && /\.tsx?$/.test(file)) return load(file);
       }
       return nativeImport(id);
     };
     const output = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
       fileName: filename,
-      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true },
+      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
     }).outputText;
     new Function('require', 'module', 'exports', output)(dependency, loadedModule, loadedModule.exports);
     return loadedModule.exports;

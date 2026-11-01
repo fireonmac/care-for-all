@@ -47,7 +47,8 @@ export default async function RecipientDetailPage({
           {recipient.name} <span className="text-2xl font-normal text-foreground/80 ml-1">어르신</span>
         </h1>
         <div className="self-start sm:self-auto min-h-11 flex items-center">
-          <WeeklyReportForm 
+          <WeeklyReportForm
+            key={`${recipient.id}:${startOfWeek}`}
             recipientId={recipient.id} 
             recipientName={recipient.name}
             currentMonth={currentMonth}
