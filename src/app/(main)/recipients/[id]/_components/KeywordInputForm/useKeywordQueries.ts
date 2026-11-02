@@ -58,30 +58,38 @@ export const useGenerateDailyDraft = (recipientId: string) => {
 
       let fullText = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        fullText += decoder.decode(value, { stream: true });
+          fullText += decoder.decode(value, { stream: true });
 
-        let currentCognition = '';
-        let currentBehavior = '';
+          let currentCognition = '';
+          let currentBehavior = '';
 
-        if (fullText.includes('[행동]')) {
-          const [cognition, behavior = ''] = fullText.split('[행동]', 2);
-          currentCognition = cognition.replace('[인지]', '').trim();
-          currentBehavior = behavior.trim();
-        } else {
-          currentCognition = fullText.replace('[인지]', '').trim();
+          if (fullText.includes('[행동]')) {
+            const [cognition, behavior = ''] = fullText.split('[행동]', 2);
+            currentCognition = cognition.replace('[인지]', '').trim();
+            currentBehavior = behavior.trim();
+          } else {
+            currentCognition = fullText.replace('[인지]', '').trim();
+          }
+
+          setDraft({ cognition: currentCognition, behavior: currentBehavior });
         }
-
-        setDraft({ cognition: currentCognition, behavior: currentBehavior });
+        fullText += decoder.decode();
+        setDraft(parseDailyRecord(fullText));
+      } finally {
+        // Cancel unfinished upstream work and release the reader on every exit.
+        await reader.cancel().catch(() => {});
+        reader.releaseLock();
       }
-      fullText += decoder.decode();
-      setDraft(parseDailyRecord(fullText));
-      reader.releaseLock();
     } catch (e) {
       setDraft(null);
+      if (e instanceof TypeError || (e instanceof Error && ['TimeoutError', 'AbortError'].includes(e.name))) {
+        throw new Error('기록 생성이 중간에 끊겼습니다. 입력한 내용은 그대로 있으니 다시 생성해주세요.');
+      }
       throw e; // 컴포넌트에서 에러를 캐치해서 Toast 띄울 수 있도록 던짐
     } finally {
       setIsGenerating(false);

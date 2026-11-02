@@ -54,3 +54,20 @@ test('client discards a malformed final stream rather than retaining its partial
   await hook.generateDraft('합성 메모');
   assert.deepEqual(state, [false, { cognition: '합성 인지', behavior: '합성 행동' }]);
 });
+
+
+test('a mid-stream network failure clears the draft, releases its lock and explains that input is retained', async (t) => {
+  const state = [];
+  const body = new ReadableStream({
+    start(controller) { controller.enqueue(new TextEncoder().encode('[인지] 부분 응답')); },
+    pull(controller) { controller.error(new TypeError('terminated')); },
+  });
+  t.mock.method(globalThis, 'fetch', async () => new Response(body));
+  const hook = sourceLoader({
+    react: { useState: value => { const index=state.push(value)-1; return [value,next=>{state[index]=next;}]; } },
+    '@tanstack/react-query': {}, '../../actions': {},
+  })('src/app/(main)/recipients/[id]/_components/KeywordInputForm/useKeywordQueries.ts').useGenerateDailyDraft('synthetic');
+  await assert.rejects(hook.generateDraft('합성 메모'), /입력한 내용은 그대로/);
+  assert.deepEqual(state, [false, null]);
+  assert.equal(body.locked, false);
+});

@@ -34,6 +34,9 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
     const response = await this.request(request, false);
     const data = (await response.json()) as OpenAiCompatibleResponse;
     assertCompletedResponse(data);
+    if (data.choices?.[0]?.finish_reason !== 'stop') {
+      throw new Error('AI 응답이 완성되지 않았습니다. 다시 생성해주세요.');
+    }
     const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
@@ -99,9 +102,8 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
           messages: request.messages,
           stream,
           temperature: request.temperature,
-          max_tokens: request.maxTokens,
         }),
-        signal: AbortSignal.timeout(request.timeoutMs ?? 30_000),
+        signal: request.signal,
       },
     );
 
@@ -144,7 +146,13 @@ function enqueueOpenAiContent(
 function assertCompletedResponse(data: OpenAiCompatibleResponse | OpenAiCompatibleChunk) {
   if (data.error) throw new Error('AI 공급자가 오류 응답을 반환했습니다.');
   const reason = data.choices?.[0]?.finish_reason;
+  if (reason === 'length') {
+    throw new Error('AI 생성 한도에 도달하여 기록이 중단됐습니다. 다시 생성해주세요.');
+  }
+  if (reason === 'content_filter') {
+    throw new Error('AI 공급자의 안전 필터로 기록 생성이 중단됐습니다.');
+  }
   if (reason && reason !== 'stop') {
-    throw new Error('AI 응답이 완성되지 않았습니다. 입력과 생성 한도를 확인해주세요.');
+    throw new Error('AI 응답이 완성되지 않았습니다. 다시 생성해주세요.');
   }
 }

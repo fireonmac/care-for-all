@@ -6,7 +6,6 @@ import { AccessDeniedError, requireRecipient } from '@/lib/workspace-access';
 import { validateAiInput, DAILY_INPUT_LIMIT } from '@/lib/ai/input';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -22,7 +21,7 @@ export async function POST(req: NextRequest) {
   catch { return Response.json({ error: `관찰 내용은 1자 이상 ${DAILY_INPUT_LIMIT}자 이내로 입력해주세요.` }, { status: 400 }); }
   try {
     await requireRecipient(session.user.id, body.recipientId, 'edit');
-    const contentStream = await streamDailyRecord(body.keywords);
+    const contentStream = await streamDailyRecord(body.keywords, req.signal);
     return new Response(contentStream, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store, no-transform' } });
   } catch (error) {
     if (error instanceof AccessDeniedError) return Response.json({ error: error.message }, { status: 404 });

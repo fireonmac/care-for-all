@@ -9,8 +9,6 @@ import { Check } from 'lucide-react';
 
 import { getWeekData, getKSTDateStr } from '@/lib/dateUtils';
 
-export const maxDuration = 120;
-
 export default async function RecipientDetailPage({
   params,
   searchParams,
