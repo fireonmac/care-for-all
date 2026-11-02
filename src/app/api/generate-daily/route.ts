@@ -6,7 +6,7 @@ import { AccessDeniedError, requireRecipient } from '@/lib/workspace-access';
 import { validateAiInput, DAILY_INPUT_LIMIT } from '@/lib/ai/input';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 90;
 
 export async function POST(req: NextRequest) {
   const session = await getSession();

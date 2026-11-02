@@ -264,14 +264,17 @@ docker compose up -d app
    `https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL`은 프로젝트에서
    사용할 수 있는 모델 ID, `AI_API_KEY`는 Gemini 키로 설정한다. 새 SDK는 필요 없다.
 7. 합성 입력으로 일일 스트림·일일 일반 응답·주간 생성과 오류/잘림/시간 초과를
-   확인한다. 공개 함수·반환 타입·기존 Ollama 설정과 30초/500토큰·60초/700토큰은
-   유지한다. 현재 `max_tokens`/temperature와 모델의 추론 기본값은 실제 선택 모델에서
-   다시 검증해야 한다. 호환 API 문서 확인과 mock 테스트를 실제 API 검증으로 보지 않는다.
+   확인한다. 공개 함수·반환 타입과 기존 Ollama 공급자는 유지한다. 일일·주간 생성은
+   출력 예산을 각각 4,096토큰으로 두고 시간 제한은 일일 60초, 주간 90초로 설정한다.
+   추론 모델은 생각 과정도 출력 예산을 쓰므로 500/700토큰의 작은 한도로는 문장이
+   중단될 수 있다. 예산 확대가 기록 분량 확대 지시는 아니며, 최종 영역별 1,000자
+   검증과 불완전 응답 거부를 유지한다. `max_tokens`/temperature와 모델의 추론
+   기본값은 실제 선택 모델에서 검증한다. 호환 API 문서 확인과 mock 테스트를 실제 API 검증으로 보지 않는다.
    AI_PROVIDER와 AI_MODEL은 생성 요청 시 검증하며, 누락 시 임의 공급자나 모델로
    대체하지 않는다. 로그인과 DB 조회는 AI 설정이 없어도 동작한다. 일일 생성 API는
    인증 후 AI 설정 누락을 503 구성 오류로 응답한다.
 8. 무료 조건·계정 연결·테스트가 충족된 경우에만 Preview를 배포한다. Node 런타임을
-   사용하며 일일 Route Handler는 maxDuration 60초, 주간 Server Action의 페이지는
+   사용하며 일일 Route Handler는 maxDuration 90초, 주간 Server Action의 페이지는
    120초다. 실제 플랫폼 설정과 배포 빌드가 이를 반영하는지 확인한다.
 
 API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어댑터는 잘림·차단·

@@ -85,14 +85,14 @@ test('Ollama provider is preserved', async (t) => {
 test('daily, weekly and streaming use cases keep their return shapes', async () => {
   const calls = [];
   const model = {
-    async generateText(input) { calls.push(input); return input.maxTokens === 500 ? '[인지] 합성 인지\n[행동] 합성 행동' : '합성 주간 기록'; },
+    async generateText(input) { calls.push(input); return input.messages[0].content.includes('한 어르신의 일일 기록') ? '합성 주간 기록' : '[인지] 합성 인지\n[행동] 합성 행동'; },
     async streamText(input) { calls.push(input); return new Response('[인지] 합성 인지\n[행동] 합성 행동').body; },
   };
   const api = sourceLoader({ '@/lib/ai/provider': { createTextGenerationProvider: () => model } })('src/lib/ai.ts');
   assert.deepEqual(await api.generateDailyRecord('합성 메모'), { cognition: '합성 인지', behavior: '합성 행동' });
   assert.equal(await api.generateWeeklyRecord([{ date: '2026-10-26', cognition: '합성 인지', behavior: null }]), '합성 주간 기록');
   assert.match(await text(await api.streamDailyRecord('합성 메모')), /합성 행동/);
-  assert.deepEqual(calls.map(({ maxTokens, timeoutMs }) => [maxTokens, timeoutMs]), [[500, 30000], [700, 60000], [500, 30000]]);
+  assert.deepEqual(calls.map(({ maxTokens, timeoutMs }) => [maxTokens, timeoutMs]), [[4096, 60000], [4096, 90000], [4096, 60000]]);
 });
 
 
@@ -110,4 +110,15 @@ test('premature EOF, DONE without stop and an empty completed stream cannot succ
 test('normal stop is sufficient even without DONE and accepts a following usage-only chunk', async (t) => {
   t.mock.method(globalThis, 'fetch', async () => new Response('data: {"choices":[{"delta":{"content":"완료 응답"},"finish_reason":"stop"}]}\n\ndata: {"choices":[],"usage":{"total_tokens":5}}'));
   assert.equal(await text(await provider().streamText(request)), '완료 응답');
+});
+
+
+test('length truncation is distinguishable from a safety filter in stream and non-stream calls', async (t) => {
+  for (const [reason, message] of [['length', /생성 한도/], ['content_filter', /안전 필터/]]) {
+    t.mock.method(globalThis, 'fetch', async (_url, options) => JSON.parse(options.body).stream
+      ? new Response('data: ' + JSON.stringify({ choices: [{ delta: { content: '[인지] 미완성' }, finish_reason: reason }] }) + '\n\n')
+      : Response.json({ choices: [{ message: { content: '[인지] 미완성' }, finish_reason: reason }] }));
+    await assert.rejects(provider().generateText(request), message);
+    await assert.rejects(text(await provider().streamText(request)), message);
+  }
 });
