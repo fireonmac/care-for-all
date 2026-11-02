@@ -7,17 +7,18 @@ const { OpenAiCompatibleProvider } = load('src/lib/ai/providers/openaiCompatible
 const { OllamaProvider } = load('src/lib/ai/providers/ollama.ts');
 const base = 'https://generativelanguage.googleapis.com/v1beta/openai';
 const provider = () => new OpenAiCompatibleProvider(base, 'synthetic-model', 'synthetic-key');
-const request = { messages: [{ role: 'user', content: '합성 관찰: 색종이를 접음.' }], maxTokens: 500, timeoutMs: 1000 };
+const request = { messages: [{ role: 'user', content: '합성 관찰: 색종이를 접음.' }] };
 const text = (stream) => new Response(stream).text();
 
-test('Gemini-compatible request keeps public result and token/timeout fields', async (t) => {
+test('Gemini-compatible request keeps results without an app token cap or timer', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, base + '/chat/completions');
     assert.equal(options.headers.get('Authorization'), 'Bearer synthetic-key');
     const body = JSON.parse(options.body);
-    assert.equal(body.model, 'synthetic-model'); assert.equal(body.max_tokens, 500);
+    assert.equal(body.model, 'synthetic-model'); assert.equal(Object.hasOwn(body, 'max_tokens'), false);
+    assert.equal(Object.hasOwn(body, 'reasoning_effort'), false);
     assert.equal(body.stream, false); assert.deepEqual(body.messages, request.messages);
-    assert.ok(options.signal instanceof AbortSignal);
+    assert.equal(options.signal, undefined);
     return Response.json({ choices: [{ message: { content: ' 합성 결과 ' }, finish_reason: 'stop' }] });
   });
   assert.equal(await provider().generateText(request), '합성 결과');
@@ -40,7 +41,7 @@ test('HTTP errors retain Error/status contract without logging upstream body', a
 });
 
 test('empty, filtered, truncated and explicit provider error responses reject', async (t) => {
-  for (const body of [{ choices: [] }, { choices: [{ message: { content: 'partial' }, finish_reason: 'length' }] }, { choices: [{ finish_reason: 'content_filter' }] }, { error: { message: 'private' } }]) {
+  for (const body of [{ choices: [] }, { choices: [{ message: { content: 'unfinished without status' } }] }, { choices: [{ message: { content: 'partial' }, finish_reason: 'length' }] }, { choices: [{ finish_reason: 'content_filter' }] }, { error: { message: 'private' } }]) {
     const mock = t.mock.method(globalThis, 'fetch', async () => Response.json(body));
     await assert.rejects(provider().generateText(request), Error); mock.mock.restore();
   }
@@ -53,14 +54,24 @@ test('stream errors and length termination reject the existing stream contract',
   }
 });
 
-test('request timeout is passed to fetch and rejects with TimeoutError', async (t) => {
-  const keepAlive = setTimeout(() => {}, 500);
-  try {
-    t.mock.method(globalThis, 'fetch', (_url, options) => new Promise((_resolve, reject) => {
-      options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true });
-    }));
-    await assert.rejects(provider().generateText({ ...request, timeoutMs: 10 }), { name: 'TimeoutError' });
-  } finally { clearTimeout(keepAlive); }
+test('caller cancellation reaches fetch for both providers and response modes', async (t) => {
+  for (const model of [provider(), new OllamaProvider('http://localhost:11434', 'synthetic-model')]) {
+    for (const mode of ['generateText', 'streamText']) {
+      const controller = new AbortController();
+      let entered;
+      const started = new Promise(resolve => { entered = resolve; });
+      t.mock.method(globalThis, 'fetch', (_url, options) => new Promise((_resolve, reject) => {
+        assert.equal(options.signal, controller.signal);
+        options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true });
+        entered();
+      }));
+      const pending = model[mode]({ ...request, signal: controller.signal });
+      const rejected = assert.rejects(pending, { name: 'AbortError' });
+      await started;
+      controller.abort();
+      await rejected;
+    }
+  }
 });
 
 test('cancelling the returned reader cancels the upstream response body', async (t) => {
@@ -76,7 +87,10 @@ test('Ollama provider is preserved', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     assert.equal(url, 'http://localhost:11434/api/chat');
     const body = JSON.parse(options.body);
-    assert.equal(body.think, false); assert.equal(body.options.num_predict, 500);
+    assert.equal(Object.hasOwn(body, 'think'), false);
+    assert.equal(Object.hasOwn(body.options, 'num_predict'), false);
+    assert.equal(Object.hasOwn(body.options, 'num_ctx'), false);
+    assert.equal(options.signal, undefined);
     return Response.json({ message: { content: '로컬 합성 결과' } });
   });
   assert.equal(await new OllamaProvider('http://localhost:11434', 'existing-model').generateText(request), '로컬 합성 결과');
@@ -92,7 +106,10 @@ test('daily, weekly and streaming use cases keep their return shapes', async () 
   assert.deepEqual(await api.generateDailyRecord('합성 메모'), { cognition: '합성 인지', behavior: '합성 행동' });
   assert.equal(await api.generateWeeklyRecord([{ date: '2026-10-26', cognition: '합성 인지', behavior: null }]), '합성 주간 기록');
   assert.match(await text(await api.streamDailyRecord('합성 메모')), /합성 행동/);
-  assert.deepEqual(calls.map(({ maxTokens, timeoutMs }) => [maxTokens, timeoutMs]), [[4096, 60000], [4096, 90000], [4096, 60000]]);
+  for (const call of calls) {
+    assert.equal(Object.hasOwn(call, 'maxTokens'), false);
+    assert.equal(Object.hasOwn(call, 'timeoutMs'), false);
+  }
 });
 
 
@@ -121,4 +138,25 @@ test('length truncation is distinguishable from a safety filter in stream and no
     await assert.rejects(provider().generateText(request), message);
     await assert.rejects(text(await provider().streamText(request)), message);
   }
+});
+
+
+test('daily HTTP cancellation reaches the provider without relaxing input or access checks', async () => {
+  const controller = new AbortController();
+  let receivedSignal;
+  const checks = [];
+  const route = sourceLoader({
+    '@/lib/auth': { getSession: async () => ({ user: { id: 'synthetic', emailVerified: true } }) },
+    '@/lib/workspace-access': { requireRecipient: async (...args) => { checks.push(args); }, AccessDeniedError: class extends Error {} },
+    '@/lib/ai': { streamDailyRecord: async (_keywords, signal) => { receivedSignal = signal; return new Response('[인지] 합성 [행동]').body; } },
+  })('src/app/api/generate-daily/route.ts');
+  const req = new Request('https://synthetic.example/api/generate-daily', { method: 'POST', signal: controller.signal,
+    body: JSON.stringify({ recipientId: 'synthetic-recipient', keywords: '합성 관찰' }) });
+  const response = await route.POST(req);
+  assert.equal(response.status, 200);
+  assert.equal(receivedSignal, req.signal);
+  assert.deepEqual(checks, [['synthetic', 'synthetic-recipient', 'edit']]);
+  controller.abort();
+  assert.equal(receivedSignal.aborted, true);
+  await response.body.cancel();
 });

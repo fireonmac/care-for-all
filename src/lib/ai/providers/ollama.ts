@@ -69,16 +69,13 @@ export class OllamaProvider implements TextGenerationProvider {
       body: JSON.stringify({
         model: this.model,
         messages: request.messages,
-        think: false,
         stream,
         keep_alive: '10m',
         options: {
-          num_ctx: 4096,
-          num_predict: request.maxTokens,
           temperature: request.temperature,
         },
       }),
-      signal: AbortSignal.timeout(request.timeoutMs ?? 30_000),
+      signal: request.signal,
     });
 
     if (!response.ok) {

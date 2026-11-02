@@ -6,8 +6,7 @@ export type AiMessage = {
 export type TextGenerationRequest = {
   messages: AiMessage[];
   temperature?: number;
-  maxTokens?: number;
-  timeoutMs?: number;
+  signal?: AbortSignal;
 };
 
 export interface TextGenerationProvider {

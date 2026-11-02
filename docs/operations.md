@@ -263,19 +263,26 @@ docker compose up -d app
 6. Gemini에는 기존 `AI_PROVIDER=openai-compatible`을 사용한다. `AI_BASE_URL`은
    `https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL`은 프로젝트에서
    사용할 수 있는 모델 ID, `AI_API_KEY`는 Gemini 키로 설정한다. 새 SDK는 필요 없다.
-7. 합성 입력으로 일일 스트림·일일 일반 응답·주간 생성과 오류/잘림/시간 초과를
-   확인한다. 공개 함수·반환 타입과 기존 Ollama 공급자는 유지한다. 일일·주간 생성은
-   출력 예산을 각각 4,096토큰으로 두고 시간 제한은 일일 60초, 주간 90초로 설정한다.
-   추론 모델은 생각 과정도 출력 예산을 쓰므로 500/700토큰의 작은 한도로는 문장이
-   중단될 수 있다. 예산 확대가 기록 분량 확대 지시는 아니며, 최종 영역별 1,000자
-   검증과 불완전 응답 거부를 유지한다. `max_tokens`/temperature와 모델의 추론
-   기본값은 실제 선택 모델에서 검증한다. 호환 API 문서 확인과 mock 테스트를 실제 API 검증으로 보지 않는다.
+7. 합성 입력으로 일일 스트림·일일 일반 응답·주간 생성과 오류·잘림·사용자 취소를
+   확인한다. 앱은 출력 토큰·컨텍스트·추론 설정과 자체 생성 타임아웃을 강제하지 않고
+   선택한 모델·공급자의 기본값과 필수 한도를 따른다. OpenAI 호환 API에는
+   `max_tokens`를 보내지 않으며 Ollama에도 `num_predict`, `num_ctx`, `think`를
+   보내지 않는다. Gemini의 출력 기본값은 모델별 한도를 따르며 현재 사용 모델의
+   공식 정보에서 확인한다. 다른 호환 공급자의 기본값까지 동일하다고 가정하지 않는다.
+   이는 무제한 실행·무제한 비용을 보장한다는 뜻이 아니다. 최종 영역별 1,000자
+   검증과 불완전 응답 거부를 유지한다. 호환 문서와 mock 테스트를 실제 API 검증으로 보지 않는다.
    AI_PROVIDER와 AI_MODEL은 생성 요청 시 검증하며, 누락 시 임의 공급자나 모델로
    대체하지 않는다. 로그인과 DB 조회는 AI 설정이 없어도 동작한다. 일일 생성 API는
    인증 후 AI 설정 누락을 503 구성 오류로 응답한다.
 8. 무료 조건·계정 연결·테스트가 충족된 경우에만 Preview를 배포한다. Node 런타임을
-   사용하며 일일 Route Handler는 maxDuration 90초, 주간 Server Action의 페이지는
-   120초다. 실제 플랫폼 설정과 배포 빌드가 이를 반영하는지 확인한다.
+   사용하며 앱의 `maxDuration` 재정의 없이 플랫폼의 실행 한도를 따른다.
+   Vercel Fluid Compute의 Hobby 기본·최대 실행 시간은 300초이며, 실제 프로젝트
+   설정과 배포 결과를 확인한다. 로컬 Node 서버와 다른 호스트의 네트워크·실행
+   타임아웃은 각 런타임의 정책을 따른다.
+
+근거: [Gemini 생성 설정](https://ai.google.dev/api/generate-content#v1beta.GenerationConfig),
+[Ollama Chat](https://docs.ollama.com/api/chat),
+[Vercel 실행 시간](https://vercel.com/docs/functions/configuring-functions/duration).
 
 API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어댑터는 잘림·차단·
 도구 호출 등 완성되지 않은 종료 이유를 실패로 처리한다. 같은 어댑터의 스트림은
@@ -286,8 +293,9 @@ API 오류는 Error 또는 스트림 오류로 전달한다. OpenAI 호환 어�
 공급자와 관계없이 일일 생성은 서버와 클라이언트에서 최종 형식을 검증하고,
 검토 후 저장/수정에도 같은 초안 스키마를 적용한다. 형식 검증이 공급자의 정상 완료나
 사실성 검증을 대신하지는 않는다.
-생성 중 reader 취소는 기존 stream pipe를 통해 상류로 전달한다. 새 AbortSignal
-인자를 추가하지 않았으며, 이미 전송된 요청의 공급자 과금 취소까지 보장하지 않는다.
+생성 중 reader 취소는 stream pipe를 통해 상류로 전달한다. 일일 HTTP 요청의
+AbortSignal도 공급자 fetch에 전달해 응답 시작 전 취소를 전파한다. 이미 전송된
+요청의 공급자 과금 취소까지 보장하지 않는다.
 
 `pnpm test`와 호환 별칭 `pnpm test:cloud`는 기존 TypeScript와 Node test runner를 사용한다.
 실제 소스의 어댑터·인증 경계, DB 어댑터의 메모리/임시 파일 SQLite와 재연결·CRUD·오류 전파,
