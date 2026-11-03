@@ -10,7 +10,7 @@ const { createDailyRecordMessages, createWeeklyRecordMessages } = sourceLoader()
 
 for (const example of cases.daily) {
   test(`editorial target ${example.id} preserves the daily schema and both generation paths`, async () => {
-    const output = `[인지]\n${example.cognition}\n\n[행동]\n${example.behavior}`;
+    const output = `[신체]\n${example.behavior}\n\n[인지]\n${example.cognition}`;
     const expected = { cognition: example.cognition, behavior: example.behavior };
     assert.deepEqual(parseDailyRecord(output), expected);
     const sentences = [example.cognition, example.behavior].filter(Boolean).flatMap(value => value.split(/(?<=\.)\s+/));
@@ -49,7 +49,7 @@ test('weekly editorial target keeps the body-only string contract and source rec
   assert.equal(example.expected.includes('\n'), false);
   for (const phrase of example.avoid) assert.equal(example.expected.includes(phrase), false, phrase);
   const records = example.input.split('\n\n').map(block => {
-    const [date, cognition, behavior] = block.split('\n');
+    const [date, behavior, cognition] = block.split('\n');
     return { date: date.slice(1, -1), cognition: cognition.slice(4), behavior: behavior.slice(4) };
   });
   const ai = sourceLoader({ '@/lib/ai/provider': { createTextGenerationProvider: () => ({

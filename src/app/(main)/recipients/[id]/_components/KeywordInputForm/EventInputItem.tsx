@@ -44,7 +44,7 @@ export function EventInputItem({
   return (
     <AccordionItem 
       value={event.eventId}
-      className="group relative rounded-3xl border-2 border-border bg-muted flex flex-col mb-4 overflow-hidden transition-all duration-300 data-[open]:border-primary data-[open]:shadow-xl data-[open]:bg-background data-[open]:scale-[1.01]"
+      className="group relative rounded-3xl border-2 last:border-b-2 border-border bg-muted flex flex-col mb-4 overflow-hidden transition-all duration-300 data-[open]:border-primary data-[open]:shadow-xl data-[open]:bg-background data-[open]:scale-[1.01]"
     >
       <AccordionTrigger className="w-full text-left p-6 md:p-8 flex flex-col transition-all focus:outline-none hover:bg-muted/50 group-data-[open]:hover:bg-transparent [&>svg]:!hidden hover:no-underline items-stretch">
           <div className="flex items-center justify-between w-full">

@@ -71,7 +71,7 @@ export function AddRecipientForm() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button type="button" variant="ghost">
+          <Button type="button" variant="ghost" className="whitespace-nowrap px-2 sm:px-6 text-base sm:text-lg">
             + 새 어르신 추가
           </Button>
         }

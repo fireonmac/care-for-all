@@ -3,6 +3,7 @@
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { DAILY_RECORD_SECTIONS } from '@/lib/record-sections';
 import { dailyRecordDraftSchema, type DailyRecordDraft } from '@/lib/daily-record';
 
 interface DraftReviewViewProps {
@@ -30,41 +31,23 @@ export function DraftReviewView({
       </div>
 
       <div className="flex flex-col gap-16 mb-16">
-        <div className="flex flex-col relative">
-          <h3 className="text-base font-medium text-foreground tracking-widest mb-6">인지 영역</h3>
-          <Textarea
-            className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft.cognition ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
-            value={draft.cognition}
-            placeholder={loading && !draft.cognition ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...' : ''}
-            readOnly={loading}
-            maxLength={1000}
-            onChange={(e) => onDraftChange({ ...draft, cognition: e.target.value })}
-          />
-          <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
-            {draft.cognition.length}/1000
-          </span>
-        </div>
-
-        <div className="flex flex-col relative">
-          <h3 className="text-base font-medium text-foreground tracking-widest mb-6">행동 영역</h3>
-          <Textarea
-            className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft.behavior ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
-            value={draft.behavior}
-            placeholder={
-              loading && !draft.behavior && draft.cognition
-                ? '인지 영역 완료. 행동 영역 작성을 준비합니다...'
-                : loading && !draft.behavior
-                  ? 'AI가 문맥을 파악하고 작성을 준비하고 있습니다...'
-                  : ''
-            }
-            readOnly={loading}
-            maxLength={1000}
-            onChange={(e) => onDraftChange({ ...draft, behavior: e.target.value })}
-          />
-          <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
-            {draft.behavior.length}/1000
-          </span>
-        </div>
+        {DAILY_RECORD_SECTIONS.map(({ key, label }) => (
+          <div key={key} className="flex flex-col relative">
+            <h3 id={`draft-${key}-label`} className="text-base font-medium text-foreground tracking-widest mb-6">{label} 영역</h3>
+            <Textarea
+              aria-labelledby={`draft-${key}-label`}
+              className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft[key] ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
+              value={draft[key]}
+              placeholder={loading && !draft[key] ? `${label} 영역 작성을 준비하고 있습니다...` : ''}
+              readOnly={loading}
+              maxLength={1000}
+              onChange={(e) => onDraftChange({ ...draft, [key]: e.target.value })}
+            />
+            <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
+              {draft[key].length}/1000
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="flex justify-end gap-6 border-t border-border pt-8">

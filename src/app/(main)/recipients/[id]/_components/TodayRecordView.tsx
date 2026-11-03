@@ -8,6 +8,7 @@ import { CopyButton } from '@/components/CopyButton';
 import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
+import { DAILY_RECORD_SECTIONS } from '@/lib/record-sections';
 import type { records } from '@/db/schema';
 
 type DailyRecord = typeof records.$inferSelect;
@@ -69,20 +70,15 @@ export function TodayRecordView({ record, recipientId, canEdit }: { record: Dail
       </div>
 
       <div className="flex flex-col gap-24">
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <h3 className="text-base font-medium text-foreground tracking-widest">인지 영역</h3>
-            <CopyButton text={record.cognitionContent ?? ''} title="인지 영역 복사" />
+        {DAILY_RECORD_SECTIONS.map(({ key, contentKey, label }) => (
+          <div key={key}>
+            <div className="flex items-center gap-3 mb-6">
+              <h3 className="text-base font-medium text-foreground tracking-widest">{label} 영역</h3>
+              <CopyButton text={record[contentKey] ?? ''} title={`${label} 영역 복사`} />
+            </div>
+            <p className="text-xl text-foreground/80 font-light leading-[1.8] whitespace-pre-wrap bg-muted p-6 rounded-lg">{record[contentKey]}</p>
           </div>
-          <p className="text-xl text-foreground/80 font-light leading-[1.8] whitespace-pre-wrap bg-muted p-6 rounded-lg">{record.cognitionContent}</p>
-        </div>
-        <div>
-          <div className="flex items-center gap-3 mb-6">
-            <h3 className="text-base font-medium text-foreground tracking-widest">행동 영역</h3>
-            <CopyButton text={record.behaviorContent ?? ''} title="행동 영역 복사" />
-          </div>
-          <p className="text-xl text-foreground/80 font-light leading-[1.8] whitespace-pre-wrap bg-muted p-6 rounded-lg">{record.behaviorContent}</p>
-        </div>
+        ))}
       </div>
     </div>
   );

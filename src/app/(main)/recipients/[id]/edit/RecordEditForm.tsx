@@ -7,6 +7,7 @@ import { BackButton } from '@/components/BackButton';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
+import { DAILY_RECORD_SECTIONS } from '@/lib/record-sections';
 import type { records } from '@/db/schema';
 
 type DailyRecord = typeof records.$inferSelect;
@@ -14,6 +15,8 @@ type DailyRecord = typeof records.$inferSelect;
 export function RecordEditForm({ record, recipientId, recipientName, date }: { record: DailyRecord, recipientId: string, recipientName: string, date: string }) {
   const [cognition, setCognition] = useState(record.cognitionContent || '');
   const [behavior, setBehavior] = useState(record.behaviorContent || '');
+  const values = { cognition, behavior };
+  const setters = { cognition: setCognition, behavior: setBehavior };
   const router = useRouter();
   const { showSuccess, showError } = useToast();
   const [saving, startTransition] = useTransition();
@@ -47,31 +50,21 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
       </header>
       
       <div className="flex flex-col gap-16 mb-16">
-        <div className="flex flex-col relative">
-          <h3 className="text-base font-medium text-foreground tracking-widest mb-6">인지 영역</h3>
-          <Textarea
-            className="text-xl pb-12 min-h-[200px]"
-            value={cognition}
-            maxLength={1000}
-            onChange={(e) => setCognition(e.target.value)}
-          />
-          <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
-            {cognition.length}/1000
-          </span>
-        </div>
-        
-        <div className="flex flex-col relative">
-          <h3 className="text-base font-medium text-foreground tracking-widest mb-6">행동 영역</h3>
-          <Textarea
-            className="text-xl pb-12 min-h-[200px]"
-            value={behavior}
-            maxLength={1000}
-            onChange={(e) => setBehavior(e.target.value)}
-          />
-          <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
-            {behavior.length}/1000
-          </span>
-        </div>
+        {DAILY_RECORD_SECTIONS.map(({ key, label }) => (
+          <div key={key} className="flex flex-col relative">
+            <h3 id={`edit-${key}-label`} className="text-base font-medium text-foreground tracking-widest mb-6">{label} 영역</h3>
+            <Textarea
+              aria-labelledby={`edit-${key}-label`}
+              className="text-xl pb-12 min-h-[200px]"
+              value={values[key]}
+              maxLength={1000}
+              onChange={(e) => setters[key](e.target.value)}
+            />
+            <span className="absolute bottom-4 right-6 text-sm text-muted-foreground font-light tracking-widest">
+              {values[key].length}/1000
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="flex justify-end gap-6 border-t border-border pt-8">
