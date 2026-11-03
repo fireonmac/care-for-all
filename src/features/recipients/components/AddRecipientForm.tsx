@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,12 +22,15 @@ import {
 
 export function AddRecipientForm() {
   const [open, setOpen] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof insertRecipientSchema>>({
     resolver: zodResolver(insertRecipientSchema),
     defaultValues: { name: '' },
   });
+
+  const nameField = form.register('name');
 
   const {
     mutate,
@@ -76,7 +79,7 @@ export function AddRecipientForm() {
           </Button>
         }
       />
-      <DialogContent>
+      <DialogContent initialFocus={nameInputRef}>
         <DialogHeader>
           <DialogTitle>어르신 등록</DialogTitle>
         </DialogHeader>
@@ -86,7 +89,12 @@ export function AddRecipientForm() {
             <div className="flex flex-col gap-2">
               <Input
                 type="text"
-                {...form.register('name')}
+                {...nameField}
+                ref={(element) => {
+                  nameField.ref(element);
+                  nameInputRef.current = element;
+                }}
+                aria-label="어르신 이름"
                 placeholder="어르신 성함을 입력하세요"
                 className="text-xl"
               />
