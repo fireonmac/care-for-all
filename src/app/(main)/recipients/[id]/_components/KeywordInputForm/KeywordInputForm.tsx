@@ -132,7 +132,13 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         적어주신 내용을 바탕으로 신체와 인지 기록을 자연스럽게 정리해드려요.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+      <form
+        onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+          const firstInvalidEvent = getValues('events').find((_, index) => validationErrors.events?.[index]?.event);
+          if (firstInvalidEvent) setActiveEventId([firstInvalidEvent.eventId]);
+        })}
+        className="flex flex-col gap-8"
+      >
         <Accordion
           value={activeEventId.length === 0 && fields.length > 0 ? [fields[0].eventId] : activeEventId}
           onValueChange={(val) => {

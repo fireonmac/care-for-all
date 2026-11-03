@@ -11,13 +11,18 @@ function formFixture(options = {}) {
   const values = (options.events ?? [first, second]).map(event => ({ ...event }));
   const errors = {};
   const appended = [];
+  const generations = [];
   const focusCalls = [];
   const effects = [];
   let active = options.active ?? [];
   const load = sourceLoader({
     react: { ...React, useState: () => [active, next => { active = next; }], useEffect: callback => { effects.push(callback); } },
     'react-hook-form': {
-      useForm: () => ({ control: {}, handleSubmit: fn => fn, reset() {}, formState: { errors },
+      useForm: () => ({ control: {}, handleSubmit: (valid, invalid) => async () => {
+        errors.events = values.map(value => value.event.trim() ? undefined : { event: { type: 'too_small', message: '일어난 사건을 먼저 적어주세요.' } });
+        if (errors.events.some(Boolean)) return invalid?.(errors);
+        return valid({ events: values });
+      }, reset() {}, formState: { errors },
         getValues: () => values,
         getFieldState: path => ({ invalid: Boolean(errors.events?.[Number(path.split('.')[1])]?.event) }),
         setFocus: path => focusCalls.push(path),
@@ -37,7 +42,7 @@ function formFixture(options = {}) {
     'next/navigation': { useRouter: () => ({ refresh() {} }) },
     '@/hooks/useToast': { useToast: () => ({ showSuccess() {}, showError() {} }) },
     './useKeywordQueries': {
-      useGenerateDailyDraft: () => ({ draft: null, setDraft() {}, isGenerating: false }),
+      useGenerateDailyDraft: () => ({ draft: null, setDraft() {}, isGenerating: false, async generateDraft(input) { generations.push(input); } }),
       useSaveDailyRecordMutation: () => ({ isPending: false }),
     },
     '@/components/ui/accordion': { Accordion: Placeholder, AccordionItem: Placeholder, AccordionTrigger: Placeholder, AccordionContent: Placeholder },
@@ -45,7 +50,7 @@ function formFixture(options = {}) {
     '@/components/ui/input': { Input: Placeholder },
     './DraftReviewView': { DraftReviewView: Placeholder },
   });
-  return { load, first, second, values, errors, appended, focusCalls, runEffects() { effects.splice(0).forEach(callback => callback()); }, get active() { return active; } };
+  return { load, first, second, values, errors, appended, generations, focusCalls, runEffects() { effects.splice(0).forEach(callback => callback()); }, get active() { return active; } };
 }
 function findNodes(node, type) {
   if (!node || typeof node !== 'object') return [];
@@ -132,4 +137,32 @@ test('a stale enabled handler rechecks the latest values and cannot append multi
   await handler();
   assert.equal(f.appended.length, 1);
   assert.deepEqual(f.active, ['one']);
+});
+
+
+test('draft submission reveals and focuses the first invalid event even when it is collapsed', async () => {
+  for (const blank of ['', '   ', '\t\n', '　']) {
+    const f = formFixture({ events: [event('one', 'Valid synthetic event'), event('two', blank), event('three', '')], active: ['one'], watchCurrent: true });
+    await findNodes(render(f), 'form')[0].props.onSubmit();
+    assert.deepEqual(f.active, ['two']);
+    assert.equal(f.generations.length, 0);
+    render(f); f.runEffects();
+    assert.equal(f.focusCalls.at(-1), 'events.1.event');
+  }
+});
+
+test('correcting submit errors advances to the next invalid event then permits normal generation', async () => {
+  const f = formFixture({ events: [event('one', ''), event('two', 'Second synthetic event'), event('three', '   ')], active: ['two'], watchCurrent: true });
+  await findNodes(render(f), 'form')[0].props.onSubmit();
+  assert.deepEqual(f.active, ['one']);
+  const Item = f.load(base + 'EventInputItem.tsx').EventInputItem;
+  findNodes(render(f), Item)[0].props.eventField.onChange({ target: { value: 'First synthetic event' } });
+  await findNodes(render(f), 'form')[0].props.onSubmit();
+  assert.deepEqual(f.active, ['three']);
+  assert.equal(f.generations.length, 0);
+  findNodes(render(f), Item)[2].props.eventField.onChange({ target: { value: 'Third synthetic event' } });
+  await findNodes(render(f), 'form')[0].props.onSubmit();
+  assert.equal(f.generations.length, 1);
+  for (const input of ['First synthetic event', 'Second synthetic event', 'Third synthetic event']) assert.ok(f.generations[0].includes(input));
+  assert.equal(f.errors.events.some(Boolean), false);
 });
