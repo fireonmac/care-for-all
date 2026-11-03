@@ -1,3 +1,4 @@
+import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,8 @@ interface EventInputItemProps {
   onUpdate: (fields: Partial<EventInput>) => void;
   onRemove: () => void;
   autoFocus?: boolean;
+  error?: FieldError;
+  eventField: UseFormRegisterReturn;
 }
 
 export function EventInputItem({
@@ -29,7 +32,10 @@ export function EventInputItem({
   onUpdate,
   onRemove,
   autoFocus,
+  error,
+  eventField,
 }: EventInputItemProps) {
+  const errorId = `event-error-${event.eventId}`;
   const isEventEmpty = !event.event.trim();
   const summaryText = isEventEmpty ? '내용을 입력해주세요' : event.event;
 
@@ -89,19 +95,23 @@ export function EventInputItem({
 
       <AccordionContent className="px-6 md:px-8 pb-8 md:pb-10 pt-4 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
-          <label className="text-base tracking-widest text-foreground flex items-baseline">
+          <label htmlFor={`event-input-${event.eventId}`} className="text-base tracking-widest text-foreground flex items-baseline">
             일어난 사건 <span className="text-sm text-muted-foreground font-normal ml-2">(필수)</span>
           </label>
           <Input
             id={`event-input-${event.eventId}`}
             type="text"
+            {...eventField}
+            aria-required="true"
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? errorId : undefined}
             value={event.event}
-            onChange={(ev) => onUpdate({ event: ev.target.value })}
             disabled={isFuture}
             placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
-            className="px-5 py-3.5 text-lg font-normal"
+            className={`px-5 py-3.5 text-lg font-normal ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
             autoFocus={autoFocus}
           />
+          {error && <p id={errorId} role="alert" className="text-sm text-destructive">{error.message}</p>}
         </div>
 
         <div className={`flex flex-col gap-3 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>

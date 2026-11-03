@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Accordion } from '@/components/ui/accordion';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { DraftReviewView } from './DraftReviewView';
@@ -15,7 +15,7 @@ import { z } from 'zod';
 
 const eventSchema = z.object({
   eventId: z.string(),
-  event: z.string(),
+  event: z.string().trim().min(1, '일어난 사건을 먼저 적어주세요.'),
   emotion: z.string(),
   isCustomEmotion: z.boolean(),
   action: z.string(),
@@ -35,8 +35,12 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const [activeEventId, setActiveEventId] = useState<string[]>([]);
 
   // 1. react-hook-form 설정
-  const { control, handleSubmit, setValue, reset } = useForm<FormValues>({
+  const {
+    control, handleSubmit, setValue, reset, getValues, register,
+    trigger, getFieldState, setFocus, formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       events: [{ eventId: 'default-id', event: '', emotion: '', isCustomEmotion: false, action: '' }],
     },
@@ -46,6 +50,14 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
     control,
     name: 'events',
   });
+
+  // 오류가 있는 사건을 연 다음, 등록된 필드에 RHF가 포커스하도록 한다.
+  useEffect(() => {
+    const index = fields.findIndex((field) => activeEventId.includes(field.eventId));
+    if (index === -1) return;
+    const name = `events.${index}.event` as const;
+    if (getFieldState(name).invalid) setFocus(name);
+  }, [activeEventId, fields, getFieldState, setFocus]);
 
   const events = useWatch({ control, name: 'events' }) || [];
   const hasRequiredEvent = events.some((e) => e.event.trim().length > 0);
@@ -138,8 +150,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                 index={index}
                 isFuture={isFuture}
                 canRemove={fields.length > 1}
+                error={errors.events?.[index]?.event}
+                eventField={register(`events.${index}.event`)}
                 onUpdate={(updates) => {
-                  setValue(`events.${index}`, { ...event, ...updates });
+                  setValue(`events.${index}`, { ...event, ...updates }, { shouldValidate: true, shouldDirty: true });
                 }}
                 onRemove={() => remove(index)}
                 autoFocus={activeEventId.includes(event.eventId)}
@@ -151,7 +165,19 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <div className="flex flex-col mb-4 mt-2">
           <Button
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              // 최신 폼 값으로도 검사해 연속 클릭·watch 갱신 전 추가를 막는다.
+              if (isFuture) return;
+              const valid = await trigger('events');
+              const currentEvents = getValues('events');
+              const emptyIndex = currentEvents.findIndex((event) => !eventSchema.shape.event.safeParse(event.event).success);
+              if (emptyIndex !== -1) {
+                const name = `events.${emptyIndex}.event` as const;
+                if (!getFieldState(name).invalid) await trigger(name);
+                setActiveEventId([currentEvents[emptyIndex].eventId]);
+                return;
+              }
+              if (!valid) return;
               const newId = crypto.randomUUID();
               append({ eventId: newId, event: '', emotion: '', isCustomEmotion: false, action: '' });
               setActiveEventId([newId]);
