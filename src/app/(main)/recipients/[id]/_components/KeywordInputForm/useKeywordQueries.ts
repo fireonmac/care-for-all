@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { saveDailyRecord } from '../../actions';
-import { parseDailyRecord, type DailyRecordDraft } from '@/lib/daily-record';
+import { parseDailyRecord, parseDailyRecordProgress, type DailyRecordDraft } from '@/lib/daily-record';
 
 // 1. API: Daily Record 저장 Mutation (React Query)
 export const useSaveDailyRecordMutation = () => {
@@ -65,18 +65,7 @@ export const useGenerateDailyDraft = (recipientId: string) => {
 
           fullText += decoder.decode(value, { stream: true });
 
-          let currentCognition = '';
-          let currentBehavior = '';
-
-          if (fullText.includes('[행동]')) {
-            const [cognition, behavior = ''] = fullText.split('[행동]', 2);
-            currentCognition = cognition.replace('[인지]', '').trim();
-            currentBehavior = behavior.trim();
-          } else {
-            currentCognition = fullText.replace('[인지]', '').trim();
-          }
-
-          setDraft({ cognition: currentCognition, behavior: currentBehavior });
+          setDraft(parseDailyRecordProgress(fullText));
         }
         fullText += decoder.decode();
         setDraft(parseDailyRecord(fullText));

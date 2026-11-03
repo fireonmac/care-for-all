@@ -1,3 +1,4 @@
+import { DAILY_RECORD_SECTIONS } from '@/lib/record-sections';
 import { createTextGenerationProvider } from '@/lib/ai/provider';
 import {
   createDailyRecordMessages,
@@ -48,7 +49,7 @@ export async function generateWeeklyRecord(
   const recordsText = dailyRecords
     .map(
       (record) =>
-        `[${record.date}]\n인지: ${record.cognition || '없음'}\n행동: ${record.behavior || '없음'}`,
+        `[${record.date}]\n${DAILY_RECORD_SECTIONS.map(({ key, label }) => `${label}: ${record[key] || '없음'}`).join('\n')}`,
     )
     .join('\n\n');
 

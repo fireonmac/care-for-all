@@ -162,3 +162,10 @@ D1 전환 시에는 드라이버·바인딩·마이그레이션뿐 아니라 사
 다른 규격의 모델 API를 추가할 때는 `TextGenerationProvider`를 구현한 어댑터를
 `src/lib/ai/providers`에 추가하고 `provider.ts`의 선택 로직에 등록한다. 앱의
 기록 생성 use case와 Route Handler는 변경하지 않는다.
+
+## 일일 기록의 영역과 형식
+
+`src/lib/record-sections.ts`가 신체·인지의 표시 명칭, 순서와 기존 저장 키 대응의 SSOT다.
+일일 AI 응답은 `[신체]` 다음 `[인지]`이며, 작성·초안·상세·수정·복사와 주간 입력도 같은 순서를 따른다.
+`src/lib/daily-record.ts`가 최종/중간 스트림 파싱을 공유한다. 이전 `[인지]`/`[행동]` 응답도 호환해 읽지만
+새 프롬프트는 사용하지 않는다. DB 스키마·기존 저장 내용·Action 인자 순서는 바꾸지 않는다.
