@@ -37,9 +37,9 @@ function RecipientListSkeleton() {
 export default function Loading() {
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-32 pb-24 min-h-screen">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-primary pb-8 mb-12 gap-6">
-        <div className="h-10 w-44 rounded bg-accent animate-pulse" />
-        <div className="h-12 w-32 rounded bg-accent animate-pulse" />
+      <header className="flex items-center sm:items-end justify-between border-b-2 border-primary pb-8 mb-12 gap-2 sm:gap-6">
+        <div className="h-8 w-32 sm:h-10 sm:w-44 rounded bg-accent animate-pulse" />
+        <div className="h-12 w-28 sm:w-32 shrink-0 rounded bg-accent animate-pulse" />
       </header>
       <RecipientListSkeleton />
     </main>
