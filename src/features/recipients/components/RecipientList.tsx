@@ -4,7 +4,8 @@ import { useDeferredValue, useEffect, useState } from 'react';
 import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import Link from 'next/link';
-import { Check, Search, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import { RecipientWeekStatus } from './RecipientWeekStatus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { recipientQueryKeys } from '@/features/recipients/queryKeys';
@@ -166,33 +167,8 @@ export function RecipientList({
                   최근 작성일: {r.latestRecordDate ? r.latestRecordDate : '-'}
                 </span>
               </div>
-              <div className="self-start sm:self-auto mt-4 sm:mt-0 flex gap-4">
-                {weekDates.map((d) => {
-                  const hasRecord = r.weeklyRecords.includes(d.dateStr);
-                  const isFuture = d.dateStr > todayStr;
-                  return (
-                    <div key={d.dateStr} className={`flex flex-col items-center justify-center gap-1.5 ${(isFuture || d.dayName === '일') ? 'opacity-30' : ''}`}>
-                      <span className={`text-[11px] tracking-widest ${
-                        d.dateStr === todayStr 
-                          ? 'text-foreground font-semibold' 
-                          : d.dayName === '일' 
-                            ? 'text-foreground/80 font-medium' 
-                            : 'text-foreground font-medium'
-                      }`}>
-                        {d.dayName}
-                      </span>
-                      <div className="h-4 flex items-center justify-center">
-                        {hasRecord ? (
-                          <Check size={14} strokeWidth={4} className="text-success" />
-                        ) : d.dayName === '일' ? null : !isFuture ? (
-                          <div className="w-1.5 h-1.5 rounded-full bg-destructive"></div>
-                        ) : (
-                          <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="self-start sm:self-auto mt-4 sm:mt-0">
+                <RecipientWeekStatus weekDates={weekDates} todayStr={todayStr} recordDates={r.weeklyRecords} />
               </div>
             </Link>
           ))

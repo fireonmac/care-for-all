@@ -1,13 +1,13 @@
 'use client';
 
-import { ReactElement } from 'react';
+import { useRef, type ReactElement, type ComponentProps } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger, DialogBody
+  DialogTrigger, DialogBody, DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -18,7 +18,9 @@ interface ConfirmDeleteModalProps {
   message: string;
   onConfirm: () => void;
   isLoading?: boolean;
-  trigger: ReactElement;
+  trigger?: ReactElement;
+  error?: string;
+  finalFocus?: ComponentProps<typeof DialogContent>['finalFocus'];
 }
 
 export function ConfirmDeleteModal({
@@ -28,24 +30,28 @@ export function ConfirmDeleteModal({
   message,
   onConfirm,
   isLoading = false,
-  trigger,
+  trigger, error, finalFocus,
 }: ConfirmDeleteModalProps) {
+  const cancelRef = useRef<HTMLButtonElement>(null);
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!isLoading) onOpenChange(value); }}>
       {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent>
+      <DialogContent initialFocus={cancelRef} finalFocus={finalFocus} className="w-[calc(100%_-_2rem)] rounded-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <DialogBody>
-          <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-line">{message}</p>
+          <DialogDescription className="text-muted-foreground text-base leading-relaxed whitespace-pre-line">{message}</DialogDescription>
+          {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
         </DialogBody>
 
-        <DialogFooter>
+        <DialogFooter showCloseButton={false} className="flex-col gap-3 sm:flex-row">
+          <Button ref={cancelRef} type="button" variant="secondary" className="w-full sm:w-auto" disabled={isLoading} onClick={() => onOpenChange(false)}>취소</Button>
           <Button
             type="button"
             variant="destructive"
+            className="w-full sm:w-auto"
             onClick={onConfirm}
             disabled={isLoading}
           >
