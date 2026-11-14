@@ -5,7 +5,11 @@ import { z } from 'zod';
 export const insertRecipientSchema = createInsertSchema(recipients).pick({
   name: true,
 }).extend({
-  name: z.string().min(1, '성함을 입력해주세요.'),
+  name: z.string().trim().min(1, '성함을 입력해주세요.'),
+});
+
+export const recipientRegistrationSchema = insertRecipientSchema.extend({
+  confirmDuplicate: z.boolean().default(false),
 });
 
 export const RECIPIENTS_PAGE_SIZE = 10;
