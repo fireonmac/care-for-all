@@ -44,19 +44,27 @@ test('observation text remains user data, independent from instructions and othe
   assert.equal(createWeeklyRecordMessages(untrusted)[1].content, untrusted);
 });
 
-test('weekly editorial target keeps the body-only string contract and source records', async () => {
-  const example = cases.weekly;
-  assert.equal(example.expected.includes('\n'), false);
-  for (const phrase of example.avoid) assert.equal(example.expected.includes(phrase), false, phrase);
-  const records = example.input.split('\n\n').map(block => {
-    const [date, behavior, cognition] = block.split('\n');
-    return { date: date.slice(1, -1), cognition: cognition.slice(4), behavior: behavior.slice(4) };
+for (const [name, example] of [['normal', cases.weekly], ['sparse', cases.weeklySparse]]) {
+  test(`weekly ${name} editorial target preserves concise lines and the string/source contract`, async () => {
+    const lines = example.expected.split('\n');
+    assert.ok(name === 'normal' ? lines.length >= 4 && lines.length <= 5 : lines.length < 4);
+    for (const line of lines) {
+      assert.match(line, /습니다\.$/);
+      assert.doesNotMatch(line, /^(?:\[|#|[-*•]|\d+[.)])/);
+    }
+    for (const phrase of example.avoid) assert.equal(example.expected.includes(phrase), false, phrase);
+    const records = example.input.split('\n\n').map(block => {
+      const [date, behavior, cognition] = block.split('\n');
+      return { date: date.slice(1, -1), cognition: cognition.slice(4), behavior: behavior.slice(4) };
+    });
+    const ai = sourceLoader({ '@/lib/ai/provider': { createTextGenerationProvider: () => ({
+      generateText: async request => {
+        assert.deepEqual(request.messages, createWeeklyRecordMessages(example.input));
+        assert.equal(Object.hasOwn(request, 'maxTokens'), false);
+        assert.equal(Object.hasOwn(request, 'timeoutMs'), false);
+        return example.expected;
+      },
+    }) } })('src/lib/ai.ts');
+    assert.equal(await ai.generateWeeklyRecord(records), example.expected);
   });
-  const ai = sourceLoader({ '@/lib/ai/provider': { createTextGenerationProvider: () => ({
-    generateText: async request => {
-      assert.deepEqual(request.messages, createWeeklyRecordMessages(example.input));
-      return example.expected;
-    },
-  }) } })('src/lib/ai.ts');
-  assert.equal(await ai.generateWeeklyRecord(records), example.expected);
-});
+}
