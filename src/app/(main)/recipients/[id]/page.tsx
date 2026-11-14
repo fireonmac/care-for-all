@@ -4,6 +4,7 @@ import { WeeklyReportForm } from './_components/WeeklyReportForm/WeeklyReportFor
 import { TodayRecordView } from './_components/TodayRecordView';
 import { WeekSelector } from '@/features/recipients/components/WeekSelector';
 import { BackButton } from '@/components/BackButton';
+import { DeleteRecipient } from '@/features/recipients/components/DeleteRecipient';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
 
@@ -114,6 +115,7 @@ export default async function RecipientDetailPage({
           <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
         ) : <p className="text-muted-foreground">공유받은 자료를 읽을 수 있습니다. 새 기록 작성은 편집 권한이 필요합니다.</p>}
       </section>
+      {recipient.canManage && <DeleteRecipient recipientId={recipient.id} recipientName={recipient.name} />}
     </main>
   );
 }

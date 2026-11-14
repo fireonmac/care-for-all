@@ -43,3 +43,13 @@ export async function addRecipient(payload: unknown) {
   if (result.status === 'created') revalidatePath('/');
   return result;
 }
+
+export async function deleteRecipient(recipientId: string) {
+  const actor = await requireActor();
+  // 기록은 보존하고 모든 조회/쓰기/AI 경로에서 제외한다. 편집 공유만으로는 삭제할 수 없다.
+  const removed = await writeTransaction(async tx => tx.update(recipients).set({ isActive: false })
+    .where(and(eq(recipients.id, recipientId), recipientAccess(actor.id, 'manage'))).returning({ id: recipients.id }));
+  if (!removed.length) throw new AccessDeniedError();
+  revalidatePath('/');
+  return { success: true };
+}

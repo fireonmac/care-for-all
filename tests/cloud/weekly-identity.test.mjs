@@ -18,6 +18,7 @@ const Page = sourceLoader({
   './_components/TodayRecordView': { TodayRecordView: Placeholder },
   '@/features/recipients/components/WeekSelector': { WeekSelector: Placeholder },
   '@/components/BackButton': { BackButton: Placeholder },
+  '@/features/recipients/components/DeleteRecipient': { DeleteRecipient: Placeholder },
   'next/link': { default: Placeholder, __esModule: true },
   'lucide-react': { Check: Placeholder },
 })('src/app/(main)/recipients/[id]/page.tsx').default;

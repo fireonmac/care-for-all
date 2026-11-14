@@ -35,7 +35,7 @@ export function recipientAccess(userId: string, permission: 'read' | 'edit' | 'm
     where ${recipientShares.recipientId} = ${recipients.id} and ${recipientShares.userId} = ${userId}
     and ${permission === 'edit' ? eq(recipientShares.permission, 'edit') : sql`1`})`;
   const creator = eq(recipients.createdByUserId, userId);
-  return and(isNotNull(recipients.workspaceId), member, permission === 'manage' ? creator : or(creator, shared))!;
+  return and(eq(recipients.isActive, true), isNotNull(recipients.workspaceId), member, permission === 'manage' ? creator : or(creator, shared))!;
 }
 
 export function recordAccess(userId: string, permission: 'read' | 'edit' = 'read') {
