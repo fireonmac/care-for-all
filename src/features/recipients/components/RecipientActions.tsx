@@ -29,7 +29,7 @@ export function RecipientActions({ recipientId, recipientName }: { recipientId: 
     </DropdownMenu>
     <RecipientNameDialog key={recipientId} open={dialog === 'rename'} onOpenChange={open => setDialog(open ? 'rename' : null)} recipient={{ id: recipientId, name: recipientName }} finalFocus={triggerRef} />
     <ConfirmDeleteModal open={dialog === 'delete'} onOpenChange={open => { if (!mutation.isPending) setDialog(open ? 'delete' : null); }}
-      title="어르신 삭제" message={`${recipientName} 어르신을 삭제할까요?\n기존 기록은 보관되며, 앱에서 복구할 수 없습니다.`}
+      title="어르신 삭제" message={`${recipientName} 어르신을 삭제할까요?\n삭제 후에는 어르신과 기록을 확인할 수 없습니다.`}
       isLoading={mutation.isPending} error={mutation.isError ? mutation.error.message : undefined} finalFocus={triggerRef}
       onConfirm={() => mutation.mutate(recipientId, { onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: recipientQueryKeys.all });

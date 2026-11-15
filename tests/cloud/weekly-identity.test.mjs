@@ -55,13 +55,17 @@ test('past weeks still expose their own report form and daily record count', asy
 });
 
 
-test('weekly report stays in the detail header and the original seven-day calendar stays below it', async () => {
+test('weekly report belongs to the selected-week toolbar while the original seven-day calendar stays below it', async () => {
   const tree = await Page({ params: Promise.resolve({ id: 'recipient-a' }), searchParams: Promise.resolve({ date: '2026-10-26' }) });
   const children = ReactChildren(tree);
   const header = children.find(node => node?.type === 'header');
   const weekView = children.find(node => node?.props?.id === 'week-view');
-  assert.ok(findWeekly(header));
-  assert.equal(findWeekly(weekView), undefined);
+  assert.equal(findWeekly(header), undefined);
+  assert.ok(findWeekly(weekView));
+  const slot = descendants(weekView).find(node => node.props?.['data-slot'] === 'weekly-report-action');
+  assert.ok(slot.props.className.includes('h-11'));
+  assert.ok(slot.props.className.includes('w-20'));
+  assert.ok(findWeekly(slot));
   const links = descendants(weekView).filter(node => node.props?.href?.includes('#week-view'));
   assert.equal(links.length, 7);
 });

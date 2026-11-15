@@ -13,6 +13,8 @@ import {
   useUpdateWeeklyRecordMutation, useDeleteWeeklyRecordMutation
 } from './useWeeklyReportQueries';
 
+const REPORT_BUTTON_CLASS = 'h-11 w-full px-2 sm:px-4';
+
 interface WeeklyReportFormProps {
   recipientId: string;
   recipientName: string;
@@ -56,6 +58,7 @@ export function WeeklyReportForm({
   // UI 상태 도출 (가장 우선순위 높은 상태부터)
   const reportStatus = isError ? 'FAILED' : isGenerating ? 'PROCESSING' : serverStatus;
   const reportContent = recordQuery.data?.combinedContent || null;
+  const reportLabel = `${currentMonth}월 ${currentWeekOfMonth}주차 주간 리포트`;
 
   // --- UI Side Effects ---
   const prevStatus = useRef(reportStatus);
@@ -112,43 +115,42 @@ export function WeeklyReportForm({
       {initialQuery.isLoading ? (
         <Button
           disabled
+          aria-label={`${reportLabel} 불러오는 중`}
           variant="secondary"
           size="sm"
-          className="bg-muted border-border text-muted-foreground cursor-wait"
+          className={`${REPORT_BUTTON_CLASS} bg-muted border-border text-muted-foreground cursor-wait`}
         >
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          로딩 중...
+          <Loader2 aria-hidden="true" className="hidden size-4 animate-spin sm:inline-block" />
+          <span className="sm:hidden">로딩 중</span><span className="hidden sm:inline">로딩 중...</span>
         </Button>
       ) : reportStatus === 'IDLE' || reportStatus === 'FAILED' ? (
         <Button
           onClick={handleGenerate}
           variant="secondary"
           size="sm"
-          className={reportStatus === 'FAILED' ? 'border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive' : ''}
+          className={`${REPORT_BUTTON_CLASS} ${reportStatus === 'FAILED' ? 'border-destructive/50 text-destructive hover:bg-destructive/10 hover:border-destructive' : ''}`}
+          aria-label={`${reportLabel} ${reportStatus === 'FAILED' ? '재발간' : '발간'}`}
           disabled={isGenerating || !canGenerate}
         >
-          {reportStatus === 'FAILED' && <AlertTriangle className="w-4 h-4 mr-2" />}
-          {reportStatus === 'FAILED' ? '주간 리포트 재발간' : '주간 리포트 발간'}
+          {reportStatus === 'FAILED' && <AlertTriangle aria-hidden="true" className="hidden size-4 sm:inline-block" />}
+          <span className="sm:hidden">{reportStatus === 'FAILED' ? '재발간' : '리포트'}</span>
+          <span className="hidden sm:inline">{reportStatus === 'FAILED' ? '주간 리포트 재발간' : '주간 리포트 발간'}</span>
         </Button>
       ) : reportStatus === 'PROCESSING' ? (
         <Button
           disabled
+          aria-label={`${reportLabel} 발간 중`}
           variant="secondary"
           size="sm"
-          className="bg-muted border-border text-muted-foreground cursor-wait"
+          className={`${REPORT_BUTTON_CLASS} bg-muted border-border text-muted-foreground cursor-wait`}
         >
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          발간 중...
+          <Loader2 aria-hidden="true" className="hidden size-4 animate-spin sm:inline-block" />
+          <span className="sm:hidden">발간 중</span><span className="hidden sm:inline">발간 중...</span>
         </Button>
       ) : (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger>
-            <Button
-              variant="outline"
-              size="sm"
-            >
-              주간 리포트 확인
-            </Button>
+          <DialogTrigger render={<Button variant="outline" size="sm" className={REPORT_BUTTON_CLASS} aria-label={`${reportLabel} 확인`} />}>
+            <span className="sm:hidden">리포트</span><span className="hidden sm:inline">주간 리포트 확인</span>
           </DialogTrigger>
           <WeeklyReportModal
             recipientName={recipientName}

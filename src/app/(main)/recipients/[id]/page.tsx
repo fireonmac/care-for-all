@@ -19,55 +19,53 @@ export default async function RecipientDetailPage({
 }) {
   const resolvedParams = await params;
   const resolvedSearch = await searchParams;
-  
+
   const recipient = await getRecipientOr404(resolvedParams.id);
   const recentRecords = await getRecipientRecords(resolvedParams.id);
 
   const todayStr = getKSTDateStr(new Date());
   const targetDate = resolvedSearch.date || todayStr;
-  
+
   const targetRecord = recentRecords.find((r) => r.date === targetDate && r.type === 'daily');
   const hasTargetRecord = !!targetRecord;
 
   const { weekDates, currentMonth, currentWeekOfMonth, startOfWeek, endOfWeek } = getWeekData(targetDate);
-  
-  const currentWeekRecords = recentRecords.filter(r => 
+
+  const currentWeekRecords = recentRecords.filter(r =>
     r.date >= startOfWeek && r.date <= endOfWeek && r.type === 'daily'
   );
-  
+
   const dailyRecordCount = currentWeekRecords.length;
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <BackButton href="/" label="목록으로 돌아가기" />
 
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-center border-b-2 border-primary pb-8 mb-20 gap-6 min-h-[88px] sm:min-h-0">
+      <header className="flex items-center gap-2 border-b-2 border-primary pb-8 mb-20 min-h-[88px] sm:min-h-0">
         <h1 className="min-w-0 break-words text-4xl font-medium text-foreground tracking-tight">
           {recipient.name} <span className="text-2xl font-normal text-foreground/80 ml-1">어르신</span>
         </h1>
-        <div className="col-start-1 row-start-2 sm:col-start-2 sm:row-start-1 min-h-11 flex items-center">
-          <WeeklyReportForm
-            key={`${recipient.id}:${startOfWeek}`}
-            canGenerate={recipient.canEdit}
-            recipientId={recipient.id} 
-            recipientName={recipient.name}
-            currentMonth={currentMonth}
-            currentWeekOfMonth={currentWeekOfMonth}
-            dailyRecordCount={dailyRecordCount} 
-            weekStartDate={weekDates[0].dateStr} 
-          />
-        </div>
-        {recipient.canManage && <div className="col-start-2 row-start-1 sm:col-start-3">
-          <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />
-        </div>}
+        {recipient.canManage && <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />}
       </header>
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
       <section id="week-view" className="mb-24 scroll-mt-20">
-        <div className="flex items-center mb-6">
+        <div data-slot="week-toolbar" className="flex min-h-11 items-center justify-between gap-3 mb-6">
           <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
+          <div data-slot="weekly-report-action" className="flex h-11 w-20 shrink-0 items-center justify-end sm:w-52">
+            <WeeklyReportForm
+              key={`${recipient.id}:${startOfWeek}`}
+              canGenerate={recipient.canEdit}
+              recipientId={recipient.id}
+              recipientName={recipient.name}
+              currentMonth={currentMonth}
+              currentWeekOfMonth={currentWeekOfMonth}
+              dailyRecordCount={dailyRecordCount}
+              weekStartDate={weekDates[0].dateStr}
+            />
+          </div>
         </div>
-        
+
         <div className="grid grid-cols-7 gap-4 border-b border-border pb-8">
           {weekDates.map(({ dateStr, dayName, isFuture }) => {
             const record = currentWeekRecords.find(r => r.date === dateStr);
@@ -84,7 +82,7 @@ export default async function RecipientDetailPage({
                 <span className={`text-4xl font-light ${isSelected ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
                   {dateStr.split('-')[2]}
                 </span>
-                
+
                 {/* 인디케이터 */}
                 <div className="flex h-2 items-center justify-center mt-2 relative">
                   {record ? (
