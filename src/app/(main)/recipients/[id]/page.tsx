@@ -41,17 +41,11 @@ export default async function RecipientDetailPage({
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <BackButton href="/" label="목록으로 돌아가기" />
 
-      <header className="flex items-center justify-between gap-4 border-b-2 border-primary pb-8 mb-12">
-        <h1 className="min-w-0 break-words text-3xl sm:text-4xl font-medium text-foreground tracking-tight">
-          {recipient.name} <span className="text-xl sm:text-2xl font-normal text-foreground/80 ml-1">어르신</span>
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_auto_auto] items-center border-b-2 border-primary pb-8 mb-20 gap-6 min-h-[88px] sm:min-h-0">
+        <h1 className="min-w-0 break-words text-4xl font-medium text-foreground tracking-tight">
+          {recipient.name} <span className="text-2xl font-normal text-foreground/80 ml-1">어르신</span>
         </h1>
-        {recipient.canManage && <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />}
-      </header>
-
-      {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
-      <section id="week-view" className="mb-24 scroll-mt-20">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
+        <div className="col-start-1 row-start-2 sm:col-start-2 sm:row-start-1 min-h-11 flex items-center">
           <WeeklyReportForm
             key={`${recipient.id}:${startOfWeek}`}
             canGenerate={recipient.canEdit}
@@ -62,6 +56,16 @@ export default async function RecipientDetailPage({
             dailyRecordCount={dailyRecordCount} 
             weekStartDate={weekDates[0].dateStr} 
           />
+        </div>
+        {recipient.canManage && <div className="col-start-2 row-start-1 sm:col-start-3">
+          <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />
+        </div>}
+      </header>
+
+      {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
+      <section id="week-view" className="mb-24 scroll-mt-20">
+        <div className="flex items-center mb-6">
+          <WeekSelector currentMonth={currentMonth} currentWeekOfMonth={currentWeekOfMonth} targetDate={targetDate} />
         </div>
         
         <div className="grid grid-cols-7 gap-4 border-b border-border pb-8">

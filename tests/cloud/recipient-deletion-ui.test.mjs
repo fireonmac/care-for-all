@@ -26,6 +26,7 @@ test('management menu opens separate edit and delete dialogs without triggering 
   let tree = render();
   assert.equal(nodes(tree, node => node.type === 'DropdownMenuTrigger')[0].props.render.props['aria-label'], '어르신 관리 메뉴');
   const items = nodes(tree, node => node.type === 'DropdownMenuItem');
+  assert.notEqual(items[1].props.variant, 'destructive');
   items[0].props.onClick();
   tree = render();
   assert.equal(nodes(tree, node => node.type === 'NameDialog')[0].props.open, true);
@@ -45,4 +46,18 @@ test('management menu opens separate edit and delete dialogs without triggering 
   assert.equal(nodes(render(), node => node.type === 'DeleteDialog')[0].props.error, '합성 오류');
   await calls[0].options.onSuccess();
   assert.deepEqual(navigations, ['/']);
+});
+
+
+test('only the final delete confirmation action uses the destructive button style', () => {
+  const ui = Object.fromEntries(['Dialog', 'DialogContent', 'DialogHeader', 'DialogTitle', 'DialogFooter', 'DialogTrigger', 'DialogBody', 'DialogDescription'].map(name => [name, name]));
+  const Modal = sourceLoader({
+    react: { ...React, useRef: () => ({ current: null }) },
+    '@/components/ui/dialog': ui, '@/components/ui/button': { Button: 'Button' },
+  })('src/components/ConfirmDeleteModal.tsx').ConfirmDeleteModal;
+  const tree = Modal({ open: true, onOpenChange() {}, title: '삭제 확인', message: '합성 안내', onConfirm() {} });
+  const buttons = nodes(tree, node => node.type === 'Button');
+  assert.equal(buttons.filter(node => node.props.variant === 'destructive').length, 1);
+  assert.equal(buttons.find(node => node.props.variant === 'destructive').props.children, '삭제하기');
+  assert.equal(buttons.find(node => node.props.children === '취소').props.variant, 'secondary');
 });

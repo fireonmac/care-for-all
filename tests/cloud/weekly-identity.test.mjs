@@ -53,3 +53,21 @@ test('past weeks still expose their own report form and daily record count', asy
   assert.equal(past.props.dailyRecordCount, 2);
   assert.equal(past.props.recipientId, 'recipient-a');
 });
+
+
+test('weekly report stays in the detail header and the original seven-day calendar stays below it', async () => {
+  const tree = await Page({ params: Promise.resolve({ id: 'recipient-a' }), searchParams: Promise.resolve({ date: '2026-10-26' }) });
+  const children = ReactChildren(tree);
+  const header = children.find(node => node?.type === 'header');
+  const weekView = children.find(node => node?.props?.id === 'week-view');
+  assert.ok(findWeekly(header));
+  assert.equal(findWeekly(weekView), undefined);
+  const links = descendants(weekView).filter(node => node.props?.href?.includes('#week-view'));
+  assert.equal(links.length, 7);
+});
+function ReactChildren(node) { return Array.isArray(node.props.children) ? node.props.children : [node.props.children]; }
+function descendants(node) {
+  if (!node || typeof node !== 'object') return [];
+  if (Array.isArray(node)) return node.flatMap(descendants);
+  return [node, ...descendants(node.props?.children)];
+}

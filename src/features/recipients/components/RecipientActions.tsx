@@ -24,7 +24,7 @@ export function RecipientActions({ recipientId, recipientName }: { recipientId: 
       <DropdownMenuContent align="end" finalFocus={dialog ? false : triggerRef} className="w-44 p-1.5">
         <DropdownMenuItem className="min-h-11 px-3 text-base" onClick={() => setDialog('rename')}><Pencil aria-hidden="true" />이름 수정</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" className="min-h-11 px-3 text-base" onClick={() => { mutation.reset(); setDialog('delete'); }}><Trash2 aria-hidden="true" />삭제</DropdownMenuItem>
+        <DropdownMenuItem className="min-h-11 px-3 text-base" onClick={() => { mutation.reset(); setDialog('delete'); }}><Trash2 aria-hidden="true" />삭제</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
     <RecipientNameDialog key={recipientId} open={dialog === 'rename'} onOpenChange={open => setDialog(open ? 'rename' : null)} recipient={{ id: recipientId, name: recipientName }} finalFocus={triggerRef} />
