@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ConfirmDeleteModal } from '@/components/ConfirmDeleteModal';
@@ -20,7 +20,7 @@ export function RecipientActions({ recipientId, recipientName }: { recipientId: 
 
   return <>
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button ref={triggerRef} type="button" variant="secondary" size="icon" className="size-10 rounded-lg text-muted-foreground" aria-label="어르신 관리 메뉴"><MoreHorizontal size={20} /></Button>} />
+      <DropdownMenuTrigger render={<Button ref={triggerRef} type="button" variant="secondary" size="icon" className="size-10 rounded-lg text-muted-foreground" aria-label="어르신 관리 메뉴"><MoreVertical size={20} /></Button>} />
       <DropdownMenuContent align="end" finalFocus={dialog ? false : triggerRef} className="w-44 p-1.5">
         <DropdownMenuItem className="min-h-11 px-3 text-base" onClick={() => setDialog('rename')}><Pencil aria-hidden="true" />이름 수정</DropdownMenuItem>
         <DropdownMenuSeparator />

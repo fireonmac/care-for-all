@@ -41,14 +41,11 @@ export default async function RecipientDetailPage({
     <main className="max-w-5xl w-full mx-auto px-6 sm:px-12 pt-24 pb-16 min-h-screen flex flex-col">
       <BackButton href="/" label="목록으로 돌아가기" />
 
-      <header className="flex items-baseline gap-2 border-b-2 border-primary pb-8 mb-20 min-h-[88px] sm:min-h-0">
+      <header className="flex items-start justify-between gap-6 border-b-2 border-primary pb-8 mb-20 min-h-[88px] sm:min-h-0">
         <h1 aria-label={`${recipient.name} 어르신`} className="min-w-0 break-words text-4xl font-medium text-foreground tracking-tight">
-          {recipient.name}
+          {recipient.name}<span className="ml-2 inline-block whitespace-nowrap text-2xl font-normal text-foreground/80">어르신</span>
         </h1>
-        <div className="inline-flex shrink-0 items-center gap-2">
-          <span data-slot="recipient-title-suffix" aria-hidden="true" className="text-2xl font-normal text-foreground/80">어르신</span>
-          {recipient.canManage && <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />}
-        </div>
+        {recipient.canManage && <RecipientActions recipientId={recipient.id} recipientName={recipient.name} />}
       </header>
 
       {/* 상단: 구조적이고 쾌적한 주간 뷰 */}
