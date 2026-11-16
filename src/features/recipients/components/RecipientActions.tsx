@@ -20,7 +20,7 @@ export function RecipientActions({ recipientId, recipientName }: { recipientId: 
 
   return <>
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button ref={triggerRef} type="button" variant="ghost" size="icon" className="size-11 rounded-full" aria-label="어르신 관리 메뉴"><MoreHorizontal size={22} /></Button>} />
+      <DropdownMenuTrigger render={<Button ref={triggerRef} type="button" variant="secondary" size="icon" className="size-10 rounded-lg text-muted-foreground" aria-label="어르신 관리 메뉴"><MoreHorizontal size={20} /></Button>} />
       <DropdownMenuContent align="end" finalFocus={dialog ? false : triggerRef} className="w-44 p-1.5">
         <DropdownMenuItem className="min-h-11 px-3 text-base" onClick={() => setDialog('rename')}><Pencil aria-hidden="true" />이름 수정</DropdownMenuItem>
         <DropdownMenuSeparator />
