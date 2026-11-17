@@ -61,20 +61,20 @@ export function RecipientNameDialog({ open, onOpenChange, recipient, trigger, fi
     }}>
       {trigger && <DialogTrigger render={trigger} />}
       <DialogContent initialFocus={nameInputRef} finalFocus={finalFocus} className="max-h-[85dvh] w-[calc(100%_-_2rem)] rounded-2xl">
-        <DialogHeader><DialogTitle>{review ? '중복 이름 확인' : recipient ? '이름 수정' : '어르신 등록'}</DialogTitle></DialogHeader>
-        <DialogBody>
+        <DialogHeader className="border-b-0 pb-0"><DialogTitle>{review ? '중복 이름 확인' : recipient ? '이름 수정' : '어르신 등록'}</DialogTitle></DialogHeader>
+        <DialogBody className="pt-7 pb-2">
           {review ? <DuplicateRecipientReview review={review} /> : (
-            <form id="recipient-name-form" onSubmit={submit()} className="space-y-2.5">
-              <label htmlFor="recipient-name" className="text-sm font-medium">어르신 이름</label>
+            <form id="recipient-name-form" onSubmit={submit()} className="flex flex-col gap-3">
+              <label htmlFor="recipient-name" className="block text-sm font-medium">어르신 이름</label>
               <Input id="recipient-name" type="text" {...nameField} ref={element => { nameField.ref(element); nameInputRef.current = element; }}
                 aria-invalid={!!form.formState.errors.name} aria-describedby={form.formState.errors.name ? 'recipient-name-error' : undefined}
-                placeholder="성함을 입력하세요" className="text-lg" />
+                placeholder="성함을 입력하세요" className="h-14 border text-lg font-normal" />
               {form.formState.errors.name && <p id="recipient-name-error" role="alert" className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
             </form>
           )}
           {mutation.isError && <p className="mt-4 text-sm text-destructive" role="alert">{mutation.error.message}</p>}
         </DialogBody>
-        <DialogFooter showCloseButton={false} className="flex-col gap-3 sm:flex-row">
+        <DialogFooter showCloseButton={false} className="flex-col gap-3 border-t-0 bg-transparent pt-4 pb-8 sm:flex-row">
           {review ? <>
             <Button type="button" variant="secondary" className="w-full sm:w-auto" disabled={mutation.isPending} onClick={() => { setReview(null); mutation.reset(); }}>뒤로</Button>
             <Button type="button" className="w-full sm:w-auto" disabled={mutation.isPending} onClick={() => void submit(true)()}>{mutation.isPending ? '저장 중...' : recipient ? '이 이름으로 저장' : '계속 등록'}</Button>
