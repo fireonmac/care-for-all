@@ -62,7 +62,7 @@ export function RecipientNameDialog({ open, onOpenChange, recipient, trigger, fi
       {trigger && <DialogTrigger render={trigger} />}
       <DialogContent initialFocus={nameInputRef} finalFocus={finalFocus} className="max-h-[85dvh] w-[calc(100%_-_2rem)] rounded-2xl">
         <DialogHeader className="border-b-0 pb-0"><DialogTitle>{review ? '중복 이름 확인' : recipient ? '이름 수정' : '어르신 등록'}</DialogTitle></DialogHeader>
-        <DialogBody className="pt-7 pb-2">
+        <DialogBody className="pt-12 pb-2">
           {review ? <DuplicateRecipientReview review={review} /> : (
             <form id="recipient-name-form" onSubmit={submit()} className="flex flex-col gap-3">
               <label htmlFor="recipient-name" className="block text-sm font-medium">어르신 이름</label>
