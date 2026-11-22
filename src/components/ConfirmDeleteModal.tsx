@@ -36,7 +36,7 @@ export function ConfirmDeleteModal({
   return (
     <Dialog open={open} onOpenChange={value => { if (!isLoading) onOpenChange(value); }}>
       {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent initialFocus={cancelRef} finalFocus={finalFocus} className="w-[calc(100%_-_2rem)] rounded-2xl">
+      <DialogContent initialFocus={cancelRef} finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -46,7 +46,7 @@ export function ConfirmDeleteModal({
           {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
         </DialogBody>
 
-        <DialogFooter showCloseButton={false} className="flex-col gap-3 sm:flex-row">
+        <DialogFooter showCloseButton={false}>
           <Button ref={cancelRef} type="button" variant="secondary" className="w-full sm:w-auto" disabled={isLoading} onClick={() => onOpenChange(false)}>취소</Button>
           <Button
             type="button"

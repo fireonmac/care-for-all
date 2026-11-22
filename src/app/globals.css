@@ -63,7 +63,13 @@
   }
 }
 
+/* Shared modal geometry; feature dialogs inherit these values. */
 :root {
+  --dialog-radius: 1rem;
+  --dialog-padding: 2rem;
+  --dialog-section-gap: 3rem;
+  --dialog-body-clearance: 0.5rem;
+  --dialog-actions-gap: 1rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);

@@ -51,7 +51,7 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 w-full max-w-md sm:max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-popover p-0 overflow-hidden flex flex-col gap-0 shadow-xl border border-border duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 w-[calc(100%_-_2rem)] max-w-md max-h-[85dvh] -translate-x-1/2 -translate-y-1/2 rounded-(--dialog-radius) bg-popover p-0 overflow-hidden flex flex-col gap-0 shadow-xl border border-border duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
@@ -80,7 +80,7 @@ function DialogHeader({
   return (
     <div
       data-slot="dialog-header"
-      className={cn("px-8 pt-8 pb-6 border-b border-border shrink-0 flex flex-row items-start justify-between gap-4", className)}
+      className={cn("px-(--dialog-padding) pt-(--dialog-padding) shrink-0 flex flex-row items-start justify-between gap-4", className)}
       {...props}
     >
       <div className="flex flex-col gap-2 flex-1">{children}</div>
@@ -107,7 +107,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "px-8 py-6 border-t border-border shrink-0 bg-background flex flex-col-reverse sm:flex-row sm:justify-end items-center gap-6",
+        "px-(--dialog-padding) pt-(--dialog-actions-gap) pb-(--dialog-padding) shrink-0 flex flex-col sm:flex-row sm:justify-end items-center gap-3",
         className
       )}
       {...props}
@@ -158,7 +158,7 @@ function DialogBody({
   return (
     <div
       data-slot="dialog-body"
-      className={cn("flex-1 overflow-y-auto p-8", className)}
+      className={cn("min-h-0 flex-1 overflow-y-auto px-(--dialog-padding) pt-(--dialog-section-gap) pb-(--dialog-body-clearance) last:pb-(--dialog-padding)", className)}
       {...props}
     />
   )

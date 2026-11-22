@@ -67,16 +67,16 @@ export function WeeklyReportModal({
         <DialogTitle>주간 요양보호기록 종합</DialogTitle>
       </DialogHeader>
 
-      <DialogBody className="pb-12 min-h-75">
+      <DialogBody>
         <div className="flex flex-col gap-8">
           <div className="px-1">
             <p className="text-xl font-medium text-foreground tracking-tight">{recipientName} 어르신</p>
           </div>
 
           <div>
-            <div className="flex items-center justify-between gap-3 mb-4 px-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 px-1">
               <div className="flex items-center gap-3">
-                <h3 className="text-base font-medium text-foreground tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
+                <h3 className="whitespace-nowrap text-base font-medium text-foreground tracking-widest">{currentMonth}월 {currentWeekOfMonth}째주 내용</h3>
                 {!isEditing && <CopyButton text={reportContent || ''} title="리포트 복사" />}
               </div>
               {canEdit && <div className="flex items-center gap-2">
