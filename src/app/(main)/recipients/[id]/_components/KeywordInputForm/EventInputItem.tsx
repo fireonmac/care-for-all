@@ -3,6 +3,8 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SpeechInputControl, SpeechInputFeedback } from './SpeechInputControl';
+import type { SpeechInput } from './useSpeechInput';
 import type { EventInput } from './KeywordInputForm';
 
 const PREDEFINED_EMOTIONS = [
@@ -14,6 +16,7 @@ const PREDEFINED_EMOTIONS = [
 
 interface EventInputItemProps {
   event: EventInput;
+  speech: SpeechInput;
   index: number;
   isFuture: boolean;
   canRemove: boolean;
@@ -26,6 +29,7 @@ interface EventInputItemProps {
 
 export function EventInputItem({
   event,
+  speech,
   index,
   isFuture,
   canRemove,
@@ -35,6 +39,7 @@ export function EventInputItem({
   error,
   eventField,
 }: EventInputItemProps) {
+  const listening = (field: 'event' | 'action' | 'emotion') => speech.busy && speech.target?.eventId === event.eventId && speech.target.field === field;
   const errorId = `event-error-${event.eventId}`;
   const isEventEmpty = !event.event.trim();
   const summaryText = isEventEmpty ? '내용을 입력해주세요' : event.event;
@@ -98,19 +103,23 @@ export function EventInputItem({
           <label htmlFor={`event-input-${event.eventId}`} className="text-base tracking-widest text-foreground flex items-baseline">
             일어난 사건 <span className="text-sm text-muted-foreground font-normal ml-2">(필수)</span>
           </label>
-          <Input
-            id={`event-input-${event.eventId}`}
-            type="text"
-            {...eventField}
-            aria-required="true"
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? errorId : undefined}
-            value={event.event}
-            disabled={isFuture}
-            placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
-            className={`px-5 py-3.5 text-lg font-normal ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
-            autoFocus={autoFocus}
-          />
+          <div className="relative">
+            <Input
+              id={`event-input-${event.eventId}`}
+              type="text"
+              {...eventField}
+              aria-required="true"
+              aria-invalid={Boolean(error)}
+              aria-describedby={[error ? errorId : null, `speech-event-${event.eventId}`].filter(Boolean).join(' ')}
+              value={event.event}
+              disabled={isFuture}
+              placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
+              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('event') ? 'border-primary ring-2 ring-primary/20' : ''} ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
+              autoFocus={autoFocus}
+            />
+            <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'event' }} label={`사건 ${index + 1} 일어난 사건`} disabled={isFuture} inputId={`event-input-${event.eventId}`} />
+          </div>
+          <SpeechInputFeedback speech={speech} target={{ eventId: event.eventId, field: 'event' }} id={`speech-event-${event.eventId}`} />
           {error && <p id={errorId} role="alert" className="text-sm text-destructive">{error.message}</p>}
         </div>
 
@@ -150,29 +159,45 @@ export function EventInputItem({
             </Button>
           </div>
           {event.isCustomEmotion && (
-            <Input
-              type="text"
-              value={event.emotion}
-              onChange={(ev) => onUpdate({ emotion: ev.target.value })}
-              disabled={isFuture || isEventEmpty}
-              placeholder="직접 감정이나 반응을 입력해주세요"
-              className="mt-2 px-5 py-3.5 text-lg font-normal"
-            />
+            <div className="mt-2 flex flex-col gap-2">
+              <div className="relative">
+                <Input
+                  id={`emotion-input-${event.eventId}`}
+                  aria-label="감정 및 반응"
+                  aria-describedby={`speech-emotion-${event.eventId}`}
+                  type="text"
+                  value={event.emotion}
+                  onChange={(ev) => onUpdate({ emotion: ev.target.value })}
+                  disabled={isFuture || isEventEmpty}
+                  placeholder="직접 감정이나 반응을 입력해주세요"
+                  className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('emotion') ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                />
+                <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'emotion' }} label={`사건 ${index + 1} 감정 및 반응`} disabled={isFuture || isEventEmpty} inputId={`emotion-input-${event.eventId}`} />
+              </div>
+              <SpeechInputFeedback speech={speech} target={{ eventId: event.eventId, field: 'emotion' }} id={`speech-emotion-${event.eventId}`} />
+            </div>
           )}
         </div>
 
         <div className={`flex flex-col gap-2 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>
-          <label className="text-base tracking-widest text-foreground flex items-baseline">
+          <label htmlFor={`action-input-${event.eventId}`} className="text-base tracking-widest text-foreground flex items-baseline">
             요양보호사의 조치 <span className="text-sm text-muted-foreground font-normal ml-2">(선택)</span>
           </label>
-          <Input
-            type="text"
-            value={event.action}
-            onChange={(ev) => onUpdate({ action: ev.target.value })}
-            disabled={isFuture || isEventEmpty}
-            placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
-            className="px-5 py-3.5 text-lg font-normal"
-          />
+          <div className="relative">
+            <Input
+              id={`action-input-${event.eventId}`}
+              aria-label="요양보호사의 조치"
+              aria-describedby={`speech-action-${event.eventId}`}
+              type="text"
+              value={event.action}
+              onChange={(ev) => onUpdate({ action: ev.target.value })}
+              disabled={isFuture || isEventEmpty}
+              placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
+              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('action') ? 'border-primary ring-2 ring-primary/20' : ''}`}
+            />
+            <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'action' }} label={`사건 ${index + 1} 요양보호사의 조치`} disabled={isFuture || isEventEmpty} inputId={`action-input-${event.eventId}`} />
+          </div>
+          <SpeechInputFeedback speech={speech} target={{ eventId: event.eventId, field: 'action' }} id={`speech-action-${event.eventId}`} />
         </div>
       </AccordionContent>
     </AccordionItem>

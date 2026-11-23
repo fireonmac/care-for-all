@@ -5,6 +5,8 @@ import { Accordion } from '@/components/ui/accordion';
 import { getKSTDateStr } from '@/lib/dateUtils';
 import { DraftReviewView } from './DraftReviewView';
 import { useGenerateDailyDraft, useSaveDailyRecordMutation } from './useKeywordQueries';
+import { useSpeechInput } from './useSpeechInput';
+import { appendDictation } from './speechRecognition';
 import { EventInputItem } from './EventInputItem';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/useToast';
@@ -69,9 +71,18 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
   const todayStr = getKSTDateStr(new Date());
   const isFuture = targetDate > todayStr;
 
+  const speech = useSpeechInput((target, text) => {
+    const current = getValues('events');
+    const index = current.findIndex(event => event.eventId === target.eventId);
+    if (index < 0 || isFuture || isGenerating) return;
+    const event = current[index];
+    if (target.field === 'emotion' && !event.isCustomEmotion) return;
+    setValue(`events.${index}.${target.field}`, appendDictation(event[target.field], text), { shouldValidate: true, shouldDirty: true });
+  });
+
   const onSubmit = async (data: FormValues) => {
     const validEvents = data.events.filter((e) => e.event.trim());
-    if (validEvents.length === 0 || isGenerating) return;
+    if (validEvents.length === 0 || isGenerating || speech.busy) return;
 
     const keywords = validEvents.map((ev, index) => {
       let text = `[사건 ${index + 1}]`;
@@ -132,6 +143,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         적어주신 내용을 바탕으로 신체와 인지 기록을 자연스럽게 정리해드려요.
       </p>
 
+      <p id="speech-input-notice" className="mb-6 text-sm text-muted-foreground leading-relaxed">
+        입력칸의 마이크를 누르면 말로 적을 수 있어요. 음성은 브라우저의 인식 서비스로 전송될 수 있어요.
+      </p>
+
       <form
         onSubmit={handleSubmit(onSubmit, (validationErrors) => {
           const firstInvalidEvent = getValues('events').find((_, index) => validationErrors.events?.[index]?.event);
@@ -142,7 +157,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         <Accordion
           value={activeEventId.length === 0 && fields.length > 0 ? [fields[0].eventId] : activeEventId}
           onValueChange={(val) => {
-            if (val.length > 0) setActiveEventId(val as string[]);
+            if (val.length > 0) { speech.cancel(); setActiveEventId(val as string[]); }
           }}
           className="flex flex-col gap-4"
         >
@@ -154,14 +169,16 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                 key={field.id}
                 event={event}
                 index={index}
-                isFuture={isFuture}
+                isFuture={isFuture || isGenerating}
+                speech={speech}
                 canRemove={fields.length > 1}
                 error={errors.events?.[index]?.event}
                 eventField={register(`events.${index}.event`)}
                 onUpdate={(updates) => {
-                  setValue(`events.${index}`, { ...event, ...updates }, { shouldValidate: true, shouldDirty: true });
+                  if ('isCustomEmotion' in updates) speech.cancel();
+                  setValue(`events.${index}`, { ...getValues('events')[index], ...updates }, { shouldValidate: true, shouldDirty: true });
                 }}
-                onRemove={() => remove(index)}
+                onRemove={() => { speech.cancel(); remove(index); }}
                 autoFocus={activeEventId.includes(event.eventId)}
               />
             );
@@ -173,7 +190,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
             type="button"
             onClick={async () => {
               // 최신 폼 값으로도 검사해 연속 클릭·watch 갱신 전 추가를 막는다.
-              if (isFuture) return;
+              if (isFuture || speech.busy) return;
               const valid = await trigger('events');
               const currentEvents = getValues('events');
               const emptyIndex = currentEvents.findIndex((event) => !eventSchema.shape.event.safeParse(event.event).success);
@@ -188,7 +205,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
               append({ eventId: newId, event: '', emotion: '', isCustomEmotion: false, action: '' });
               setActiveEventId([newId]);
             }}
-            disabled={isFuture}
+            disabled={isFuture || speech.busy}
             variant="outline"
             className="w-full py-4 border-dashed rounded-3xl hover:bg-muted"
           >
@@ -197,11 +214,11 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         </div>
 
         <div className="flex flex-wrap justify-end gap-3">
-          <Button type="button" variant="secondary" disabled={isGenerating || isFuture}
-            onClick={() => setDraft({ cognition: '', behavior: '' })}>직접 기록 작성</Button>
+          <Button type="button" variant="secondary" disabled={isGenerating || isFuture || speech.busy}
+            onClick={() => { speech.cancel(); setDraft({ cognition: '', behavior: '' }); }}>직접 기록 작성</Button>
           <Button
             type="submit"
-            disabled={isGenerating || !hasRequiredEvent || isFuture}
+            disabled={isGenerating || !hasRequiredEvent || isFuture || speech.busy}
           >
             {isGenerating ? '생성 중...' : '기록 초안 생성'}
           </Button>

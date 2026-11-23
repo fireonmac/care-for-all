@@ -41,6 +41,7 @@ function formFixture(options = {}) {
     },
     'next/navigation': { useRouter: () => ({ refresh() {} }) },
     '@/hooks/useToast': { useToast: () => ({ showSuccess() {}, showError() {} }) },
+    './useSpeechInput': { useSpeechInput: () => ({ busy: false, target: null, state: { phase: 'idle' }, cancel() {} }) },
     './useKeywordQueries': {
       useGenerateDailyDraft: () => ({ draft: null, setDraft() {}, isGenerating: false, async generateDraft(input) { generations.push(input); } }),
       useSaveDailyRecordMutation: () => ({ isPending: false }),
@@ -104,7 +105,7 @@ test('blank and whitespace-only events block append, open the field and show an 
     const input = findNodes(rendered, Placeholder).find(node => node.props['aria-required']);
     const error = findNodes(rendered, 'p').find(node => node.props.role === 'alert');
     assert.equal(input.props['aria-invalid'], true);
-    assert.equal(input.props['aria-describedby'], error.props.id);
+    assert.ok(input.props['aria-describedby'].split(' ').includes(error.props.id));
     assert.match(input.props.className, /border-destructive/);
     assert.equal(input.props.name, 'events.0.event');
     f.runEffects();
