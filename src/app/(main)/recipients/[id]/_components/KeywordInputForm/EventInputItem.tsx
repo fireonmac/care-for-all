@@ -114,7 +114,7 @@ export function EventInputItem({
               value={event.event}
               disabled={isFuture}
               placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
-              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('event') ? 'border-primary ring-2 ring-primary/20' : ''} ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
+              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('event') ? 'border-ring bg-muted/30' : ''} ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
               autoFocus={autoFocus}
             />
             <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'event' }} label={`사건 ${index + 1} 일어난 사건`} disabled={isFuture} inputId={`event-input-${event.eventId}`} />
@@ -170,7 +170,7 @@ export function EventInputItem({
                   onChange={(ev) => onUpdate({ emotion: ev.target.value })}
                   disabled={isFuture || isEventEmpty}
                   placeholder="직접 감정이나 반응을 입력해주세요"
-                  className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('emotion') ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                  className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('emotion') ? 'border-ring bg-muted/30' : ''}`}
                 />
                 <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'emotion' }} label={`사건 ${index + 1} 감정 및 반응`} disabled={isFuture || isEventEmpty} inputId={`emotion-input-${event.eventId}`} />
               </div>
@@ -193,7 +193,7 @@ export function EventInputItem({
               onChange={(ev) => onUpdate({ action: ev.target.value })}
               disabled={isFuture || isEventEmpty}
               placeholder="어떻게 대처하셨나요? (예: 안심시켜드리고 새 숟가락 교체)"
-              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('action') ? 'border-primary ring-2 ring-primary/20' : ''}`}
+              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('action') ? 'border-ring bg-muted/30' : ''}`}
             />
             <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'action' }} label={`사건 ${index + 1} 요양보호사의 조치`} disabled={isFuture || isEventEmpty} inputId={`action-input-${event.eventId}`} />
           </div>

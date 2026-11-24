@@ -8,14 +8,14 @@ export function SpeechInputControl({ speech, target, label, disabled, inputId }:
   const selected = speech.target?.eventId === target.eventId && speech.target.field === target.field;
   const active = selected && speech.busy;
   const waiting = active && (speech.state.phase === 'starting' || speech.state.phase === 'stopping');
-  return <Button type="button" variant={active ? 'secondary' : 'ghost'}
-    className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-11 p-0 rounded-lg ${active ? 'text-primary border-primary' : ''}`}
+  return <Button type="button" variant="ghost"
+    className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-11 p-0 rounded-full ${active ? 'bg-muted text-foreground hover:bg-muted' : ''}`}
     aria-label={`${label} ${active ? speech.state.phase === 'stopping' ? '음성 입력 취소' : '음성 입력 그만하기' : '말해서 입력'}`}
     aria-pressed={active} aria-controls={inputId} aria-describedby="speech-input-notice"
     title={active ? speech.state.phase === 'stopping' ? '취소' : '그만하기' : '말해서 입력'}
     disabled={!active && (disabled || speech.busy)}
     onClick={() => active ? speech.state.phase === 'stopping' ? speech.cancel() : speech.stop() : speech.start(target)}>
-    {waiting ? <LoaderCircle size={20} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : active ? <Square size={18} aria-hidden="true" /> : <Mic size={20} aria-hidden="true" />}
+    {waiting ? <LoaderCircle size={20} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : active ? <Square size={14} fill="currentColor" strokeWidth={0} aria-hidden="true" /> : <Mic size={20} strokeWidth={1.75} aria-hidden="true" />}
   </Button>;
 }
 
