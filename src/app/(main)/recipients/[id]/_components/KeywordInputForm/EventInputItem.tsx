@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ChevronDown } from 'lucide-react';
@@ -39,6 +40,19 @@ export function EventInputItem({
   error,
   eventField,
 }: EventInputItemProps) {
+  const itemRef = useRef<HTMLDivElement>(null);
+  const lastAppend = useRef(speech.appendVersion);
+  // Synchronize the DOM viewport only after a dictated append is rendered.
+  // Manual edits keep their caret/selection, and the stop button keeps focus.
+  useLayoutEffect(() => {
+    if (lastAppend.current === speech.appendVersion) return;
+    lastAppend.current = speech.appendVersion;
+    if (speech.target?.eventId !== event.eventId) return;
+    const input = itemRef.current?.querySelector<HTMLInputElement>(`[data-speech-field="${speech.target.field}"]`);
+    if (!input) return;
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.scrollLeft = input.scrollWidth;
+  }, [speech.appendVersion, speech.target, event.eventId]);
   const listening = (field: 'event' | 'action' | 'emotion') => speech.busy && speech.target?.eventId === event.eventId && speech.target.field === field;
   const errorId = `event-error-${event.eventId}`;
   const isEventEmpty = !event.event.trim();
@@ -53,7 +67,8 @@ export function EventInputItem({
     : event.emotion;
 
   return (
-    <AccordionItem 
+    <AccordionItem
+      ref={itemRef}
       value={event.eventId}
       className="group relative rounded-3xl border-2 last:border-b-2 border-border bg-muted flex flex-col mb-4 overflow-hidden transition-all duration-300 data-[open]:border-primary data-[open]:shadow-xl data-[open]:bg-background data-[open]:scale-[1.01]"
     >
@@ -106,6 +121,7 @@ export function EventInputItem({
           <div className="relative">
             <Input
               id={`event-input-${event.eventId}`}
+              data-speech-field="event"
               type="text"
               {...eventField}
               aria-required="true"
@@ -163,6 +179,7 @@ export function EventInputItem({
               <div className="relative">
                 <Input
                   id={`emotion-input-${event.eventId}`}
+                  data-speech-field="emotion"
                   aria-label="감정 및 반응"
                   aria-describedby={`speech-emotion-${event.eventId}`}
                   type="text"
@@ -186,6 +203,7 @@ export function EventInputItem({
           <div className="relative">
             <Input
               id={`action-input-${event.eventId}`}
+              data-speech-field="action"
               aria-label="요양보호사의 조치"
               aria-describedby={`speech-action-${event.eventId}`}
               type="text"

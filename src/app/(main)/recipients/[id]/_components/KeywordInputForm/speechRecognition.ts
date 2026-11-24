@@ -24,12 +24,14 @@ export function recognitionConstructor(browser: { SpeechRecognition?: Recognitio
   return browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
 }
 
-function errorMessage(error: string) {
+function errorMessage(error: string, isBrave: boolean) {
   switch (error) {
     case 'not-allowed': case 'service-not-allowed':
       return '마이크 사용이 허용되지 않았어요. 브라우저의 사이트 설정을 확인해주세요.';
-    case 'audio-capture': return '마이크를 찾을 수 없어요. 연결과 Windows 마이크 설정을 확인해주세요.';
-    case 'network': return '음성 연결이 끊겼어요. 입력된 글은 남아 있으니 다시 눌러주세요.';
+    case 'audio-capture': return '마이크를 찾을 수 없어요. 연결과 기기의 마이크 설정을 확인해주세요.';
+    case 'network': return isBrave
+      ? 'Brave에서는 음성 인식 서비스에 연결할 수 없어요. Chrome에서 사용해주세요. 입력한 글은 그대로 남아 있어요.'
+      : '음성 연결이 끊겼어요. 입력된 글은 남아 있으니 다시 눌러주세요.';
     case 'no-speech': return '말소리를 듣지 못했어요. 마이크를 눌러 다시 말씀해주세요.';
     case 'language-not-supported': return '이 브라우저에서는 한국어 음성 입력을 사용할 수 없어요.';
     default: return '음성 입력을 시작하지 못했어요. 다시 시도하거나 직접 입력해주세요.';
@@ -41,6 +43,7 @@ export function createSpeechSession(
   Recognition: RecognitionConstructor,
   onFinal: (text: string) => void,
   onState: (state: SpeechState) => void,
+  isBrave = false,
 ) {
   const recognition = new Recognition();
   recognition.lang = 'ko-KR';
@@ -84,23 +87,25 @@ export function createSpeechSession(
   };
   recognition.onerror = ({ error }) => {
     if (!active) return;
+    const emptyStop = phase === 'stopping' && error === 'no-speech';
     cancel();
     phase = 'idle';
-    emit('', errorMessage(error));
+    emit('', emptyStop ? '' : errorMessage(error, isBrave));
   };
   recognition.onend = () => {
     if (!active) return;
     active = false;
     detach();
+    const stoppedByUser = phase === 'stopping';
     phase = 'idle';
-    emit('', receivedText ? '음성 입력이 끝났어요. 내용을 확인해주세요.' : '입력된 말이 없어요. 마이크를 눌러 다시 말씀해주세요.');
+    emit('', receivedText || stoppedByUser ? '' : '입력된 말이 없어요. 마이크를 눌러 다시 말씀해주세요.');
   };
   return {
-    start() { emit(); try { recognition.start(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('start')); } },
+    start() { emit(); try { recognition.start(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('start', isBrave)); } },
     stop() {
       if (!active || phase === 'stopping') return;
       phase = 'stopping'; emit();
-      try { recognition.stop(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('stop')); }
+      try { recognition.stop(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('stop', isBrave)); }
     },
     cancel,
   };

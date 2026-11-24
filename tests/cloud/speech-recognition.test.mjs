@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sourceLoader } from './load-source.mjs';
 const {createSpeechSession,appendDictation,recognitionConstructor}=sourceLoader()('src/app/(main)/recipients/[id]/_components/KeywordInputForm/speechRecognition.ts');
-function fixture({startError=false,stopError=false}={}) {
+function fixture({startError=false,stopError=false,isBrave=false}={}) {
  const instances=[]; const states=[]; let value='원래 메모';
  class FakeRecognition {
   constructor(){ instances.push(this); }
@@ -10,7 +10,7 @@ function fixture({startError=false,stopError=false}={}) {
   stop(){this.stops=(this.stops??0)+1;if(stopError)throw Error('stop');}
   abort(){this.aborts=(this.aborts??0)+1;}
  }
- const session=createSpeechSession(FakeRecognition,text=>{value=appendDictation(value,text);},s=>states.push(s));
+ const session=createSpeechSession(FakeRecognition,text=>{value=appendDictation(value,text);},s=>states.push(s),isBrave);
  const result=(text,isFinal)=>Object.assign([{transcript:text}],{isFinal});
  return {session,engine:instances[0],states,result,get value(){return value;},edit(text){value=text;}};
 }
@@ -36,7 +36,7 @@ test('dictation appends to the latest typed edits and does not replace or trim e
 });
 test('stop flushes a final result once, then allows a fresh session without automatically restarting',()=>{
  const f=fixture();f.session.start();f.engine.onstart();f.session.stop();f.session.stop();assert.equal(f.engine.stops,1);assert.equal(f.states.at(-1).phase,'stopping');
- f.engine.onresult({results:[f.result('마지막 말',true)]});f.engine.onend();assert.equal(f.value,'원래 메모 마지막 말');assert.equal(f.states.at(-1).phase,'idle');assert.equal(f.engine.onresult,null);
+ f.engine.onresult({results:[f.result('마지막 말',true)]});f.engine.onend();assert.equal(f.value,'원래 메모 마지막 말');assert.equal(f.states.at(-1).phase,'idle');assert.equal(f.states.at(-1).message,'');assert.equal(f.engine.onresult,null);
  const next=fixture();next.session.start();assert.equal(next.states.at(-1).phase,'starting');
 });
 test('cancel on navigation/unmount detaches listeners and rejects even queued late callbacks',()=>{
@@ -52,4 +52,21 @@ test('permissions, microphone, network, silence and language errors preserve com
 });
 test('start/stop exceptions and an empty natural end return to idle without losing text',()=>{
  for(const options of [{startError:true},{stopError:true},{}]){const f=fixture(options);f.session.start();if(options.stopError)f.session.stop();else if(!options.startError)f.engine.onend();assert.equal(f.states.at(-1).phase,'idle');assert.ok(f.states.at(-1).message);assert.equal(f.value,'원래 메모');}
+});
+
+test('normal completion and an explicit empty stop clear guidance; errors remain actionable',()=>{
+ for(const withText of [false,true]){
+  const f=fixture();f.session.start();f.engine.onstart();
+  if(withText)f.engine.onresult({results:[f.result('완료한 말',true)]});
+  else f.session.stop();
+  f.engine.onend();assert.equal(f.states.at(-1).message,'');assert.equal(f.states.at(-1).interim,'');
+ }
+});
+test('Brave service failures explain the browser limitation instead of suggesting repeated retries',()=>{
+ const f=fixture({isBrave:true});f.session.start();f.engine.onerror({error:'network'});
+ assert.match(f.states.at(-1).message,/Brave.*Chrome/);assert.doesNotMatch(f.states.at(-1).message,/다시 눌러/);assert.equal(f.value,'원래 메모');
+});
+
+test('explicit stop stays quiet if the browser reports no-speech while flushing',()=>{
+ const f=fixture();f.session.start();f.session.stop();f.engine.onerror({error:'no-speech'});assert.equal(f.states.at(-1).message,'');
 });
