@@ -123,6 +123,7 @@ export function EventInputItem({
             <Input
               id={`event-input-${event.eventId}`}
               data-speech-field="event"
+              autoComplete="off"
               type="text"
               {...eventField}
               aria-required="true"
@@ -205,6 +206,7 @@ export function EventInputItem({
             <Input
               id={`action-input-${event.eventId}`}
               data-speech-field="action"
+              autoComplete="off"
               aria-label="요양보호사의 조치"
               aria-describedby={`speech-action-${event.eventId}`}
               type="text"
