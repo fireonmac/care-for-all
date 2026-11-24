@@ -1,3 +1,4 @@
+# Keep the existing Docker stack identity; this is independent of the GitHub repository name.
 name: care-for-all
 
 services:

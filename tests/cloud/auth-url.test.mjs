@@ -9,7 +9,7 @@ test('explicit auth URL preserves local and custom-domain configuration', () => 
 });
 
 test('Vercel Preview resolves its own HTTPS deployment origin without a placeholder', () => {
-  assert.equal(getAuthBaseUrl({ VERCEL: '1', VERCEL_URL: 'care-for-all-preview.vercel.app' }), 'https://care-for-all-preview.vercel.app');
+  assert.equal(getAuthBaseUrl({ VERCEL: '1', VERCEL_URL: 'carefor-all-preview.vercel.app' }), 'https://carefor-all-preview.vercel.app');
 });
 
 test('auth URL fallback rejects local, malformed, and unrelated hosts', () => {

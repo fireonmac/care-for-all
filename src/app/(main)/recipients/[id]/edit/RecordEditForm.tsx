@@ -54,6 +54,7 @@ export function RecordEditForm({ record, recipientId, recipientName, date }: { r
           <div key={key} className="flex flex-col relative">
             <h3 id={`edit-${key}-label`} className="text-base font-medium text-foreground tracking-widest mb-6">{label} 영역</h3>
             <Textarea
+              autoComplete="off"
               aria-labelledby={`edit-${key}-label`}
               className="text-xl pb-12 min-h-[200px]"
               value={values[key]}

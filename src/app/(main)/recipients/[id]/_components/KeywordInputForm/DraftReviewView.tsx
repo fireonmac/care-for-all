@@ -35,6 +35,7 @@ export function DraftReviewView({
           <div key={key} className="flex flex-col relative">
             <h3 id={`draft-${key}-label`} className="text-base font-medium text-foreground tracking-widest mb-6">{label} 영역</h3>
             <Textarea
+              autoComplete="off"
               aria-labelledby={`draft-${key}-label`}
               className={`text-xl pb-12 min-h-50 transition-all duration-500 ${loading && !draft[key] ? 'bg-muted animate-pulse text-foreground/80 border-border' : ''}`}
               value={draft[key]}
