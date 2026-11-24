@@ -144,7 +144,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       </p>
 
       <p id="speech-input-notice" className="mb-6 text-sm text-muted-foreground leading-relaxed">
-        입력칸의 마이크를 누르면 말로 적을 수 있어요. 음성은 브라우저의 인식 서비스로 전송될 수 있어요.
+        음성은 브라우저의 인식 서비스로 전송될 수 있어요.
       </p>
 
       <form

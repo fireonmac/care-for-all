@@ -16,7 +16,7 @@ function formFixture(options = {}) {
   const effects = [];
   let active = options.active ?? [];
   const load = sourceLoader({
-    react: { ...React, useState: () => [active, next => { active = next; }], useEffect: callback => { effects.push(callback); } },
+    react: { ...React, useRef: value => ({ current: value }), useLayoutEffect() {}, useState: () => [active, next => { active = next; }], useEffect: callback => { effects.push(callback); } },
     'react-hook-form': {
       useForm: () => ({ control: {}, handleSubmit: (valid, invalid) => async () => {
         errors.events = values.map(value => value.event.trim() ? undefined : { event: { type: 'too_small', message: '일어난 사건을 먼저 적어주세요.' } });

@@ -1,4 +1,5 @@
 import { LoaderCircle, Mic, Square } from 'lucide-react';
+import { SpeechWaveform } from './SpeechWaveform';
 import { Button } from '@/components/ui/button';
 import type { SpeechInput, SpeechTarget } from './useSpeechInput';
 
@@ -21,8 +22,15 @@ export function SpeechInputControl({ speech, target, label, disabled, inputId }:
 
 export function SpeechInputFeedback({ speech, target, id }: { speech: SpeechInput; target: SpeechTarget; id: string }) {
   const selected = speech.target?.eventId === target.eventId && speech.target.field === target.field;
-  const text = !selected ? '' : speech.state.phase === 'starting' ? '마이크 연결 중… 권한 요청이 나오면 허용해주세요.'
-    : speech.state.phase === 'stopping' ? '마지막 말을 정리하고 있어요… 다시 누르면 취소돼요.'
-    : speech.state.phase === 'listening' ? `듣는 중… ${speech.state.interim || '편하게 말씀해주세요.'}` : speech.state.message;
-  return <p id={id} role="status" aria-live="polite" aria-atomic="true" className="text-sm text-muted-foreground empty:hidden">{text}</p>;
+  const active = selected && speech.busy;
+  const status = !selected ? '' : speech.state.phase === 'starting' ? '마이크 연결 중'
+    : speech.state.phase === 'stopping' ? '음성 입력 마무리 중'
+    : speech.state.phase === 'listening' ? '음성 입력 중' : speech.state.message;
+  return <>
+    <p id={id} role="status" aria-live="polite" aria-atomic="true"
+      className={active ? 'sr-only' : 'text-sm text-muted-foreground empty:hidden'}>{status}</p>
+    {active && <div className="rounded-2xl bg-muted/60 px-4 py-1" data-slot="speech-waveform">
+      <SpeechWaveform analyser={speech.analyser} />
+    </div>}
+  </>;
 }
