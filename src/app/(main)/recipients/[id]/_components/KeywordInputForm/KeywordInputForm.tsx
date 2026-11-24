@@ -143,10 +143,6 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
         적어주신 내용을 바탕으로 신체와 인지 기록을 자연스럽게 정리해드려요.
       </p>
 
-      <p id="speech-input-notice" className="mb-6 text-sm text-muted-foreground leading-relaxed">
-        음성은 브라우저의 인식 서비스로 전송될 수 있어요.
-      </p>
-
       <form
         onSubmit={handleSubmit(onSubmit, (validationErrors) => {
           const firstInvalidEvent = getValues('events').find((_, index) => validationErrors.events?.[index]?.event);
