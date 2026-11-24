@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createSpeechAudio } from './speechAudio';
-import { createSpeechSession, idleSpeech, recognitionConstructor, type RecognitionConstructor } from './speechRecognition';
+import { createSpeechSession, idleSpeech, recognitionConstructor, speechErrorMessage, type RecognitionConstructor } from './speechRecognition';
 
 export type SpeechTarget = { eventId: string; field: 'event' | 'action' | 'emotion' };
 
@@ -12,15 +12,12 @@ export function useSpeechInput(
   const [target, setTarget] = useState<SpeechTarget | null>(null);
   const session = useRef<ReturnType<typeof createSpeechSession> | null>(null);
   const audio = useRef<ReturnType<typeof createSpeechAudio>>(null);
-  const isBrave = useRef(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [appendVersion, setAppendVersion] = useState(0);
   const callbacks = useRef({ onFinal, onNotice });
   // Browser callbacks must read the latest form values and field-array positions.
   useEffect(() => { callbacks.current = { onFinal, onNotice }; }, [onFinal, onNotice]);
   useEffect(() => {
-    const browser: Navigator & { brave?: { isBrave(): Promise<boolean> } } = navigator;
-    void browser.brave?.isBrave().then(value => { isBrave.current = value; }).catch(() => {});
     const leave = () => {
       session.current?.cancel(); session.current = null;
       audio.current?.dispose(); audio.current = null; setAnalyser(null);
@@ -47,14 +44,14 @@ export function useSpeechInput(
   function start(next: SpeechTarget) {
     // Guard synchronous double clicks before React renders the listening state.
     if (session.current) return;
-    setTarget(next);
     const browser: Window & { SpeechRecognition?: RecognitionConstructor; webkitSpeechRecognition?: RecognitionConstructor } = window;
     const Recognition = recognitionConstructor(browser);
     if (!Recognition || !window.isSecureContext) {
-      setState(idleSpeech);
-      callbacks.current.onNotice('음성 입력을 지원하지 않는 환경이에요. Chrome에서 열거나 직접 입력해주세요.');
+      setState(idleSpeech); setTarget(null);
+      callbacks.current.onNotice(speechErrorMessage(!window.isSecureContext ? 'insecure-context' : 'unsupported'));
       return;
     }
+    setTarget(next);
     audio.current?.dispose();
     audio.current = createSpeechAudio(setAnalyser);
     try {
@@ -70,14 +67,14 @@ export function useSpeechInput(
           session.current = null;
           audio.current?.finish(); setAnalyser(null);
         }
-      }, isBrave.current);
+      });
       session.current = current;
       current.start();
     } catch {
       audio.current?.dispose(); audio.current = null; setAnalyser(null);
       session.current = null;
       setState(idleSpeech);
-      callbacks.current.onNotice('음성 입력을 시작하지 못했어요. 직접 입력하거나 다시 시도해주세요.');
+      callbacks.current.onNotice(speechErrorMessage('start'));
     }
   }
   return { state, target, analyser, appendVersion, busy: state.phase !== 'idle', start, stop: () => session.current?.stop(), cancel };

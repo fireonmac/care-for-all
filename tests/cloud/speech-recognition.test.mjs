@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sourceLoader } from './load-source.mjs';
-const {createSpeechSession,appendDictation,recognitionConstructor}=sourceLoader()('src/app/(main)/recipients/[id]/_components/KeywordInputForm/speechRecognition.ts');
-function fixture({startError=false,stopError=false,isBrave=false}={}) {
+const {createSpeechSession,appendDictation,recognitionConstructor,speechErrorMessage}=sourceLoader()('src/app/(main)/recipients/[id]/_components/KeywordInputForm/speechRecognition.ts');
+function fixture({startError=false,stopError=false}={}) {
  const instances=[]; const states=[]; let value='원래 메모';
  class FakeRecognition {
   constructor(){ instances.push(this); }
@@ -10,7 +10,7 @@ function fixture({startError=false,stopError=false,isBrave=false}={}) {
   stop(){this.stops=(this.stops??0)+1;if(stopError)throw Error('stop');}
   abort(){this.aborts=(this.aborts??0)+1;}
  }
- const session=createSpeechSession(FakeRecognition,text=>{value=appendDictation(value,text);},s=>states.push(s),isBrave);
+ const session=createSpeechSession(FakeRecognition,text=>{value=appendDictation(value,text);},s=>states.push(s));
  const result=(text,isFinal)=>Object.assign([{transcript:text}],{isFinal});
  return {session,engine:instances[0],states,result,get value(){return value;},edit(text){value=text;}};
 }
@@ -45,7 +45,7 @@ test('cancel on navigation/unmount detaches listeners and rejects even queued la
  lateResult({results:[f.result('늦은 결과',true)]});lateStart();lateEnd();assert.equal(f.value,'원래 메모');assert.equal(f.states.length,count);assert.equal(f.engine.onresult,null);assert.equal(f.engine.aborts,1);
 });
 test('permissions, microphone, network, silence and language errors preserve committed text with actionable guidance',()=>{
- for(const error of ['not-allowed','service-not-allowed','audio-capture','network','no-speech','language-not-supported','other']){
+ for(const error of ['not-allowed','service-not-allowed','audio-capture','network','no-speech','language-not-supported','aborted','other']){
  const f=fixture();f.session.start();f.engine.onresult({results:[f.result('확정된 말',true)]});const late=f.engine.onresult;f.engine.onerror({error});
  late({results:[f.result('버려야 할 말',true)]});assert.equal(f.value,'원래 메모 확정된 말');assert.equal(f.states.at(-1).phase,'idle');assert.ok(f.states.at(-1).message);assert.equal(f.engine.onresult,null);
  }
@@ -62,11 +62,54 @@ test('normal completion and an explicit empty stop clear guidance; errors remain
   f.engine.onend();assert.equal(f.states.at(-1).message,'');assert.equal(f.states.at(-1).interim,'');
  }
 });
-test('Brave service failures explain the browser limitation instead of suggesting repeated retries',()=>{
- const f=fixture({isBrave:true});f.session.start();f.engine.onerror({error:'network'});
- assert.match(f.states.at(-1).message,/Brave.*Chrome/);assert.doesNotMatch(f.states.at(-1).message,/다시 눌러/);assert.equal(f.value,'원래 메모');
+test('network errors preserve successful recognition without declaring a browser unsupported',()=>{
+ const f=fixture();f.session.start();f.engine.onstart();
+ f.engine.onresult({results:[f.result('확정된 말',true)]});f.engine.onerror({error:'network'});
+ const state=f.states.at(-1);assert.equal(state.phase,'idle');assert.match(state.message,/연결.*문제/);
+ assert.doesNotMatch(state.message,/Brave|Chrome|지원하지|마이크.*허용/);
+ assert.equal(f.value,'원래 메모 확정된 말');
 });
 
-test('explicit stop stays quiet if the browser reports no-speech while flushing',()=>{
- const f=fixture();f.session.start();f.session.stop();f.engine.onerror({error:'no-speech'});assert.equal(f.states.at(-1).message,'');
+test('permission, service refusal and audio capture failures explain distinct problems without inventing causes',()=>{
+ const permission=speechErrorMessage('not-allowed');
+ const service=speechErrorMessage('service-not-allowed');
+ const capture=speechErrorMessage('audio-capture');
+ assert.match(permission,/권한.*설정/);assert.doesNotMatch(permission,/서비스.*지원하지/);
+ assert.match(service,/서비스.*사용할 수 없/);assert.doesNotMatch(service,/마이크.*허용되지/);
+ assert.match(capture,/소리를 가져오지 못/);assert.doesNotMatch(capture,/찾을 수 없/);
+ assert.notEqual(service,permission);
+});
+
+test('insecure origins, missing API and Korean service support have separate guidance',()=>{
+ assert.match(speechErrorMessage('insecure-context'),/HTTPS/);
+ assert.match(speechErrorMessage('unsupported'),/환경.*사용할 수 없/);
+ assert.doesNotMatch(speechErrorMessage('unsupported'),/HTTPS|Chrome|Brave/);
+ assert.match(speechErrorMessage('language-not-supported'),/서비스.*한국어/);
+});
+
+test('unexpected aborts and unknown runtime errors do not misreport a start failure',()=>{
+ for(const error of ['aborted','future-provider-error']){
+  const f=fixture();f.session.start();f.engine.onstart();
+  f.engine.onresult({results:[f.result('확정된 말',true)]});f.engine.onerror({error});
+  assert.equal(f.states.at(-1).phase,'idle');assert.equal(f.value,'원래 메모 확정된 말');
+  assert.doesNotMatch(f.states.at(-1).message,/시작하지 못|future-provider-error/);
+  if(error==='aborted')assert.match(f.states.at(-1).message,/중단/);
+ }
+});
+
+test('a stop exception reports finishing failure and preserves confirmed text',()=>{
+ const f=fixture({stopError:true});f.session.start();f.engine.onstart();
+ f.engine.onresult({results:[f.result('확정된 말',true)]});f.session.stop();
+ assert.equal(f.states.at(-1).phase,'idle');assert.equal(f.value,'원래 메모 확정된 말');
+ assert.match(f.states.at(-1).message,/마무리하지 못/);assert.doesNotMatch(f.states.at(-1).message,/시작/);
+ assert.equal(f.engine.onresult,null);
+});
+
+test('explicit stop stays quiet for empty or aborted completion, but reports unrelated failures',()=>{
+ for(const error of ['no-speech','aborted','network','service-not-allowed']){
+  const f=fixture();f.session.start();f.engine.onstart();f.session.stop();
+  const lateEnd=f.engine.onend;f.engine.onerror({error});const count=f.states.length;lateEnd();
+  assert.equal(f.states.at(-1).phase,'idle');assert.equal(f.states.length,count);
+  assert.equal(Boolean(f.states.at(-1).message),!['no-speech','aborted'].includes(error));
+ }
 });

@@ -24,17 +24,34 @@ export function recognitionConstructor(browser: { SpeechRecognition?: Recognitio
   return browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
 }
 
-function errorMessage(error: string, isBrave: boolean) {
+// Error codes describe the failed operation, not a browser's permanent capabilities.
+// Keep notices here so asynchronous errors and synchronous failures stay consistent.
+export function speechErrorMessage(error: string) {
   switch (error) {
-    case 'not-allowed': case 'service-not-allowed':
-      return '마이크 사용이 허용되지 않았어요. 브라우저의 사이트 설정을 확인해주세요.';
-    case 'audio-capture': return '마이크를 찾을 수 없어요. 연결과 기기의 마이크 설정을 확인해주세요.';
-    case 'network': return isBrave
-      ? 'Brave에서는 음성 인식 서비스에 연결할 수 없어요. Chrome에서 사용해주세요. 입력한 글은 그대로 남아 있어요.'
-      : '음성 연결이 끊겼어요. 입력된 글은 남아 있으니 다시 눌러주세요.';
-    case 'no-speech': return '말소리를 듣지 못했어요. 마이크를 눌러 다시 말씀해주세요.';
-    case 'language-not-supported': return '이 브라우저에서는 한국어 음성 입력을 사용할 수 없어요.';
-    default: return '음성 입력을 시작하지 못했어요. 다시 시도하거나 직접 입력해주세요.';
+    case 'not-allowed':
+      return '음성 입력이 허용되지 않았어요. 마이크 권한과 브라우저 설정을 확인해주세요.';
+    case 'service-not-allowed':
+      return '현재 음성 인식 서비스를 사용할 수 없어요. 브라우저 설정을 확인하거나 다른 브라우저에서 시도해주세요.';
+    case 'audio-capture':
+      return '마이크 소리를 가져오지 못했어요. 연결과 기기의 마이크 설정을 확인해주세요.';
+    case 'network':
+      return '음성 인식 연결에 문제가 생겼어요. 다시 시도하거나 직접 입력해주세요.';
+    case 'no-speech':
+      return '말소리를 듣지 못했어요. 마이크를 눌러 다시 말씀해주세요.';
+    case 'language-not-supported':
+      return '현재 음성 인식 서비스에서는 한국어를 지원하지 않아요. 다른 브라우저에서 시도해주세요.';
+    case 'aborted':
+      return '음성 입력이 중단됐어요. 다시 눌러 이어서 입력해주세요.';
+    case 'insecure-context':
+      return '음성 입력에는 보안 연결이 필요해요. HTTPS 주소로 접속해주세요.';
+    case 'unsupported':
+      return '이 환경에서는 음성 입력을 사용할 수 없어요. 지원하는 브라우저에서 열거나 직접 입력해주세요.';
+    case 'start':
+      return '음성 입력을 시작하지 못했어요. 다시 시도하거나 직접 입력해주세요.';
+    case 'stop':
+      return '음성 입력을 마무리하지 못했어요. 입력된 글은 남아 있어요.';
+    default:
+      return '음성 입력에 문제가 생겼어요. 다시 시도하거나 직접 입력해주세요.';
   }
 }
 
@@ -43,7 +60,6 @@ export function createSpeechSession(
   Recognition: RecognitionConstructor,
   onFinal: (text: string) => void,
   onState: (state: SpeechState) => void,
-  isBrave = false,
 ) {
   const recognition = new Recognition();
   recognition.lang = 'ko-KR';
@@ -87,10 +103,10 @@ export function createSpeechSession(
   };
   recognition.onerror = ({ error }) => {
     if (!active) return;
-    const emptyStop = phase === 'stopping' && error === 'no-speech';
+    const expectedStop = phase === 'stopping' && (error === 'no-speech' || error === 'aborted');
     cancel();
     phase = 'idle';
-    emit('', emptyStop ? '' : errorMessage(error, isBrave));
+    emit('', expectedStop ? '' : speechErrorMessage(error));
   };
   recognition.onend = () => {
     if (!active) return;
@@ -101,11 +117,11 @@ export function createSpeechSession(
     emit('', receivedText || stoppedByUser ? '' : '입력된 말이 없어요. 마이크를 눌러 다시 말씀해주세요.');
   };
   return {
-    start() { emit(); try { recognition.start(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('start', isBrave)); } },
+    start() { emit(); try { recognition.start(); } catch { cancel(); phase = 'idle'; emit('', speechErrorMessage('start')); } },
     stop() {
       if (!active || phase === 'stopping') return;
       phase = 'stopping'; emit();
-      try { recognition.stop(); } catch { cancel(); phase = 'idle'; emit('', errorMessage('stop', isBrave)); }
+      try { recognition.stop(); } catch { cancel(); phase = 'idle'; emit('', speechErrorMessage('stop')); }
     },
     cancel,
   };
