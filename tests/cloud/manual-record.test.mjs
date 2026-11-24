@@ -15,6 +15,7 @@ test('manual entry opens editable fields and saves without any AI generation', (
     react: { useState: value => [value, () => {}], useEffect() {} },
     'react-hook-form': { useForm: () => ({ control: {}, handleSubmit: fn => fn, setValue() {}, reset() {}, formState: { errors: {} } }),
       useFieldArray: () => ({ fields: [], append() {}, remove() {} }), useWatch: () => [] },
+    './useSpeechInput': { useSpeechInput: () => ({ busy: false, target: null, state: { phase: 'idle' }, cancel() {} }) },
     './useKeywordQueries': { useGenerateDailyDraft: () => ({ draft, setDraft: value => { draft = value; }, isGenerating: false, generateDraft: () => { aiCalls++; } }),
       useSaveDailyRecordMutation: () => ({ isPending: false, mutate: value => { saved = value; } }) },
     './DraftReviewView': { DraftReviewView: Review }, './EventInputItem': { EventInputItem: Placeholder },

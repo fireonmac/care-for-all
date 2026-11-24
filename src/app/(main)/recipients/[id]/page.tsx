@@ -113,7 +113,7 @@ export default async function RecipientDetailPage({
             </p>
           </div>
         ) : recipient.canEdit ? (
-          <KeywordInputForm key={targetDate} recipientId={recipient.id} targetDate={targetDate} />
+          <KeywordInputForm key={`${recipient.id}:${targetDate}`} recipientId={recipient.id} targetDate={targetDate} />
         ) : <p className="text-muted-foreground">공유받은 자료를 읽을 수 있습니다. 새 기록 작성은 편집 권한이 필요합니다.</p>}
       </section>
     </main>
