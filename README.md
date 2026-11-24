@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/brand/care-for-all-logo.png" alt="케어포올 로고" width="180" />
+  <img src="./public/brand/carefor-all-logo.png" alt="케어포올 로고" width="180" />
 </p>
 
 <h1 align="center">케어포올</h1>

@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm flex flex-col items-center text-center -mt-16">
         <Image
-          src="/brand/care-for-all-logo-placeholder.png"
+          src="/brand/carefor-all-logo-placeholder.png"
           alt="케어포올 로고"
           width={56}
           height={56}

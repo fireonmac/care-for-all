@@ -16,7 +16,7 @@ export default function MainLayout({
             className="flex items-center gap-2 text-foreground hover:opacity-70 transition-opacity"
           >
             <Image
-              src="/brand/care-for-all-logo-placeholder.png"
+              src="/brand/carefor-all-logo-placeholder.png"
               alt="케어포올"
               width={36}
               height={36}

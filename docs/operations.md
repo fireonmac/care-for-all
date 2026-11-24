@@ -152,12 +152,16 @@ Quick Tunnel은 고정 주소와 가용성을 보장하지 않으므로 배포 �
 필요하다. 예시 디렉터리:
 
 ```text
-/path/to/services/care-for-all
+/path/to/services/carefor-all
 ```
 
+GitHub 저장소와 패키지 이름은 `carefor-all`이다. 기존 Docker 스택을 새 스택으로
+인식하지 않도록 Compose 프로젝트 식별자 `care-for-all`은 유지한다. 저장소 이름을
+바꾸어도 이미 실행 중인 컨테이너 이름과 배포 도메인은 자동으로 변경하지 않는다.
+
 ```bash
-mkdir -p /path/to/services/care-for-all
-cd /path/to/services/care-for-all
+mkdir -p /path/to/services/carefor-all
+cd /path/to/services/carefor-all
 mkdir -p app_data backups
 cp /path/to/source/.env.example .env
 ```
