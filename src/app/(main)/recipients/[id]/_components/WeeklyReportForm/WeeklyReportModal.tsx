@@ -112,6 +112,7 @@ export function WeeklyReportModal({
 
             {isEditing && canEdit ? (
               <Textarea
+                autoComplete="off"
                 ref={textareaRef}
                 className="w-full min-h-100 text-[1.05rem] leading-[2.2] tracking-wide text-foreground resize-none p-6 md:p-8"
                 value={editContent}

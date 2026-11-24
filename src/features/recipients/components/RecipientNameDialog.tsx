@@ -64,7 +64,7 @@ export function RecipientNameDialog({ open, onOpenChange, recipient, trigger, fi
         <DialogHeader><DialogTitle>{review ? '중복 이름 확인' : recipient ? '이름 수정' : '어르신 등록'}</DialogTitle></DialogHeader>
         <DialogBody>
           {review ? <DuplicateRecipientReview review={review} /> : (
-            <form id="recipient-name-form" onSubmit={submit()} className="flex flex-col gap-3">
+            <form autoComplete="off" id="recipient-name-form" onSubmit={submit()} className="flex flex-col gap-3">
               <label htmlFor="recipient-name" className="sr-only">어르신 이름</label>
               <Input id="recipient-name" type="text" {...nameField} ref={element => { nameField.ref(element); nameInputRef.current = element; }}
                 aria-invalid={!!form.formState.errors.name} aria-describedby={form.formState.errors.name ? 'recipient-name-error' : undefined}

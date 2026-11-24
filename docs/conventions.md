@@ -66,6 +66,15 @@
 - 모달 디자인: `src/components/ui/dialog.tsx`의 공용 Header·Body·Footer를 사용한다. 구분선 없이 여백으로 영역을 나누며, 반경·패딩·영역 간격은 `src/app/globals.css`의 `--dialog-*` 토큰에서 관리한다. 개별 모달에서는 콘텐츠에 필요한 크기만 조절하고 공통 여백이나 구분선을 재정의하지 않는다. 보이는 입력 라벨을 생략하더라도 스크린리더용 이름은 유지한다.
 - 복합 UI: 모달과 토스트처럼 접근성과 상태 관리가 복잡한 UI는 직접 구현하지 않고 shadcn-ui 컴포넌트를 우선 사용한다.
 
+#### 브라우저 자동완성
+
+- 공용 `Input`·`Textarea`는 `autoComplete` 기본값을 강제하지 않고 HTML 기본 동작을 보존한다.
+- 어르신 등록·이름 수정과 관찰 메모처럼 사용자 본인의 저장 정보를 채우지 않는 폼은 `<form autoComplete="off">`에 정책을 둔다. 자식 입력은 이를 상속하므로 같은 속성을 반복하지 않는다.
+- HTML 폼에 속하지 않는 검색창과 일일·주간 기록 편집 입력에는 `autoComplete="off"`를 직접 지정한다. 이 속성을 위해 불필요하게 폼 구조나 제출 동작을 바꾸지 않는다.
+- 사용자 본인의 정보를 받는 필드에는 `email`, `tel`, `username`, `current-password` 등 실제 목적에 맞는 표준 토큰을 명시한다. `type`만으로 자동완성 목적을 추측하거나 모든 이메일·전화번호 입력을 일괄 허용하지 않는다.
+- 자동완성 정책은 입력의 중요도나 필수 여부가 아니라 용도에 따라 정한다. 브라우저 확장 기능이나 비밀번호 관리자가 `off`를 무시할 수 있으므로 완전한 차단을 보장하지 않는다.
+- 기준: [HTML autocomplete](https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#autofill), [WCAG 입력 목적 식별](https://www.w3.org/WAI/WCAG22/Understanding/identify-input-purpose.html).
+
 ### 6. 기타 일반 규칙
 
 - any 타입 사용 금지: TypeScript 환경에서 any의 사용을 엄격히 금지한다. 타입을 알 수 없거나 동적인 데이터의 경우 반드시 unknown을 사용하여, 사용 시점에 타입 검사(Type Guard) 또는 타입 단언을 강제한다.

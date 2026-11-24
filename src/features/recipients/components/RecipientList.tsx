@@ -128,6 +128,7 @@ export function RecipientList({
           )}
         </div>
         <Input
+          autoComplete="off"
           type="text"
           placeholder="어르신 이름 검색..."
           value={searchQuery}

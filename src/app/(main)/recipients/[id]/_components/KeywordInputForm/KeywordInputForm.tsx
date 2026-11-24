@@ -145,6 +145,7 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
       </p>
 
       <form
+        autoComplete="off"
         onSubmit={handleSubmit(onSubmit, (validationErrors) => {
           const firstInvalidEvent = getValues('events').find((_, index) => validationErrors.events?.[index]?.event);
           if (firstInvalidEvent) setActiveEventId([firstInvalidEvent.eventId]);
