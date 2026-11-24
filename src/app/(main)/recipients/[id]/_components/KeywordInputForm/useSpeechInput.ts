@@ -4,7 +4,10 @@ import { createSpeechSession, idleSpeech, recognitionConstructor, type Recogniti
 
 export type SpeechTarget = { eventId: string; field: 'event' | 'action' | 'emotion' };
 
-export function useSpeechInput(onFinal: (target: SpeechTarget, text: string) => void) {
+export function useSpeechInput(
+  onFinal: (target: SpeechTarget, text: string) => void,
+  onNotice: (message: string) => void,
+) {
   const [state, setState] = useState(idleSpeech);
   const [target, setTarget] = useState<SpeechTarget | null>(null);
   const session = useRef<ReturnType<typeof createSpeechSession> | null>(null);
@@ -12,9 +15,9 @@ export function useSpeechInput(onFinal: (target: SpeechTarget, text: string) => 
   const isBrave = useRef(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [appendVersion, setAppendVersion] = useState(0);
-  const write = useRef(onFinal);
+  const callbacks = useRef({ onFinal, onNotice });
   // Browser callbacks must read the latest form values and field-array positions.
-  useEffect(() => { write.current = onFinal; }, [onFinal]);
+  useEffect(() => { callbacks.current = { onFinal, onNotice }; }, [onFinal, onNotice]);
   useEffect(() => {
     const browser: Navigator & { brave?: { isBrave(): Promise<boolean> } } = navigator;
     void browser.brave?.isBrave().then(value => { isBrave.current = value; }).catch(() => {});
@@ -35,9 +38,11 @@ export function useSpeechInput(onFinal: (target: SpeechTarget, text: string) => 
   }, []);
 
   function cancel() {
+    const wasActive = session.current !== null;
     session.current?.cancel(); session.current = null;
     audio.current?.finish(); setAnalyser(null);
     setState(idleSpeech); setTarget(null);
+    return wasActive;
   }
   function start(next: SpeechTarget) {
     // Guard synchronous double clicks before React renders the listening state.
@@ -46,17 +51,19 @@ export function useSpeechInput(onFinal: (target: SpeechTarget, text: string) => 
     const browser: Window & { SpeechRecognition?: RecognitionConstructor; webkitSpeechRecognition?: RecognitionConstructor } = window;
     const Recognition = recognitionConstructor(browser);
     if (!Recognition || !window.isSecureContext) {
-      setState({ ...idleSpeech, message: '음성 입력을 지원하지 않는 환경이에요. Chrome에서 열거나 직접 입력해주세요.' });
+      setState(idleSpeech);
+      callbacks.current.onNotice('음성 입력을 지원하지 않는 환경이에요. Chrome에서 열거나 직접 입력해주세요.');
       return;
     }
     audio.current?.dispose();
     audio.current = createSpeechAudio(setAnalyser);
     try {
       const current = createSpeechSession(Recognition, text => {
-        write.current(next, text);
+        callbacks.current.onFinal(next, text);
         setAppendVersion(version => version + 1);
       }, nextState => {
         setState(nextState);
+        if (nextState.message) callbacks.current.onNotice(nextState.message);
         if (nextState.phase === 'listening') audio.current?.start();
         if (nextState.phase === 'stopping') { audio.current?.stopMeter(); setAnalyser(null); }
         if (nextState.phase === 'idle') {
@@ -69,7 +76,8 @@ export function useSpeechInput(onFinal: (target: SpeechTarget, text: string) => 
     } catch {
       audio.current?.dispose(); audio.current = null; setAnalyser(null);
       session.current = null;
-      setState({ ...idleSpeech, message: '음성 입력을 시작하지 못했어요. 직접 입력하거나 다시 시도해주세요.' });
+      setState(idleSpeech);
+      callbacks.current.onNotice('음성 입력을 시작하지 못했어요. 직접 입력하거나 다시 시도해주세요.');
     }
   }
   return { state, target, analyser, appendVersion, busy: state.phase !== 'idle', start, stop: () => session.current?.stop(), cancel };

@@ -54,6 +54,7 @@ export function EventInputItem({
     input.scrollLeft = input.scrollWidth;
   }, [speech.appendVersion, speech.target, event.eventId]);
   const listening = (field: 'event' | 'action' | 'emotion') => speech.busy && speech.target?.eventId === event.eventId && speech.target.field === field;
+  const visibleError = listening('event') ? undefined : error;
   const errorId = `event-error-${event.eventId}`;
   const isEventEmpty = !event.event.trim();
   const summaryText = isEventEmpty ? '내용을 입력해주세요' : event.event;
@@ -125,18 +126,18 @@ export function EventInputItem({
               type="text"
               {...eventField}
               aria-required="true"
-              aria-invalid={Boolean(error)}
-              aria-describedby={[error ? errorId : null, `speech-event-${event.eventId}`].filter(Boolean).join(' ')}
+              aria-invalid={Boolean(visibleError)}
+              aria-describedby={[visibleError ? errorId : null, `speech-event-${event.eventId}`].filter(Boolean).join(' ')}
               value={event.event}
               disabled={isFuture}
               placeholder="어떤 일이 있었나요? (예: 식사 중 숟가락을 떨어뜨리심)"
-              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('event') ? 'border-ring bg-muted/30' : ''} ${error ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
+              className={`pl-5 pr-14 py-3.5 text-lg font-normal ${listening('event') ? 'border-ring bg-muted/30' : ''} ${visibleError ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive' : ''}`}
               autoFocus={autoFocus}
             />
             <SpeechInputControl speech={speech} target={{ eventId: event.eventId, field: 'event' }} label={`사건 ${index + 1} 일어난 사건`} disabled={isFuture} inputId={`event-input-${event.eventId}`} />
           </div>
           <SpeechInputFeedback speech={speech} target={{ eventId: event.eventId, field: 'event' }} id={`speech-event-${event.eventId}`} />
-          {error && <p id={errorId} role="alert" className="text-sm text-destructive">{error.message}</p>}
+          {visibleError && <p id={errorId} role="alert" className="text-sm text-destructive">{visibleError.message}</p>}
         </div>
 
         <div className={`flex flex-col gap-3 transition-opacity duration-300 ${isEventEmpty ? 'opacity-40' : 'opacity-100'}`}>

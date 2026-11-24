@@ -25,10 +25,10 @@ export function SpeechInputFeedback({ speech, target, id }: { speech: SpeechInpu
   const active = selected && speech.busy;
   const status = !selected ? '' : speech.state.phase === 'starting' ? '마이크 연결 중'
     : speech.state.phase === 'stopping' ? '음성 입력 마무리 중'
-    : speech.state.phase === 'listening' ? '음성 입력 중' : speech.state.message;
+    : speech.state.phase === 'listening' ? '음성 입력 중' : '';
   return <>
     <p id={id} role="status" aria-live="polite" aria-atomic="true"
-      className={active ? 'sr-only' : 'text-sm text-muted-foreground empty:hidden'}>{status}</p>
+      className="sr-only empty:hidden">{status}</p>
     {active && <div className="rounded-2xl bg-muted/60 px-4 py-1" data-slot="speech-waveform">
       <SpeechWaveform analyser={speech.analyser} />
     </div>}

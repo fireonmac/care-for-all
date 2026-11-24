@@ -32,7 +32,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function KeywordInputForm({ recipientId, targetDate }: { recipientId: string, targetDate: string }) {
   const router = useRouter();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showInfo } = useToast();
 
   const [activeEventId, setActiveEventId] = useState<string[]>([]);
 
@@ -76,9 +76,10 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
     const index = current.findIndex(event => event.eventId === target.eventId);
     if (index < 0 || isFuture || isGenerating) return;
     const event = current[index];
+    if (target.field !== 'event' && !event.event.trim()) return;
     if (target.field === 'emotion' && !event.isCustomEmotion) return;
     setValue(`events.${index}.${target.field}`, appendDictation(event[target.field], text), { shouldValidate: true, shouldDirty: true });
-  });
+  }, showError);
 
   const onSubmit = async (data: FormValues) => {
     const validEvents = data.events.filter((e) => e.event.trim());
@@ -169,7 +170,16 @@ export function KeywordInputForm({ recipientId, targetDate }: { recipientId: str
                 speech={speech}
                 canRemove={fields.length > 1}
                 error={errors.events?.[index]?.event}
-                eventField={register(`events.${index}.event`)}
+                eventField={register(`events.${index}.event`, {
+                  onChange: (change) => {
+                    // End dependent dictation in this input event, before the field
+                    // disables. Cancel rejects pending results without losing text.
+                    if (!change.target.value.trim() && speech.target?.eventId === field.eventId
+                      && speech.target.field !== 'event' && speech.cancel()) {
+                      showInfo('사건 내용이 비어 음성 입력을 멈췄어요.');
+                    }
+                  },
+                })}
                 onUpdate={(updates) => {
                   if ('isCustomEmotion' in updates) speech.cancel();
                   setValue(`events.${index}`, { ...getValues('events')[index], ...updates }, { shouldValidate: true, shouldDirty: true });
